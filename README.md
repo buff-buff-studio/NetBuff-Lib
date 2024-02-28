@@ -33,7 +33,6 @@ var manager = NetworkManager.Instance;
 manager.IsServerRunning //Returns if there's a server running locally
 manager.IsClientRunning //Returns if there's a client running locally
 manager.ClientId //local client id (If the client is running)
-
 ```
 
 ### **Network Transport**
@@ -53,9 +52,13 @@ Used to sync an object reference across all network-ends. **All objects that nee
 - **OwnerId (int):** References the owner of the object. Default is **-1 (Server)**
 - **Prefab Id (32 byte hex number):** The object source prefab id (For starting objects, the prefab value is **0000000000000000**)
 
-<p align="center">
-  <img src="https://github.com/buff-buff-studio/NetworkLib/assets/17664054/8c819ebe-ae4a-49d7-b21d-f977a6450703">
-</p>
+```cs
+public NetworkId => id;
+
+public int OwnerId => ownerId;
+
+public NetworkId PrefabId => prefabId;
+```
 
 These three fields combined provides all the needed information for basic-object handling
 
@@ -85,11 +88,11 @@ Extends the NetworkTransform syncing with a better support for physics based obj
 
 ### **Network Animator**
 
-Syncs animation layer states, parameters, timing and transitions of an Animator across the network. Triggers are not automatically synced if you set them directly on the Animator. Use the NetworkAnimator.SetTrigger (with Authority) method to set them correctly.
-
-<p align="center">
-  <img src="https://github.com/buff-buff-studio/NetworkLib/assets/17664054/5bc4b157-6b04-44f1-bcbd-b839e3339bc6">
-</p>
+```cs
+public NetworkAnimator animator;
+[...]
+animator.SetTrigger("Punch");
+```
 
 ## **Basic Structure Diagram**
 
@@ -171,9 +174,25 @@ There are two main types of packets:
 
 You can easily create a packet type just by creating a class. For convention you shall use properties instead of fields, with the name in PascalCase:
 
-<p align="center">
-  <img src="https://github.com/buff-buff-studio/NetworkLib/assets/17664054/adf1c2a9-8225-4c5a-b745-25386989a837">
-</p>
+```cs
+public class DoorStatePacket : IOwnedPacket
+{
+    public NetworkId Id { get; set; }
+    public bool IsOpen { get; set; }
+
+    public void Serialize(BinaryWriter writer)
+    {
+        Id.Serialize(writer);
+        writer.Write(IsOpen); 
+    }
+
+    public void Deserialize(BinaryReader reader)
+    {
+        Id = NetworkId.Read(reader);
+        IsOpen = reader.ReadBoolean();
+    }
+} 
+```
 
 The Serialize method will tell the NetworkTransport how to translate into bytes and the Deserialize one will do the reverse way
 
@@ -183,22 +202,72 @@ The Serialize method will tell the NetworkTransport how to translate into bytes 
 
 **To send a packet** you can **use** any **one of the listed methods found in the NetworkBehaviour class that fits your use case**. Normally **you may use SendPacket** alongside **HasAuthority** checks. See the PlayerController example below:
 
-<p align="center">
-  <img src="[https://github.com/buff-buff-studio/NetworkLib/assets/17664054/e4dfdd21-1d04-43c3-97a8-448526fbca92](https://github.com/buff-buff-studio/NetworkLib/assets/17664054/6ab8a3db-b5ca-492e-9864-dd50de4d8650)">
-</p>
+```cs
+private void Update()
+{                                                         
+    if (!HasAuthority || !IsOwnedByClient)
+        return;                         
+
+    [...] 
+
+    if (Input.GetMouseButtonDown(0) && punchCooldown <= 0 && IsGrounded)
+    {                                           
+        [...]
+
+        //Just to add some delay to fit the animation
+        Task.Run(async () =>
+        {
+            await Task.Delay(500);
+
+            SendPacket(new PlayerPunchActionPacket
+            {
+                Id = Id                    
+            }); 
+        });
+    }
+    [...]
+}
+
+```
 
 If the object is **guaranteed** to be always owned by the server you don’t need to worry about broadcasting the packet to other players. But **normally** (as in the example above) **you shall handle the broadcasting process** in the **OnServerReceivePacket** method:
-<p align="center">
-  <img src="https://github.com/buff-buff-studio/NetworkLib/assets/17664054/da5d380d-0f88-428e-bbea-859827c8a6c3">
-</p>
+
+```cs
+public override void OnServerReceivePacket(IOwnedPacket packet, int clientId)
+{
+    switch (packet)
+    {
+        [...]
+        case PacketPlayerPunch punch: 
+            if(clientId == OwnerId) 
+              ServerBroadcastPacketExceptFor(punch, clientId, true);
+            break;
+        [...]
+    }
+}
+```
 
 ### **Handling Received Packets**
 
 if the packet is an **IOwnedPacket**, the handling process is **automated**: the callback of the behaviors of the network object that owns the packet will be called. **For other packets** you may **use the NetworkBehaviour.GetPacketListener** to add/remove your own listeners **(you can also use this method to handle IOwnedPackets of other objects)**:
 
-<p align="center">
-  <img src="https://github.com/buff-buff-studio/NetworkLib/assets/17664054/1dbd8ae0-d518-480d-8fc7-561214c4f591">
-</p>
+```cs
+private void OnEnable() 
+{
+    //Needs to listen to a specific packet type
+    GetPacketListener<PlayerPunchActionPacket>().OnServerReceive += OnPlayerPunch; 
+}
+
+private void OnDisable()
+{
+  GetPacketListener<PlayerPunchActionPacket>().OnServerReceive -= OnPlayerPunch;
+}
+
+private void OnPlayerPunch(PlayerPunchActionPacket obj, int client)
+{
+    [...]
+}
+```
 
 ### **Packet Reliability: States and Actions**
 
@@ -211,9 +280,16 @@ There are basically two main types of packets: state packets and action packets.
 |Sent with reliable = false (Or omit the field, as false is it default value)|Sent with reliable = true, so the server will guarantee the order and the delivery of the packet|
 |**Limited to 1000 bytes**|**No Bytes Limitation**|
 
-<p align="center">
-  <img src="https://github.com/buff-buff-studio/NetworkLib/assets/17664054/42c9ac1b-7a8d-4041-9fea-81ab75d1b5e6">
-</p>
+```js
+//NetworkTransport State (Non Realiable as it state updates constanntly)
+SendPacket(CreateTransformPacket
+
+//PlayerController Punch (Reliable as it's an action)
+SendPacket(new PlayerPunchActionPacket
+  {
+    Id = Id
+  }, true);
+```
 
 ### **Packing Packets**
 For optimization purposes packets are packed (...) together with others if they’re sent at the same short-time period. Also if a reliable packet is too big to be sent on the same time, it will be automatically split.
