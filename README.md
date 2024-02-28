@@ -27,9 +27,14 @@ The system provides many features (which some are very worthy to note, so theyâ€
 
 Main network component, manages the client and/or server connection, packets sending/handling and network object states across the network. Can be extended to implement custom specific behaviors. You can access the current Network Manager instance using
 
-<p align="center">
-  <img src="https://github.com/buff-buff-studio/NetworkLib/assets/17664054/e4dfdd21-1d04-43c3-97a8-448526fbca92">
-</p>
+```js
+var manager = NetworkManager.Instance;
+
+manager.IsServerRunning //Returns if there's a server running locally
+manager.IsClientRunning //Returns if there's a client running locally
+manager.ClientId //local client id (If the client is running)
+
+```
 
 ### **Network Transport**
 
@@ -38,6 +43,7 @@ Internal interface used in background to handle connections between server and c
 Currently the following transport methods are supported:
 
 - **UDP (Reliable & Unreliable)**
+- **Local Split Screen (2 players, useful for testing)**
 
 ### **Network Identifier**
 
@@ -148,6 +154,7 @@ This section will show information of the base class NetworkBehaviour alongside 
 |Both|**GetNetworkObjects()**|Returns all the network objects|
 |Both|**GetNetworkObjectsOwnedBy(int clientId)**|Returns all the network objects owned by a client **(use -1 for server owned objects)**|
 |Both|**GetNetworkObjectCount()**|Return the count of network objects|
+|Client|**GetLocalClientIndex(int clientId)**|Returns the local client index for a given client id (normally 0). Useful for split screen modes|
 
 Auth side means that it can be used on both sides but need to have the ownership over the object
 
@@ -209,8 +216,24 @@ There are basically two main types of packets: state packets and action packets.
 </p>
 
 ### **Packing Packets**
-
 For optimization purposes packets are packed (...) together with others if theyâ€™re sent at the same short-time period. Also if a reliable packet is too big to be sent on the same time, it will be automatically split.
+
+### **Retroactive State Synchronization**
+When a client joins the server, the server synchronizes what network objects should be spawned (and destroyed), and then for each object it syncs the owner, the prefabId and default transformation (position, rotation and scale). All other custom data should be sent manually using the callback NetworkingBehaviour.OnClientConnect:
+
+```c#
+public override void OnClientConnected(int clientId)
+{
+    // Sends the player nickname to the client
+    ServerSendPacket(new PacketPlayerData
+    {
+        Id = Id,
+        Name = headplate.text
+    }, clientId, true);
+}
+```
+
+When the client joins, the server sends to the client all the information he needs about that PlayerController. The packet handling is the same as the default, so the only thing you should care about is: you need to send the current state for new players. After that the object will behave normally, the same as it works for all the clients previously connected.
 
 ## **Miscellaneous**
 
