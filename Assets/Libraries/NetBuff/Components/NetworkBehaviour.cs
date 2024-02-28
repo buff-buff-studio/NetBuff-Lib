@@ -187,6 +187,18 @@ namespace NetBuff.Components
         {
             return NetworkManager.Instance.GetNetworkObjectCount();
         }
+        
+        /// <summary>
+        /// Returns the local client index of the specified client id
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <returns></returns>
+        [ClientOnly]
+        public int GetLocalClientIndex(int clientId)
+        {
+            return Identity.GetLocalClientIndex(clientId);
+        }
+
 
         #region Listeners
         /// <summary>

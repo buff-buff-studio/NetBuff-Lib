@@ -5,6 +5,9 @@ namespace ExamplePlatformer
     public class LevelManager : NetworkBehaviour
     {
         private static LevelManager _instance;
+        
+        public OrbitCamera[] orbitCameras;
+        
         public static LevelManager Instance
         {
             get

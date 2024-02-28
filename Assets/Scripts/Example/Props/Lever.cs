@@ -30,14 +30,21 @@ namespace ExamplePlatformer.Props
 
         private void OnPlayerPunch(PlayerPunchActionPacket obj, int client)
         {
-            var o = GetNetworkObject(obj.Id);
-            var dist = Vector3.Distance(o.transform.position, transform.position);
-            
-            if (dist > radius)
-                return;
-            
-            //Change it
-            _SetState(!isOn);
+            try
+            {
+                var o = GetNetworkObject(obj.Id);
+                var dist = Vector3.Distance(o.transform.position, transform.position);
+
+                if (dist > radius)
+                    return;
+
+                //Change it
+                _SetState(!isOn);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError(e);
+            }
         }
 
 

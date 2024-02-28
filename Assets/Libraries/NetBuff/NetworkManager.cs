@@ -68,11 +68,14 @@ namespace NetBuff
         [ClientOnly]
         public IConnectionInfo ClientConnectionInfo => transport.ClientConnectionInfo;
         
+        [ClientOnly]
+        private int[] _LocalClientIds = Array.Empty<int>();
+        
         /// <summary>
-        /// Returns the local client id
+        /// Returns all local client ids
         /// </summary>
         [ClientOnly]
-        public int ClientId { get; private set; } = -1;
+        public ReadOnlySpan<int> LocalClientIds => _LocalClientIds;
         #endregion
         
         private readonly Dictionary<Type, PacketListener> _packetListeners = new();
@@ -236,15 +239,6 @@ namespace NetBuff
         public int GetNetworkObjectCount()
         {
             return networkObjects.Count;
-        }
-        
-        /// <summary>
-        /// Get all objects owned by the local client
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerable<NetworkIdentity> GetNetworkObjectsOwned()
-        {
-            return GetNetworkObjectsOwnedBy(ClientId);
         }
         
         /// <summary>
@@ -555,7 +549,9 @@ namespace NetBuff
             switch (packet)
             {
                 case ClientIdPacket clientPacket:
-                    ClientId = clientPacket.ClientId;
+                    var list = new List<int>(_LocalClientIds);
+                    list.Add(clientPacket.ClientId);
+                    _LocalClientIds = list.ToArray();
                     return;
                 
                 case NetworkObjectSpawnPacket spawnPacket:

@@ -1,4 +1,5 @@
-﻿using NetBuff.Interface;
+﻿using System;
+using NetBuff.Interface;
 using NetBuff.Misc;
 using NetBuff.Packets;
 using UnityEngine;
@@ -57,8 +58,8 @@ namespace NetBuff.Components
 
                 return man.EndType switch
                 {
-                    NetworkTransport.EndType.Host => (ownerId == -1 && man.IsServerRunning) || (ownerId == man.ClientId && man.IsClientRunning),
-                    NetworkTransport.EndType.Client => ownerId != -1 && ownerId == man.ClientId,
+                    NetworkTransport.EndType.Host => (ownerId == -1 && man.IsServerRunning) || (man.LocalClientIds.IndexOf(ownerId) != -1 && man.IsClientRunning),
+                    NetworkTransport.EndType.Client => ownerId != -1 && man.LocalClientIds.IndexOf(ownerId) != -1,
                     NetworkTransport.EndType.Server => ownerId == -1,
                     _ => false
                 };
@@ -172,6 +173,17 @@ namespace NetBuff.Components
                     ClientSendPacket(new NetworkObjectOwnerPacket{Id = Id, OwnerId = clientId});
             }
         } 
+        
+        /// <summary>
+        /// Returns the local client index of the specified client id
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <returns></returns>
+        [ClientOnly]
+        public int GetLocalClientIndex(int clientId)
+        {
+            return NetworkManager.Instance.LocalClientIds.IndexOf(clientId);
+        }
         
         private void OnValidate()
         {

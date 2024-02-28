@@ -11,7 +11,17 @@ namespace NetBuff.Components
     public class NetworkRigidbodyTransform : NetworkTransform
     {
         private Rigidbody _rigidbody;
-        public Rigidbody Rigidbody => _rigidbody ??= GetComponent<Rigidbody>();
+
+        public Rigidbody Rigidbody
+        {
+            get
+            {
+                if (_rigidbody == null)
+                    _rigidbody = GetComponent<Rigidbody>();
+                
+                return _rigidbody;
+            }
+        }
         
         private Vector3 _lastVelocity;
         private Vector3 _lastAngularVelocity;

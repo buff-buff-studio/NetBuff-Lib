@@ -40,7 +40,6 @@ namespace ExamplePlatformer
         { 
             remoteBodyRotation = body.localEulerAngles.y;
             _controller = GetComponent<CharacterController>();
-            _orbitCamera = FindFirstObjectByType<OrbitCamera>();
             InvokeRepeating(nameof(Tick), 0, 1f / tickRate);
         }
 
@@ -123,10 +122,25 @@ namespace ExamplePlatformer
         {
             if (!HasAuthority || !IsOwnedByClient)
                 return;
+
+            if (_orbitCamera == null)
+            {
+                var idx = GetLocalClientIndex(OwnerId);
+                _orbitCamera = LevelManager.Instance.orbitCameras[idx];
+                _orbitCamera.target = gameObject;
+
+                if (idx == 1)
+                {
+                    //Setup split screen
+                    var cameraA = LevelManager.Instance.orbitCameras[0].GetComponent<Camera>();
+                    var cameraB = _orbitCamera.GetComponent<Camera>();
+                    
+                    cameraA.rect = new Rect(0, 0, 0.5f, 1);
+                    cameraB.rect = new Rect(0.5f, 0, 0.5f, 1);
+                }
+            }
             
-            _orbitCamera.target = gameObject;
             headplate.text = CreateRandomEnglishName();
-            
             SendPacket(new PacketPlayerData
             {
                 Id = Id,
@@ -168,7 +182,8 @@ namespace ExamplePlatformer
             else
                 velocity.y -= gravity * Time.deltaTime;
 
-            var move = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical")).normalized;
+            var idx = GetLocalClientIndex(OwnerId);
+            var move = GetMoveInput(idx).normalized;
             var camAngle = Camera.main!.transform.eulerAngles.y;
             var targetAngle = camAngle;
             var moveAngle = Mathf.Atan2(move.x, move.z) * Mathf.Rad2Deg;
@@ -191,7 +206,7 @@ namespace ExamplePlatformer
             
             animator.SetBool("Jumping", !IsGrounded);
 
-            if (Input.GetMouseButtonDown(0) && punchCooldown <= 0 && IsGrounded)
+            if (GetPunchInput(idx) && punchCooldown <= 0 && IsGrounded)
             {
                 animator.SetTrigger("Punch");
                 punchCooldown = 1.25f;
@@ -210,8 +225,52 @@ namespace ExamplePlatformer
             
             animator.SetFloat("Running", Mathf.Lerp(animator.GetFloat("Running"), to, Time.deltaTime * 5f));
             
-            if (Input.GetKeyDown(KeyCode.Space) && IsGrounded)
+            if (GetJumpInput(idx) && IsGrounded)
                 velocity.y = jumpForce;
+        }
+
+        public Vector3 GetMoveInput(int index)
+        {
+            switch (index)
+            {
+                case 0:
+                    return new Vector3(GetKey(KeyCode.D) - GetKey(KeyCode.A), 0, GetKey(KeyCode.W) - GetKey(KeyCode.S));
+                case 1:
+                    return new Vector3(GetKey(KeyCode.RightArrow) - GetKey(KeyCode.LeftArrow), 0, GetKey(KeyCode.UpArrow) - GetKey(KeyCode.DownArrow));
+                default:
+                    return Vector3.zero;
+            }
+        }
+        
+        public bool GetPunchInput(int index)
+        {
+            switch (index)
+            {
+                case 0:
+                    return Input.GetKeyDown(KeyCode.Q);
+                case 1:
+                    return Input.GetKeyDown(KeyCode.P);
+                default:
+                    return false;
+            }
+        }
+        
+        public bool GetJumpInput(int index)
+        {
+            switch (index)
+            {
+                case 0:
+                    return Input.GetKeyDown(KeyCode.Space);
+                case 1:
+                    return Input.GetKeyDown(KeyCode.Return);
+                default:
+                    return false;
+            }
+        }
+            
+        private float GetKey(KeyCode key)
+        {
+            return Input.GetKey(key) ? 1 : 0;
         }
     }
     
