@@ -1,4 +1,4 @@
-﻿namespace BuffBuffNetcode.Interface
+﻿namespace NetBuff.Interface
 {
     public interface IClientConnectionInfo : IConnectionInfo
     {

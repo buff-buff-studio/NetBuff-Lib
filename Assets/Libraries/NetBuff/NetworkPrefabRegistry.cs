@@ -1,9 +1,9 @@
 ﻿using System.Linq;
 using AYellowpaper.SerializedCollections;
-using BuffBuffNetcode.Misc;
+using NetBuff.Misc;
 using UnityEngine;
 
-namespace BuffBuffNetcode
+namespace NetBuff
 {
     /// <summary>
     /// Used to store prefabs for networked objects, to reference them across the network

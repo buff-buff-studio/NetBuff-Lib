@@ -1,7 +1,7 @@
 ﻿using System;
-using BuffBuffNetcode.Interface;
+using NetBuff.Interface;
 
-namespace BuffBuffNetcode
+namespace NetBuff
 {
     /// <summary>
     /// Class to register all packets used via the network

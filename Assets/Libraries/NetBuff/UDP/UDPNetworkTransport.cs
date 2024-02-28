@@ -5,12 +5,12 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using BuffBuffNetcode.Interface;
 using LiteNetLib;
+using NetBuff.Interface;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-namespace BuffBuffNetcode.UDP
+namespace NetBuff.UDP
 {
     public class UDPNetworkTransport : NetworkTransport
     {

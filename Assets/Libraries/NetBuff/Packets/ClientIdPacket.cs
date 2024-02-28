@@ -1,7 +1,7 @@
 ﻿using System.IO;
-using BuffBuffNetcode.Interface;
+using NetBuff.Interface;
 
-namespace BuffBuffNetcode.Packets
+namespace NetBuff.Packets
 {
     public class ClientIdPacket : IPacket
     {

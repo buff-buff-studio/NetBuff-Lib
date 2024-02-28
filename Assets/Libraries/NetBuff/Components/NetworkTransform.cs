@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using BuffBuffNetcode.Interface;
-using BuffBuffNetcode.Misc;
+using NetBuff.Interface;
+using NetBuff.Misc;
 using UnityEngine;
 
-namespace BuffBuffNetcode.Components
+namespace NetBuff.Components
 {
     /// <summary>
     /// Component that syncs the transform of a game object over the network.

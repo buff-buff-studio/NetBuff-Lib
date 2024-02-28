@@ -1,8 +1,8 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
-using BuffBuffNetcode.Components;
-using BuffBuffNetcode.Interface;
-using BuffBuffNetcode.Misc;
+using NetBuff.Components;
+using NetBuff.Interface;
+using NetBuff.Misc;
 using TMPro;
 using UnityEngine;
 using Random = UnityEngine.Random;

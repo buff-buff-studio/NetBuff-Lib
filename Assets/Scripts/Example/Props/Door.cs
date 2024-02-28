@@ -1,6 +1,6 @@
 ﻿using System.IO;
-using BuffBuffNetcode.Interface;
-using BuffBuffNetcode.Misc;
+using NetBuff.Interface;
+using NetBuff.Misc;
 using UnityEngine;
 
 namespace ExamplePlatformer.Props

@@ -1,9 +1,9 @@
 ﻿using System.IO;
-using BuffBuffNetcode.Interface;
-using BuffBuffNetcode.Misc;
+using NetBuff.Interface;
+using NetBuff.Misc;
 using UnityEngine;
 
-namespace BuffBuffNetcode.Packets
+namespace NetBuff.Packets
 {
     public class NetworkObjectSpawnPacket : IPacket
     {

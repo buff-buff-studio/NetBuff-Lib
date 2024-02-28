@@ -1,7 +1,7 @@
-﻿using BuffBuffNetcode.UDP;
+﻿using NetBuff.UDP;
 using UnityEngine;
 
-namespace BuffBuffNetcode
+namespace NetBuff
 {
     /// <summary>
     /// Debug GUI for NetworkManager

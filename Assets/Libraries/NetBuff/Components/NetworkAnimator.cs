@@ -2,11 +2,11 @@
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using BuffBuffNetcode.Interface;
-using BuffBuffNetcode.Misc;
+using NetBuff.Interface;
+using NetBuff.Misc;
 using UnityEngine;
 
-namespace BuffBuffNetcode.Components
+namespace NetBuff.Components
 {
     /// <summary>
     /// Component that syncs a animator state and parameters over the network

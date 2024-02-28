@@ -1,4 +1,4 @@
-﻿using BuffBuffNetcode.Components;
+﻿using NetBuff.Components;
 
 namespace ExamplePlatformer
 {

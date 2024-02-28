@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
-using BuffBuffNetcode.Interface;
-using BuffBuffNetcode.Misc;
-using BuffBuffNetcode.Packets;
+using NetBuff.Interface;
+using NetBuff.Misc;
+using NetBuff.Packets;
 using UnityEngine;
 
-namespace BuffBuffNetcode.Components
+namespace NetBuff.Components
 {
     /// <summary>
     /// Base class for all network object components

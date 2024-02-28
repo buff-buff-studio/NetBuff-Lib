@@ -1,6 +1,6 @@
-﻿using BuffBuffNetcode.Misc;
+﻿using NetBuff.Misc;
 
-namespace BuffBuffNetcode.Interface
+namespace NetBuff.Interface
 {
     public interface IOwnedPacket : IPacket
     {

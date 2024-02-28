@@ -1,4 +1,4 @@
-﻿namespace BuffBuffNetcode.Misc
+﻿namespace NetBuff.Misc
 {
     /// <summary>
     /// Marks that a method, field, or property should only be used on the client.

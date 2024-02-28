@@ -1,6 +1,6 @@
-﻿using BuffBuffNetcode.Interface;
+﻿using NetBuff.Interface;
 
-namespace BuffBuffNetcode.Misc
+namespace NetBuff.Misc
 {
     public abstract class PacketListener
     {

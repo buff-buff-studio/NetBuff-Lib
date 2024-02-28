@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using AYellowpaper.SerializedCollections;
-using BuffBuffNetcode.Components;
-using BuffBuffNetcode.Interface;
-using BuffBuffNetcode.Misc;
-using BuffBuffNetcode.Packets;
+using NetBuff.Components;
+using NetBuff.Interface;
+using NetBuff.Misc;
+using NetBuff.Packets;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
@@ -14,7 +14,7 @@ using UnityEngine.SceneManagement;
 using UnityEditor;
 #endif
 
-namespace BuffBuffNetcode
+namespace NetBuff
 { 
     
     /// <summary>

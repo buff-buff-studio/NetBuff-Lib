@@ -1,4 +1,4 @@
-﻿using BuffBuffNetcode.Interface;
+﻿using NetBuff.Interface;
 using UnityEngine;
 
 namespace ExamplePlatformer.Props

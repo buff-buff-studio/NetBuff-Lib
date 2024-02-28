@@ -1,13 +1,13 @@
-﻿using BuffBuffNetcode.Interface;
-using BuffBuffNetcode.Misc;
-using BuffBuffNetcode.Packets;
+﻿using NetBuff.Interface;
+using NetBuff.Misc;
+using NetBuff.Packets;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 using System.Linq;
 #endif
 
-namespace BuffBuffNetcode.Components
+namespace NetBuff.Components
 {
     /// <summary>
     /// Main class for networked objects. Used to identify and manage networked objects.

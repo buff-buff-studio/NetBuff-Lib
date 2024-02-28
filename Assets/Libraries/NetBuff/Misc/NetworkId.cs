@@ -5,7 +5,7 @@ using System.IO;
 using UnityEngine;
 using Random = System.Random;
 
-namespace BuffBuffNetcode.Misc
+namespace NetBuff.Misc
 {
     [Serializable]
     public class NetworkId : IComparable

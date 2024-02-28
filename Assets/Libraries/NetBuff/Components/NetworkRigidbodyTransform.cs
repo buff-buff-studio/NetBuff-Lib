@@ -2,7 +2,7 @@
 using UnityEngine;
 
 // ReSharper disable BitwiseOperatorOnEnumWithoutFlags
-namespace BuffBuffNetcode.Components
+namespace NetBuff.Components
 {
     /// <summary>
     /// Component that syncs the transform and rigidbody of a game object over the network.

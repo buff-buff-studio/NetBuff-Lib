@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using BuffBuffNetcode.Interface;
+using NetBuff.Interface;
 using UnityEngine;
 
-namespace BuffBuffNetcode
+namespace NetBuff
 {
     /// <summary>
     /// Base class for network transport

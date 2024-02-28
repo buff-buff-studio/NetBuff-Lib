@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace BuffBuffNetcode.Interface
+namespace NetBuff.Interface
 {
     public interface IPacket
     {
