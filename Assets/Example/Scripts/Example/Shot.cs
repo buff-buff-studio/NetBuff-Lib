@@ -6,7 +6,7 @@ namespace ExamplePlatformer
 {
     public class Shot : NetworkBehaviour
     {
-        public float lifeTime = 2.0f;
+        public float lifeTime = 5.0f;
 
         private void Update()
         {

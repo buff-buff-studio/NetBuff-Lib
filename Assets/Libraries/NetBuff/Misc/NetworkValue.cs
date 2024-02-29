@@ -355,18 +355,14 @@ namespace NetBuff.Misc
         {
             var value = property.FindPropertyRelative("_value");
             EditorGUI.BeginChangeCheck();
-            var old = EditorStyles.label.normal.textColor;
             EditorStyles.label.normal.textColor = Color.yellow;
             EditorGUI.PropertyField(position, value, label);
-            EditorStyles.label.normal.textColor = old;
+            EditorStyles.label.normal.textColor = Color.white;
             if (EditorGUI.EndChangeCheck())
             {
                 property.serializedObject.ApplyModifiedProperties();
-                
-                //get the serialized object AS nETWORKVALUE     
                 (GetTargetObjectOfProperty(property) as NetworkValue)!.EditorForceUpdate();
             }
-            
         }
         
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
