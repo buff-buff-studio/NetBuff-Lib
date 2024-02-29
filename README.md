@@ -4,6 +4,11 @@
   <a href="https://buff-buff-studios.itch.io">
     <img src="https://github.com/buff-buff-studio/NetworkLib/assets/17664054/74449a77-3e4c-4ee7-9998-46708cbba555" width="400" alt="NetBuff Logo">
   </a>
+  <p align="center">
+    <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/buff-buff-studio/NetBuff-Lib">
+    <img alt="Lines of code" src="http://tokei.ekzhang.com/b1/github/buff-buff-studio/NetBuff-Lib">
+    <img alt="GitHub tag (latest by date)" src="https://img.shields.io/github/v/tag/buff-buff-studio/NetBuff-Lib?label=version">
+  </p>
 </p>
 
 ### About
