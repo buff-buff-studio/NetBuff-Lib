@@ -261,10 +261,10 @@ MonoBehaviour:
   velocity: {x: 0, y: 0, z: 0}
   punchCooldown: 0
   remoteBodyRotation: 0
-  Nickname:
-    _value: Teste
+  nickname:
+    _value: 
     _type: 0
-  BodyColor:
+  bodyColor:
     _value: {r: 1, g: 1, b: 1, a: 1}
     _type: 0
   bodyRenderers:
@@ -272,6 +272,7 @@ MonoBehaviour:
   - {fileID: 1769646489277191575}
   - {fileID: 5536417365284720266}
   - {fileID: 9043690000600730564}
+  shotPrefab: {fileID: 1929699772166020255, guid: 504bac287d3df6b4fbf64510f133a82d, type: 3}
 --- !u!114 &1031041553154999754
 MonoBehaviour:
   m_ObjectHideFlags: 0

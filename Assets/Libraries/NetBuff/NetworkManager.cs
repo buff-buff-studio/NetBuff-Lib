@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using AYellowpaper.SerializedCollections;
@@ -16,8 +15,7 @@ using UnityEditor;
 #endif
 
 namespace NetBuff
-{ 
-    
+{
     /// <summary>
     /// Main network system class. Holds the network state and manages the network objects.
     /// </summary>
@@ -69,14 +67,12 @@ namespace NetBuff
         [ClientOnly]
         public IConnectionInfo ClientConnectionInfo => transport.ClientConnectionInfo;
         
-        [ClientOnly]
-        private int[] _LocalClientIds = Array.Empty<int>();
-        
         /// <summary>
         /// Returns all local client ids
         /// </summary>
         [ClientOnly]
-        public ReadOnlySpan<int> LocalClientIds => _LocalClientIds;
+        public ReadOnlySpan<int> LocalClientIds => _localClientIds;
+        private int[] _localClientIds = Array.Empty<int>();
         #endregion
         
         private readonly Dictionary<Type, PacketListener> _packetListeners = new();
@@ -461,8 +457,8 @@ namespace NetBuff
                 DespawnNetworkObjectForClients(id.Id);
             
             foreach (var identity in networkObjects.Values)
-            foreach (var behaviour in identity.Behaviours)
-                behaviour.OnClientDisconnected(clientId);
+                foreach (var behaviour in identity.Behaviours)
+                    behaviour.OnClientDisconnected(clientId);
         }
 
         /// <summary>
@@ -509,6 +505,14 @@ namespace NetBuff
                 {
                     if (!networkObjects.TryGetValue(valuesPacket.IdentityId, out _)) return;
                     BroadcastServerPacketExceptFor(valuesPacket, clientId, true);
+                    return;
+                }
+
+                case NetworkObjectSpawnPacket spawnPacket:
+                {
+                    if (networkObjects.ContainsKey(spawnPacket.Id)) return;
+                    if (!prefabRegistry.IsPrefabValid(spawnPacket.PrefabId)) return;
+                    BroadcastServerPacket(spawnPacket, true);
                     return;
                 }
 
@@ -564,9 +568,9 @@ namespace NetBuff
             switch (packet)
             {
                 case ClientIdPacket clientPacket:
-                    var list = new List<int>(_LocalClientIds);
+                    var list = new List<int>(_localClientIds);
                     list.Add(clientPacket.ClientId);
-                    _LocalClientIds = list.ToArray();
+                    _localClientIds = list.ToArray();
                     return;
 
                 case NetworkValuesPacket valuesPacket:
@@ -670,12 +674,17 @@ namespace NetBuff
             var obj = Instantiate(prefab, packet.Position, packet.Rotation);
             obj.transform.localScale = packet.Scale;
             var identity = obj.GetComponent<NetworkIdentity>();
-            _IDField.SetValue(identity, packet.Id);
-            _OwnerIdField.SetValue(identity, packet.OwnerId);
-            _PrefabIdField.SetValue(identity, packet.PrefabId);
-            networkObjects.Add(identity.Id, identity);
-            identity.gameObject.SetActive(packet.IsActive);
-            OnNetworkObjectSpawned(identity, packet.IsRetroactive);
+            if (identity != null)
+            {
+                _IDField.SetValue(identity, packet.Id);
+                _OwnerIdField.SetValue(identity, packet.OwnerId);
+                _PrefabIdField.SetValue(identity, packet.PrefabId);
+                networkObjects.Add(identity.Id, identity);
+                identity.gameObject.SetActive(packet.IsActive);
+                OnNetworkObjectSpawned(identity, packet.IsRetroactive);
+            }
+            else
+                obj.SetActive(packet.IsActive);
         }
         
         private void HandleOwnerPacket(NetworkObjectOwnerPacket packet)

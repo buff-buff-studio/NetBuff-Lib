@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using NetBuff.Interface;
 using NetBuff.Misc;
 using NetBuff.Packets;
 using UnityEngine;
 #if UNITY_EDITOR
-using UnityEditor;
 #endif
 
 namespace NetBuff.Components
@@ -426,6 +424,116 @@ namespace NetBuff.Components
         public bool IsPrefabValid(NetworkId id)
         {
             return NetworkManager.Instance.prefabRegistry.IsPrefabValid(id);
+        }
+        #endregion
+
+        #region Spawning
+        /// <summary>
+        /// Spawns a new object across the network
+        /// </summary>
+        /// <param name="prefab"></param>
+        /// <returns></returns>
+        public static NetworkId Spawn(GameObject prefab)
+        {
+            return Spawn(prefab, Vector3.zero, Quaternion.identity, Vector3.one, true);
+        }
+
+        /// <summary>
+        /// Spawns a new object across the network
+        /// </summary>
+        /// <param name="prefab"></param>
+        /// <param name="position"></param>
+        /// <param name="rotation"></param>
+        /// <param name="active"></param>
+        /// <returns></returns>
+        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation, bool active)
+        {
+            return Spawn(prefab, position, rotation, Vector3.one, active);
+        }
+
+        /// <summary>
+        /// Spawns a new object across the network
+        /// </summary>
+        /// <param name="prefab"></param>
+        /// <param name="position"></param>
+        /// <param name="rotation"></param>
+        /// <param name="owner"></param>
+        /// <returns></returns>
+        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation, int owner)
+        {
+            return Spawn(prefab, position, rotation, Vector3.one, true, owner);
+        }
+        
+        /// <summary>
+        /// Spawns a new object across the network
+        /// </summary>
+        /// <param name="prefab"></param>
+        /// <param name="position"></param>
+        /// <param name="rotation"></param>
+        /// <returns></returns>
+        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation)
+        {
+            return Spawn(prefab, position, rotation, Vector3.one, true);
+        }
+
+        /// <summary>
+        /// Spawns a new object across the network
+        /// </summary>
+        /// <param name="prefab"></param>
+        /// <param name="position"></param>
+        /// <param name="rotation"></param>
+        /// <param name="scale"></param>
+        /// <param name="active"></param>
+        /// <param name="owner"></param>
+        /// <returns></returns>
+        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation, Vector3 scale, bool active, int owner = -1)
+        {
+            //var get it id
+            var id = NetworkManager.Instance.prefabRegistry.GetPrefabId(prefab);
+            if (id == NetworkId.Empty)
+                throw new InvalidOperationException("The prefab is not registered");
+            
+            return InternalSpawn(id, position, rotation, scale, active, owner);
+        }
+
+        /// <summary>
+        /// Spawns a new object across the network
+        /// </summary>
+        /// <param name="prefabId"></param>
+        /// <param name="position"></param>
+        /// <param name="rotation"></param>
+        /// <param name="scale"></param>
+        /// <param name="active"></param>
+        /// <param name="owner"></param>
+        /// <returns></returns>
+        public static NetworkId Spawn(NetworkId prefabId, Vector3 position, Quaternion rotation, Vector3 scale, bool active, int owner = -1)
+        {
+            if (!NetworkManager.Instance.prefabRegistry.IsPrefabValid(prefabId))
+                throw new InvalidOperationException("The prefab is not registered");
+            
+            return InternalSpawn(prefabId, position, rotation, scale, active, owner);
+        }
+        
+        private static NetworkId InternalSpawn(NetworkId prefabId, Vector3 position, Quaternion rotation, Vector3 scale, bool active, int owner)
+        {
+            var packet = new NetworkObjectSpawnPacket
+            {
+                Id = NetworkId.New(),
+                PrefabId = prefabId,
+                Position = position,
+                Rotation = rotation,
+                Scale = scale,
+                IsActive = active,
+                IsRetroactive = false,
+                OwnerId = owner
+            };
+
+            if (NetworkManager.Instance.IsServerRunning)
+                NetworkManager.Instance.BroadcastServerPacket(packet, true);
+            else
+                NetworkManager.Instance.SendClientPacket(packet, true);
+            
+            return packet.Id;
         }
         #endregion
     }
