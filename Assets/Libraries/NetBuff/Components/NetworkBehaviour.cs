@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using NetBuff.Interface;
 using NetBuff.Misc;
 using NetBuff.Packets;
@@ -12,12 +15,19 @@ namespace NetBuff.Components
     [RequireComponent(typeof(NetworkIdentity))]
     public abstract class NetworkBehaviour : MonoBehaviour
     {
-        private NetworkIdentity _identity;
-        
+        [SerializeField, HideInInspector]
+        private NetworkId behaviourId;
+
+        /// <summary>
+        /// Represents the NetworkId of the behaviour. This is only unique NetworkIdentity-wise
+        /// </summary>
+        public NetworkId BehaviourId => behaviourId;
+
         /// <summary>
         /// Returns the NetworkIdentity attached to this object
         /// </summary>
         public NetworkIdentity Identity => _identity ??= GetComponent<NetworkIdentity>();
+        private NetworkIdentity _identity;
         
         /// <summary>
         /// Returns if the local client has authority over this object
@@ -45,6 +55,132 @@ namespace NetBuff.Components
         /// Returns the prefab used to spawn this object (Will be empty for pre-spawned objects)
         /// </summary>
         public NetworkId PrefabId => Identity.PrefabId;
+
+        /// <summary>
+        /// Returns if the behaviour is dirty
+        /// </summary>
+        public bool IsDirty => NetworkManager.Instance.dirtyBehaviours.Contains(this);
+
+        /// <summary>
+        /// Returns all values being tracked by this behaviour
+        /// </summary>
+        public ReadOnlySpan<NetworkValue> Values => new ReadOnlySpan<NetworkValue>(_values);
+        private NetworkValue[] _values;
+        private Queue<byte> _dirtyValues = new Queue<byte>();
+
+        #region Values
+
+        /// <summary>
+        /// Set all the values being tracked by this behaviour
+        /// </summary>
+        /// <param name="values"></param>
+        public void WithValues(params NetworkValue[] values)
+        {
+            foreach (var value in values)
+                value.AttachedTo = this;
+
+            _values = values;
+        }
+
+        /// <summary>
+        /// Mark a value as dirty to be updated across the network
+        /// </summary>
+        /// <param name="value"></param>
+        /// <exception cref="InvalidOperationException"></exception>
+        public void MarkValueDirty(NetworkValue value)
+        {
+            var index = Array.IndexOf(_values, value);
+            if (index == -1)
+                throw new InvalidOperationException("The value is not attached to this behaviour");
+            MarkValueDirty((byte) index);
+        }
+
+
+        /// <summary>
+        /// Mark a value as dirty to be updated across the network
+        /// </summary>
+        /// <param name="index"></param>
+        public void MarkValueDirty(byte index)
+        {
+            _dirtyValues.Enqueue(index);
+
+            if(IsDirty)
+                return;            
+            NetworkManager.Instance.dirtyBehaviours.Add(this);
+        }
+
+        /// <summary>
+        /// Update all dirty values, generating a packet to sync them across the network
+        /// </summary>
+        public void UpdateDirtyValues()
+        {
+            BinaryWriter writer = new BinaryWriter(new MemoryStream());
+            writer.Write((byte) _dirtyValues.Count);
+            while (_dirtyValues.Count > 0)
+            {
+                var index = _dirtyValues.Dequeue();
+                writer.Write(index);
+                _values[index].Serialize(writer);
+            }
+
+            NetworkValuesPacket packet = new NetworkValuesPacket
+            {
+                IdentityId = Id,
+                BehaviourId = BehaviourId,
+                Payload = ((MemoryStream) writer.BaseStream).ToArray()
+            };
+
+            if(NetworkManager.Instance.IsServerRunning)
+                ServerBroadcastPacket(packet, true);
+            else
+                ClientSendPacket(packet, true);
+        }
+
+        /// <summary>
+        /// Send a packet to a specific client to sync all the NetowrkValues of this behaviour
+        /// </summary>
+        /// <param name="clientId"></param>
+        [ServerOnly]
+        public void SendNetworkValuesToClient(int clientId)
+        {
+            if(_values == null || _values.Length == 0)
+                return;
+
+            BinaryWriter writer = new BinaryWriter(new MemoryStream());
+            writer.Write((byte) _values.Length);
+
+            //Write all values
+            for(var i = 0; i < _values.Length; i++)
+            {
+                writer.Write((byte) i);
+                _values[i].Serialize(writer);
+            }
+
+            NetworkValuesPacket packet = new NetworkValuesPacket
+            {
+                IdentityId = Id,
+                BehaviourId = BehaviourId,
+                Payload = ((MemoryStream) writer.BaseStream).ToArray()
+            };
+
+            ServerSendPacket(packet, clientId, true);
+        }
+
+        /// <summary>
+        /// Apply all values coming from a payload
+        /// </summary>
+        /// <param name="payload"></param>
+        public void ApplyDirtyValues(byte[] payload)
+        {
+            BinaryReader reader = new BinaryReader(new MemoryStream(payload));
+            var count = reader.ReadByte();
+            for (int i = 0; i < count; i++)
+            {
+                var index = reader.ReadByte();
+                _values[index].Deserialize(reader);
+            }
+        }
+        #endregion
         
         /// <summary>
         /// Broadcasts a packet to all clients
@@ -287,5 +423,15 @@ namespace NetBuff.Components
             return NetworkManager.Instance.prefabRegistry.IsPrefabValid(id);
         }
         #endregion
+
+        private void OnValidate()
+        {
+            #if UNITY_EDITOR
+            if (Identity.Behaviours.FirstOrDefault(b => b.behaviourId == behaviourId) == null)
+                return;
+            behaviourId = NetworkId.New();
+            UnityEditor.EditorUtility.SetDirty(this);
+            #endif
+        }
     }
 }

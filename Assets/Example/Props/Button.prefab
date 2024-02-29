@@ -141,5 +141,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4fa5455ef3574891939e8e96b80e437a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  behaviourId:
+    high: 1919857155
+    low: 250454005
   isPressed: 0
   knob: {fileID: 2675438458070379541}

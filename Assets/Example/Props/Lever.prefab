@@ -165,6 +165,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 604d9f1ce8c8473ab00957a737b4d4ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  behaviourId:
+    high: 1981095942
+    low: 510634238
   isOn: 0
   radius: 2
   handle: {fileID: 3795257717302705810}

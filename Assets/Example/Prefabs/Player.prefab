@@ -60,6 +60,8 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -231,6 +233,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6e25519dc96460b8011f9bfd913a40f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  behaviourId:
+    high: 703620772
+    low: 165155725
   tickRate: 50
   positionThreshold: 0.001
   rotationThreshold: 0.001
@@ -248,6 +253,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f73255a1aabb4027a653a52071aaabf8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  behaviourId:
+    high: -1374078398
+    low: -415924443
   animator: {fileID: 1031041553154999754}
   body: {fileID: 694691261045141294}
   headplate: {fileID: 1802484566073501002}
@@ -258,7 +266,10 @@ MonoBehaviour:
   tickRate: 50
   velocity: {x: 0, y: 0, z: 0}
   punchCooldown: 0
-  _remoteBodyRotation: 0
+  remoteBodyRotation: 0
+  Nickname:
+    _value: Teste
+    _type: 0
 --- !u!114 &1031041553154999754
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -271,6 +282,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1736e5a82a014cd98e158916ca49768d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  behaviourId:
+    high: 1141649505
+    low: 492958364
   tickRate: 50
   animator: {fileID: 4275513494041308814}
 --- !u!1 &8762174959648807484
@@ -328,6 +342,8 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -416,15 +432,17 @@ MonoBehaviour:
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
-  m_enableWordWrapping: 0
+  m_TextWrappingMode: 0
   m_wordWrappingRatios: 0.4
   m_overflowMode: 0
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 0
+  m_ActiveFontFeatures: 
   m_enableExtraPadding: 0
   checkPaddingRequired: 0
   m_isRichText: 1
+  m_EmojiFallbackSupport: 1
   m_parseCtrlCharacters: 1
   m_isOrthographic: 0
   m_isCullingEnabled: 0
@@ -536,7 +554,7 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
 --- !u!95 &4275513494041308814
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -550,6 +568,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1

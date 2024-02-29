@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
+using NetBuff;
 using NetBuff.Components;
 using NetBuff.Interface;
 using NetBuff.Misc;
@@ -32,15 +33,21 @@ namespace ExamplePlatformer
         public float remoteBodyRotation;
         public bool IsGrounded => _controller.isGrounded;
         
-        //Synced Name
-        public string Name { get; set; }
-        
+        public StringNetworkValue Nickname = new StringNetworkValue("");
 
         public void OnEnable()
         { 
             remoteBodyRotation = body.localEulerAngles.y;
             _controller = GetComponent<CharacterController>();
             InvokeRepeating(nameof(Tick), 0, 1f / tickRate);
+
+
+            WithValues(Nickname);
+
+            Nickname.OnValueChanged += (oldValue, newValue) =>
+            {
+                headplate.text = newValue;
+            };
         }
 
         private void OnDisable()
@@ -54,11 +61,13 @@ namespace ExamplePlatformer
         /// <param name="clientId"></param>
         public override void OnClientConnected(int clientId)
         {
+            /*
             ServerSendPacket(new PacketPlayerData
             {
                 Id = Id,
                 Name = headplate.text
             }, clientId, true);
+            */
         }
         
         /// <summary>
@@ -90,10 +99,6 @@ namespace ExamplePlatformer
                     if(clientId == OwnerId)
                         ServerBroadcastPacketExceptFor(data, clientId);
                     break;
-                case PacketPlayerData data2:
-                    if(clientId == OwnerId)
-                        ServerBroadcastPacketExceptFor(data2, clientId , true);
-                    break;
             }
         }
 
@@ -107,9 +112,6 @@ namespace ExamplePlatformer
             {
                 case PacketBodyRotation bodyRot:
                     remoteBodyRotation = bodyRot.BodyRotation;
-                    break;
-                case PacketPlayerData data:
-                    headplate.text = data.Name;
                     break;
             }
         }
@@ -139,13 +141,15 @@ namespace ExamplePlatformer
                     cameraB.rect = new Rect(0.5f, 0, 0.5f, 1);
                 }
             }
-            
-            headplate.text = CreateRandomEnglishName();
+
+            Nickname.Value = CreateRandomEnglishName();
+            /*
             SendPacket(new PacketPlayerData
             {
                 Id = Id,
                 Name = headplate.text
             }, true);
+            */
         }
         
         private string CreateRandomEnglishName()
@@ -176,6 +180,9 @@ namespace ExamplePlatformer
                 body.localEulerAngles = new Vector3(0, Mathf.LerpAngle(body.localEulerAngles.y, remoteBodyRotation, Time.deltaTime * 20), 0);
                 return;
             }
+
+            if (Input.GetKeyDown(KeyCode.N))
+                Nickname.Value = CreateRandomEnglishName();
 
             if (IsGrounded)
                 velocity.y = Mathf.Max(velocity.y, -1);
@@ -289,24 +296,6 @@ namespace ExamplePlatformer
         {
             Id = NetworkId.Read(reader);
             BodyRotation = reader.ReadSingle();
-        }
-    }
-    
-    public class PacketPlayerData : IOwnedPacket
-    {
-        public NetworkId Id { get; set; }
-        public string Name { get; set; }
-        
-        public void Serialize(BinaryWriter writer)
-        {
-            Id.Serialize(writer);
-            writer.Write(Name);
-        }
-        
-        public void Deserialize(BinaryReader reader)
-        {
-            Id = NetworkId.Read(reader);
-            Name = reader.ReadString();
         }
     }
 

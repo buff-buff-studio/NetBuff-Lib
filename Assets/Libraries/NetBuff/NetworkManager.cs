@@ -85,6 +85,9 @@ namespace NetBuff
         
         [SerializeField]
         private Stack<NetworkId> removedPreExistingObjects = new Stack<NetworkId>();
+
+        [SerializeField]
+        public List<NetworkBehaviour> dirtyBehaviours = new List<NetworkBehaviour>();
         
         private void OnEnable()
         {
@@ -421,6 +424,10 @@ namespace NetBuff
                 };
                 SendServerPacket(packet, clientId, true);
             }
+
+            foreach (var identity in networkObjects.Values)
+                foreach (var behaviour in identity.Behaviours)
+                    behaviour.SendNetworkValuesToClient(clientId);
             
             #if UNITY_EDITOR
             if (!isClientReloaded)
@@ -497,6 +504,15 @@ namespace NetBuff
         {
             switch (packet)
             {
+                case NetworkValuesPacket valuesPacket:
+                {
+                    if (!networkObjects.TryGetValue(valuesPacket.IdentityId, out _)) return;
+                    
+                    //Broadcast the packet
+                    BroadcastServerPacketExceptFor(valuesPacket, clientId, true);
+                    return;
+                }
+
                 case NetworkObjectDespawnPacket destroyPacket:
                 {
                     if (!networkObjects.TryGetValue(destroyPacket.Id, out var identity)) return;
@@ -506,7 +522,7 @@ namespace NetBuff
                     DespawnNetworkObjectForClients(destroyPacket.Id);
                     return;
                 }
-                
+
                 case NetworkObjectActivePacket activePacket:
                 {
                     if (!networkObjects.TryGetValue(activePacket.Id, out var identity)) return;
@@ -553,6 +569,16 @@ namespace NetBuff
                     list.Add(clientPacket.ClientId);
                     _LocalClientIds = list.ToArray();
                     return;
+
+                case NetworkValuesPacket valuesPacket:
+                {
+                    if (!networkObjects.TryGetValue(valuesPacket.IdentityId, out var identity)) return;
+                    
+                    foreach (var behaviour in identity.Behaviours)
+                         if(behaviour.BehaviourId == valuesPacket.BehaviourId)
+                             behaviour.ApplyDirtyValues(valuesPacket.Payload);
+                    return;
+                }
                 
                 case NetworkObjectSpawnPacket spawnPacket:
                 {
@@ -734,17 +760,11 @@ namespace NetBuff
 
         private void Update()
         {
-            if (EndType != NetworkTransport.EndType.Host)
-                return;
-            
-            //TODO: REMOVE THIS SHIT
-            if (Input.GetKeyDown(KeyCode.X))
-            {
-                //Delete random persistent object
-                var obj = networkObjects.Values.FirstOrDefault(identity => identity.PrefabId.IsEmpty);
-                if (obj != null)
-                    DespawnNetworkObjectForClients(obj.Id);
-            }
+            //Update dirty behaviours
+            foreach (var behaviour in dirtyBehaviours)
+                behaviour.UpdateDirtyValues();
+
+            dirtyBehaviours.Clear();
         }
     }
     
