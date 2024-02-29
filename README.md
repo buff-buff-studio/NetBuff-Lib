@@ -6,8 +6,9 @@
   </a>
   <p align="center">
     <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/buff-buff-studio/NetBuff-Lib">
-    <img alt="Lines of code" src="http://tokei.ekzhang.com/b1/github/buff-buff-studio/NetBuff-Lib">
+    <img alt="Lines of code" src="http://tokei.ekzhang.com/b1/github/buff-buff-studio/NetBuff-Lib?color=#7CEC1D">
     <img alt="GitHub tag (latest by date)" src="https://img.shields.io/github/v/tag/buff-buff-studio/NetBuff-Lib?label=version">
+    <a href="#license"> <img alt="License" src="https://img.shields.io/badge/License-CC_BY--NC--SA-color=#7CEC1D"> </a>
   </p>
 </p>
 
