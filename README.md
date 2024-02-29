@@ -120,9 +120,8 @@ This section will show information of the base class NetworkBehaviour alongside 
 
 ### **Properties**
 
-|**Properties**|||
-| - | :- | :- |
 |**Side**|**Name**|**Description**|
+| - | :- | :- |
 |Both|**Identity (NetworkIdentity)**|Returns the identity component attached to the network object|
 |Both|**HasAuthority (bool)**|Returns if the local environment has authority over the object. When the OwnerId is -1 (Default), HasAuthority will return true only on the server. When the object is owned by a client, it will only be true in the client local environment. **Use this to control input / state handling.**|
 |Both|**IsOwnedByAClient (bool)**|Returns if the OwnerId is not -1|
@@ -133,9 +132,8 @@ This section will show information of the base class NetworkBehaviour alongside 
 
 ### **Event Callbacks**
 
-|**Event Callbacks**|||
-| - | :- | :- |
 |**Side**|**Name**|**Description**|
+| - | :- | :- |
 |Server|**OnServerReceivePacket(IOwnedPacket packet, int clientId)**|Called when the object receives an OwnedPacket on the server side. **The packets received are not default broadcast to the clients. You should do it on this callback.** (See the section about packets for more info)|
 |Client|**OnClientReceivePacket(IOwnedPacket packet)**|<p>Called when the object receives an OwnedPacket on the client side. (See the section about packets for more info).</p><p>**THIS IS ALSO CALLED ON SERVER (NOT HOST) ENDS**</p>|
 |Both|**OnSpawned(bool isRetroactive)**|Called when the object is spawned on the network end (Even the pre existing ones will call this method). **Very useful to load the initial state of an object.**|
@@ -147,9 +145,8 @@ This section will show information of the base class NetworkBehaviour alongside 
 
 ### **Methods**
 
-|**Methods**|||
-| - | :- | :- |
 |**Side**|**Name**|**Description**|
+| - | :- | :- |
 |Server|**ServerBroadcastPacket(IPacket packet, bool reliable = false)**|<p>Broadcast a packet to all the clients. You can choose if the packet should be reliable.</p><p>If it’s a constant state update, where a packet loss is not an issue, you may set it as false for performance and low-data usage</p>|
 |Server|**ServerBroadcastPacketExceptFor(IPac ket packet, int except, bool reliable = false)**|Broadcast a packet to all the clients except one. Useful when spreading a packet received from a client.|
 |Server|**ServerSendPacket(IPacket packet, int clientId, bool reliable = false)**|Sends a packet a client|
@@ -317,6 +314,130 @@ public override void OnClientConnected(int clientId)
 
 When the client joins, the server sends to the client all the information he needs about that PlayerController. The packet handling is the same as the default, so the only thing you should care about is: you need to send the current state for new players. After that the object will behave normally, the same as it works for all the clients previously connected.
 
+## **Network Values**
+To make it easier to sync states we can use the NetworkValue class type, while offering change callbacks. You shall not use it for variables that update constantly, as value updating is a way more expensive than any standard packet transfer. See the table below for more info:
+
+|  |**Network Values**|**Packets**|
+| - | - | - |
+|**Synchronization**|Automatic|Manual|
+|**Retroactive Sync**|Automatic|Manual|
+|**Reliability**|Reliable|Reliable / Non Reliable (User can choose)|
+|**Data Efficiency**|Efficient|Very efficient|
+|**Speed**|Fast|Very fast|
+|**Use-Cases**|Values that don’t update many times per second (Timers, points, simple states, etc…)|Values that update quite often (Position, complex states, etc…)|
+
+### **Implementing Network Values**
+To implement a network value is very simple. You create the field (serialized by unity) and just add it to the behaviour:
+
+```c#
+public class PlayerController : NetworkBehaviour
+{
+    public StringNetworkValue nickname = new StringNetworkValue("");
+    public ColorNetworkValue bodyColor = new ColorNetworkValue(Color.white);
+
+    public void OnEnable()
+    {
+        [...]
+        WithValues(nickname, bodyColor);
+        [...]
+    } 
+}
+```
+
+
+> [!CAUTION]
+> **DON’T CREATE THE FIELD USING** NetworkValue our NetworkValue<T> as unity won’t be able to serialize it correctly. Use a literal type as StringNetworkValue instead
+> ```js
+> public Network Value nickname = new String NetworkValue("George"); //NO
+> public NetworkValue<string> nickname = new StringNetworkValue("George"); //NO
+> public StringNetworkValue nickname = new StringNetworkValue("George"); //YES 
+> ```
+
+
+The field will show up on the inspector, where you can edit its default value (as any other field). For development purposes, if you change the field in the inspector, the value will be synced across the network as well (if you have authority on that object). All NetworkValues names will be yellow for a better distinction.
+
+<p align="center">
+  <img src="https://github.com/buff-buff-studio/NetBuff-Lib/assets/17664054/768e7154-284c-4345-a86b-a0f99af0a557">
+</p>
+
+### **Listening For Network Value Changes**
+You can easily listen for changes on any network value, just adding a callback to it. The callbacks will be called on all the network ends:
+
+```c#
+public class Door : LogicOutput
+{
+    public BoolNetworkValue isOpen = new(false);
+
+    private void OnEnable()
+    {
+        WithValues(isOpen);
+        isOpen.OnValueChanged += OnIsOpenChanged;
+    }
+
+    private void OnIsOpenChanged(bool old, bool now)
+    {
+        open.SetActive(now);
+        closed.SetActive(!now);
+    } 
+}
+```
+
+### **Creating Your Own Network Value Types**
+By default, the system comes with the following types implemented:
+- ByteNetworkValue
+- IntNetworkValue
+- FloatNetworkValue
+- DoubleNetworkValue
+- BoolNetworkValue
+- StringNetworkValue
+- Vector2NetworkValue
+- Vector3NetworkValue
+- Vector4NetworkValue
+- QuaterionNetworkValue
+- ColorNetworkValue
+- NetworkIdNetworkValue
+
+While all these types will probably support 99.999% of the use cases, some mcases custom types will be required. But don’t worry, it’s very easy to create
+your own implementation. You just need to implement the serialization / deserialization of your object. Take for example the Vector2NetworkValue:
+
+```c#
+[Serializable]
+public class Vector2NetworkValue : NetworkValue<Vector2>
+{
+  public Vector2NetworkValue(Vector2 defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue, type) {}
+  
+  public override void Serialize(BinaryWriter writer)
+  {
+      writer.Write(_value.x);
+      writer.Write(_value.y);
+  }
+  
+  public override void Deserialize(BinaryReader reader)
+  {
+      var x = reader.ReadSingle();
+      var y = reader.ReadSingle();
+      SetValueCalling(new Vector2(x, y));
+  }
+}
+```
+
+## **Realtime Object Spawning**
+The spawning system is very simple. NetworkBehaviour class has the Spawn static method that you can use to spawn any prefab across the network. It will return the created object NetworkId and you can use it all around if needed
+
+In the example below when the player presses T a bullet is spawned:
+
+```c#
+if (Input.GetKeyDown(KeyCode.T))
+    Spawn(shotPrefab, transform.position + body.forward * 1 + body.up * 1.5f, body.rotation, Vector3.one, true);
+```
+
+You can choose the initial object position, rotation, scale, if the object is active or not and the object's current owner. If the spawned object has no identity, the returned id and the object owner shall be ignored. By the default the owner is -1 (server)/.
+
+> [!WARNING]
+> REMEMBER TO REGISTER ALL THE PREFABS ON THE NETWORK MANAGER PREFAB SCRIPTABLE OBJECT, OR A ERROR WILL BE THROWN AS OTHER NETWORK ENDS WON’T BE ABLE TO KNOW WHAT PREFAB THEY SHOULD USE
+> 
+> ![](https://github.com/buff-buff-studio/NetBuff-Lib/assets/17664054/463d8ff2-6bc7-4d56-a526-586a8dd847e7)
+
 ## **Miscellaneous**
 
 ### **Split Screen Support**
@@ -327,14 +448,12 @@ When the client joins, the server sends to the client all the information he nee
 
 Sometimes you may need to regenerate the id of an object. You can do this clicking on the **N** button on the id field **DO NOT DO THIS IN RUNTIME**
 
-![](Aspose.Words.8206784b-08db-4513-a674-b3a7d0ba6eb2.013.png)
 <p align="center">
   <img src="https://github.com/buff-buff-studio/NetworkLib/assets/17664054/10112813-60aa-420a-b73b-245125879f18">
 </p>
 
 You can also regenerate all ids at once using the Regenerate Ids button on NetworkManager:
 
-![](Aspose.Words.8206784b-08db-4513-a674-b3a7d0ba6eb2.014.png)
 <p align="center">
   <img src="https://github.com/buff-buff-studio/NetworkLib/assets/17664054/15779bab-3f74-41da-ab56-aa3eadaac458">
 </p>
