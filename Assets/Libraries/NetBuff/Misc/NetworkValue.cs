@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Reflection;
 using UnityEngine;
 using NetBuff.Components;
 #if UNITY_EDITOR
@@ -22,6 +23,8 @@ namespace NetBuff.Misc
 
         public abstract void Serialize(BinaryWriter writer);
         public abstract void Deserialize(BinaryReader reader);
+        
+        public abstract void EditorForceUpdate();
     }
 
     [Serializable]
@@ -55,8 +58,8 @@ namespace NetBuff.Misc
 
         protected NetworkValue(T defaultValue, ModifierType type = ModifierType.OwnerOnly)
         {
-            this._value = defaultValue;
-            this._type = type;
+            _value = defaultValue;
+            _type = type;
         }
 
         public bool CheckPermission()
@@ -78,7 +81,21 @@ namespace NetBuff.Misc
         {
             var oldValue = _value;
             _value = newValue;
+            
             OnValueChanged?.Invoke(oldValue, newValue);
+        }
+
+        public override void EditorForceUpdate()
+        {
+            SetValueCalling(_value);
+            
+            if(AttachedTo != null)
+                AttachedTo.MarkValueDirty(this);
+        }
+
+        public override string ToString()
+        {
+            return $"NetworkValue({_value.ToString()})";
         }
     }
     
@@ -94,9 +111,6 @@ namespace NetBuff.Misc
 
         public override void Deserialize(BinaryReader reader)
         {
-            if(_type == ModifierType.OwnerOnly && AttachedTo.HasAuthority)
-                return;
-
             var value = reader.ReadBoolean();
             SetValueCalling(value);
         }
@@ -114,9 +128,6 @@ namespace NetBuff.Misc
 
         public override void Deserialize(BinaryReader reader)
         {
-            if(_type == ModifierType.OwnerOnly && AttachedTo.HasAuthority)
-                return;
-
             var value = reader.ReadByte();
             SetValueCalling(value);
         }
@@ -134,9 +145,6 @@ namespace NetBuff.Misc
 
         public override void Deserialize(BinaryReader reader)
         {
-            if(_type == ModifierType.OwnerOnly && AttachedTo.HasAuthority)
-                return;
-
             var value = reader.ReadInt32();
             SetValueCalling(value);
         }
@@ -154,9 +162,6 @@ namespace NetBuff.Misc
 
         public override void Deserialize(BinaryReader reader)
         {
-            if(_type == ModifierType.OwnerOnly && AttachedTo.HasAuthority)
-                return;
-
             var value = reader.ReadSingle();
             SetValueCalling(value);
         }
@@ -174,9 +179,6 @@ namespace NetBuff.Misc
 
         public override void Deserialize(BinaryReader reader)
         {
-            if(_type == ModifierType.OwnerOnly && AttachedTo.HasAuthority)
-                return;
-
             var value = reader.ReadDouble();
             SetValueCalling(value);
         }
@@ -194,9 +196,6 @@ namespace NetBuff.Misc
 
         public override void Deserialize(BinaryReader reader)
         {
-            if(_type == ModifierType.OwnerOnly && AttachedTo.HasAuthority)
-                return;
-
             var value = reader.ReadInt64();
             SetValueCalling(value);
         }
@@ -214,34 +213,11 @@ namespace NetBuff.Misc
 
         public override void Deserialize(BinaryReader reader)
         {
-            if(_type == ModifierType.OwnerOnly && AttachedTo.HasAuthority)
-                return;
-
             var value = reader.ReadString();
             SetValueCalling(value);
         }
     }
-    
-    [Serializable]
-    public class NetworkIdNetworkValue : NetworkValue<NetworkId>
-    {
-        public NetworkIdNetworkValue(NetworkId defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue, type) {}
-
-        public override void Serialize(BinaryWriter writer)
-        {
-            _value.Serialize(writer);
-        }
-
-        public override void Deserialize(BinaryReader reader)
-        {
-            if(_type == ModifierType.OwnerOnly && AttachedTo.HasAuthority)
-                return;
-
-            var value = NetworkId.Read(reader);
-            SetValueCalling(value);
-        }
-    }
-    
+ 
     [Serializable]
     public class Vector2NetworkValue : NetworkValue<Vector2>
     {
@@ -255,9 +231,6 @@ namespace NetBuff.Misc
 
         public override void Deserialize(BinaryReader reader)
         {
-            if(_type == ModifierType.OwnerOnly && AttachedTo.HasAuthority)
-                return;
-
             var x = reader.ReadSingle();
             var y = reader.ReadSingle();
             SetValueCalling(new Vector2(x, y));
@@ -278,9 +251,6 @@ namespace NetBuff.Misc
 
         public override void Deserialize(BinaryReader reader)
         {
-            if(_type == ModifierType.OwnerOnly && AttachedTo.HasAuthority)
-                return;
-
             var x = reader.ReadSingle();
             var y = reader.ReadSingle();
             var z = reader.ReadSingle();
@@ -303,9 +273,6 @@ namespace NetBuff.Misc
 
         public override void Deserialize(BinaryReader reader)
         {
-            if(_type == ModifierType.OwnerOnly && AttachedTo.HasAuthority)
-                return;
-
             var x = reader.ReadSingle();
             var y = reader.ReadSingle();
             var z = reader.ReadSingle();
@@ -329,9 +296,6 @@ namespace NetBuff.Misc
 
         public override void Deserialize(BinaryReader reader)
         {
-            if(_type == ModifierType.OwnerOnly && AttachedTo.HasAuthority)
-                return;
-
             var x = reader.ReadSingle();
             var y = reader.ReadSingle();
             var z = reader.ReadSingle();
@@ -355,14 +319,29 @@ namespace NetBuff.Misc
 
         public override void Deserialize(BinaryReader reader)
         {
-            if(_type == ModifierType.OwnerOnly && AttachedTo.HasAuthority)
-                return;
-
             var r = reader.ReadSingle();
             var g = reader.ReadSingle();
             var b = reader.ReadSingle();
             var a = reader.ReadSingle();
             SetValueCalling(new Color(r, g, b, a));
+        }
+    }
+    
+    [Serializable]
+    //networkid
+    public class NetworkIdNetworkValue : NetworkValue<NetworkId>
+    {
+        public NetworkIdNetworkValue(NetworkId defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue, type) {}
+
+        public override void Serialize(BinaryWriter writer)
+        {
+            _value.Serialize(writer);
+        }
+
+        public override void Deserialize(BinaryReader reader)
+        {
+            var value = NetworkId.Read(reader);
+            SetValueCalling(value);
         }
     }
     
@@ -375,15 +354,85 @@ namespace NetBuff.Misc
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             var value = property.FindPropertyRelative("_value");
+            EditorGUI.BeginChangeCheck();
             var old = EditorStyles.label.normal.textColor;
             EditorStyles.label.normal.textColor = Color.yellow;
             EditorGUI.PropertyField(position, value, label);
             EditorStyles.label.normal.textColor = old;
+            if (EditorGUI.EndChangeCheck())
+            {
+                property.serializedObject.ApplyModifiedProperties();
+                
+                //get the serialized object AS nETWORKVALUE     
+                (GetTargetObjectOfProperty(property) as NetworkValue)!.EditorForceUpdate();
+            }
+            
         }
         
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             return EditorGUI.GetPropertyHeight(property.FindPropertyRelative("_value"), label);
+        }
+        
+        /// <summary>
+        /// Gets the object the property represents.
+        /// </summary>
+        /// <param name="prop"></param>
+        /// <returns></returns>
+        public static object GetTargetObjectOfProperty(SerializedProperty prop)
+        {
+            if (prop == null) return null;
+
+            var path = prop.propertyPath.Replace(".Array.data[", "[");
+            object obj = prop.serializedObject.targetObject;
+            var elements = path.Split('.');
+            foreach (var element in elements)
+            {
+                if (element.Contains("["))
+                {
+                    var elementName = element.Substring(0, element.IndexOf("["));
+                    var index = System.Convert.ToInt32(element.Substring(element.IndexOf("[")).Replace("[", "").Replace("]", ""));
+                    obj = GetValue_Imp(obj, elementName, index);
+                }
+                else
+                {
+                    obj = GetValue_Imp(obj, element);
+                }
+            }
+            return obj;
+        }
+        
+        private static object GetValue_Imp(object source, string name)
+        {
+            if (source == null)
+                return null;
+            var type = source.GetType();
+
+            while (type != null)
+            {
+                var f = type.GetField(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+                if (f != null)
+                    return f.GetValue(source);
+
+                var p = type.GetProperty(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+                if (p != null)
+                    return p.GetValue(source, null);
+
+                type = type.BaseType;
+            }
+            return null;
+        }
+        
+        private static object GetValue_Imp(object source, string name, int index)
+        {
+            var enumerable = GetValue_Imp(source, name) as System.Collections.IEnumerable;
+            if (enumerable == null) return null;
+            var enm = enumerable.GetEnumerator();
+            for (var i = 0; i <= index; i++)
+            {
+                if (!enm.MoveNext()) return null;
+            }
+            return enm.Current;
         }
     }
     #endif
