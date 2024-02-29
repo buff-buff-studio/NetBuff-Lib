@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using AYellowpaper.SerializedCollections;
@@ -507,8 +508,6 @@ namespace NetBuff
                 case NetworkValuesPacket valuesPacket:
                 {
                     if (!networkObjects.TryGetValue(valuesPacket.IdentityId, out _)) return;
-                    
-                    //Broadcast the packet
                     BroadcastServerPacketExceptFor(valuesPacket, clientId, true);
                     return;
                 }
@@ -573,10 +572,11 @@ namespace NetBuff
                 case NetworkValuesPacket valuesPacket:
                 {
                     if (!networkObjects.TryGetValue(valuesPacket.IdentityId, out var identity)) return;
-                    
                     foreach (var behaviour in identity.Behaviours)
-                         if(behaviour.BehaviourId == valuesPacket.BehaviourId)
-                             behaviour.ApplyDirtyValues(valuesPacket.Payload);
+                        if (behaviour.BehaviourId == valuesPacket.BehaviourId)
+                        {
+                            behaviour.ApplyDirtyValues(valuesPacket.Payload);
+                        }
                     return;
                 }
                 

@@ -50,7 +50,6 @@ namespace NetBuff.Components
         public bool HasAuthority
         {
             get
-            
             {
                 var man = NetworkManager.Instance;
                 if(man == null)
@@ -67,12 +66,21 @@ namespace NetBuff.Components
         }
         
         private NetworkBehaviour[] _behaviours;
-        
+
         /// <summary>
         /// Returns all NetworkBehaviours attached to this object
         /// </summary>
-        public NetworkBehaviour[] Behaviours => _behaviours ??= GetComponents<NetworkBehaviour>();
-        
+        public NetworkBehaviour[] Behaviours
+        {
+            get
+            {
+                if (_behaviours != null) return _behaviours;
+                _behaviours = GetComponents<NetworkBehaviour>();
+                Array.Sort(_behaviours, (x, y) => string.Compare(x.GetType().Name, y.GetType().Name, StringComparison.Ordinal));
+                return _behaviours;
+            }
+        }
+
         /// <summary>
         /// Broadcasts a packet to all clients
         /// </summary>

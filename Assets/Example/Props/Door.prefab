@@ -66,10 +66,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca615de7a3eb4fdf9c8a04b7a7616bee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  behaviourId:
-    high: -375689536
-    low: 152372815
-  isOpen: 0
+  behaviourId: 0
+  isOpen:
+    _value: 0
+    _type: 0
   open: {fileID: 5792153580959864692}
   closed: {fileID: 5057285610143129853}
 --- !u!1001 &5638166377962436272

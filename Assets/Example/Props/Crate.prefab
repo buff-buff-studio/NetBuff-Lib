@@ -169,9 +169,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86cf07713ee8455cb312a38d0b413f9a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  behaviourId:
-    high: 1227074769
-    low: 1157149072
+  behaviourId: 0
   tickRate: 50
   positionThreshold: 0.001
   rotationThreshold: 0.001

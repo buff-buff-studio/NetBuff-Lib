@@ -68,9 +68,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 23af9f263075426faea04fda85b12108, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  behaviourId:
-    high: -661238493
-    low: 402865266
+  behaviourId: 1
   state: 0
   pointOff: {x: 0, y: 0, z: 0}
   pointOn: {x: 0, y: 0, z: 0}
@@ -86,9 +84,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6e25519dc96460b8011f9bfd913a40f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  behaviourId:
-    high: 1441279199
-    low: -931399049
+  behaviourId: 0
   tickRate: 50
   positionThreshold: 0.001
   rotationThreshold: 0.001

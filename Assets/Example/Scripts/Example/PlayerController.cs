@@ -6,6 +6,7 @@ using NetBuff.Interface;
 using NetBuff.Misc;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
 namespace ExamplePlatformer
@@ -33,20 +34,29 @@ namespace ExamplePlatformer
         public float remoteBodyRotation;
         public bool IsGrounded => _controller.isGrounded;
         
-        public StringNetworkValue Nickname = new StringNetworkValue("");
+        public StringNetworkValue nickname = new StringNetworkValue("");
+        public ColorNetworkValue bodyColor = new ColorNetworkValue(Color.white);
 
+        public Renderer[] bodyRenderers;
+        
         public void OnEnable()
         { 
             remoteBodyRotation = body.localEulerAngles.y;
             _controller = GetComponent<CharacterController>();
             InvokeRepeating(nameof(Tick), 0, 1f / tickRate);
+            WithValues(nickname, bodyColor);
 
-
-            WithValues(Nickname);
-
-            Nickname.OnValueChanged += (oldValue, newValue) =>
+            nickname.OnValueChanged += (oldValue, newValue) =>
             {
                 headplate.text = newValue;
+            };
+            
+            bodyColor.OnValueChanged += (oldValue, newValue) =>
+            {
+                foreach (var r in bodyRenderers)
+                {
+                    r.material.color = newValue;
+                }
             };
         }
 
@@ -142,14 +152,8 @@ namespace ExamplePlatformer
                 }
             }
 
-            Nickname.Value = CreateRandomEnglishName();
-            /*
-            SendPacket(new PacketPlayerData
-            {
-                Id = Id,
-                Name = headplate.text
-            }, true);
-            */
+            nickname.Value = CreateRandomEnglishName();
+            bodyColor.Value = Random.ColorHSV(0, 1, 1, 1, 1, 1);
         }
         
         private string CreateRandomEnglishName()
@@ -182,7 +186,9 @@ namespace ExamplePlatformer
             }
 
             if (Input.GetKeyDown(KeyCode.N))
-                Nickname.Value = CreateRandomEnglishName();
+                nickname.Value = CreateRandomEnglishName();
+            if (Input.GetKeyDown(KeyCode.M))
+                bodyColor.Value = Random.ColorHSV(0, 1, 1, 1, 1, 1);
 
             if (IsGrounded)
                 velocity.y = Mathf.Max(velocity.y, -1);

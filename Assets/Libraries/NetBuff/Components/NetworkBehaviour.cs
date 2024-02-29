@@ -6,6 +6,9 @@ using NetBuff.Interface;
 using NetBuff.Misc;
 using NetBuff.Packets;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace NetBuff.Components
 {
@@ -15,13 +18,10 @@ namespace NetBuff.Components
     [RequireComponent(typeof(NetworkIdentity))]
     public abstract class NetworkBehaviour : MonoBehaviour
     {
-        [SerializeField, HideInInspector]
-        private NetworkId behaviourId;
-
         /// <summary>
         /// Represents the NetworkId of the behaviour. This is only unique NetworkIdentity-wise
         /// </summary>
-        public NetworkId BehaviourId => behaviourId;
+        public byte BehaviourId => (byte) Array.IndexOf(Identity.Behaviours, this);
 
         /// <summary>
         /// Returns the NetworkIdentity attached to this object
@@ -114,7 +114,7 @@ namespace NetBuff.Components
         /// </summary>
         public void UpdateDirtyValues()
         {
-            BinaryWriter writer = new BinaryWriter(new MemoryStream());
+            var writer = new BinaryWriter(new MemoryStream());
             writer.Write((byte) _dirtyValues.Count);
             while (_dirtyValues.Count > 0)
             {
@@ -123,15 +123,20 @@ namespace NetBuff.Components
                 _values[index].Serialize(writer);
             }
 
-            NetworkValuesPacket packet = new NetworkValuesPacket
+            var packet = new NetworkValuesPacket
             {
                 IdentityId = Id,
                 BehaviourId = BehaviourId,
                 Payload = ((MemoryStream) writer.BaseStream).ToArray()
             };
 
-            if(NetworkManager.Instance.IsServerRunning)
-                ServerBroadcastPacket(packet, true);
+            if (NetworkManager.Instance.IsServerRunning)
+            {
+                if(NetworkManager.Instance.IsClientRunning)
+                    ServerBroadcastPacketExceptFor(packet, NetworkManager.Instance.LocalClientIds[0], true);
+                else
+                    ServerBroadcastPacket(packet, true);
+            }
             else
                 ClientSendPacket(packet, true);
         }
@@ -146,7 +151,7 @@ namespace NetBuff.Components
             if(_values == null || _values.Length == 0)
                 return;
 
-            BinaryWriter writer = new BinaryWriter(new MemoryStream());
+            var writer = new BinaryWriter(new MemoryStream());
             writer.Write((byte) _values.Length);
 
             //Write all values
@@ -156,7 +161,7 @@ namespace NetBuff.Components
                 _values[i].Serialize(writer);
             }
 
-            NetworkValuesPacket packet = new NetworkValuesPacket
+            var packet = new NetworkValuesPacket
             {
                 IdentityId = Id,
                 BehaviourId = BehaviourId,
@@ -172,9 +177,9 @@ namespace NetBuff.Components
         /// <param name="payload"></param>
         public void ApplyDirtyValues(byte[] payload)
         {
-            BinaryReader reader = new BinaryReader(new MemoryStream(payload));
+            var reader = new BinaryReader(new MemoryStream(payload));
             var count = reader.ReadByte();
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
             {
                 var index = reader.ReadByte();
                 _values[index].Deserialize(reader);
@@ -423,15 +428,5 @@ namespace NetBuff.Components
             return NetworkManager.Instance.prefabRegistry.IsPrefabValid(id);
         }
         #endregion
-
-        private void OnValidate()
-        {
-            #if UNITY_EDITOR
-            if (Identity.Behaviours.FirstOrDefault(b => b.behaviourId == behaviourId) == null)
-                return;
-            behaviourId = NetworkId.New();
-            UnityEditor.EditorUtility.SetDirty(this);
-            #endif
-        }
     }
 }
