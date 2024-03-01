@@ -1,4 +1,7 @@
-﻿using NetBuff.UDP;
+﻿using System;
+using System.Collections.Generic;
+using NetBuff.Misc;
+using NetBuff.UDP;
 using UnityEngine;
 
 namespace NetBuff
@@ -69,6 +72,13 @@ namespace NetBuff
             }
             
             GUILayout.EndArea();
+            
+            if (NetworkManager.Instance.EndType == NetworkTransport.EndType.None)
+            {
+                GUILayout.BeginArea(new Rect(220, 10, 300, 400));
+                DrawServerList();
+                GUILayout.EndArea();
+            }
         }
 
         private void DrawAddressAndPort()
@@ -95,6 +105,47 @@ namespace NetBuff
         private void DrawServerStatus()
         {
             GUILayout.Label($"Clients: {NetworkManager.Instance.transport.GetClientCount()}");
+        }
+
+        
+        private GameServerLocator.GameInfo[] _serverList;
+
+        private void DrawServerList()
+        {
+            if (_serverList == null)
+            {
+                _serverList = Array.Empty<GameServerLocator.GameInfo>();
+                var list = new List<GameServerLocator.GameInfo>();
+                
+                if (NetworkManager.Instance.transport is UDPNetworkTransport udp)
+                {
+                    GameServerLocator.FindServers(udp.port, (info) =>
+                    {
+                        list.Add(info);
+                        _serverList = list.ToArray();
+                    }, () => {});
+                }
+            }
+
+            if (NetworkManager.Instance.transport is UDPNetworkTransport transport)
+            {
+                foreach (var info in _serverList)
+                {
+                    if (info is GameServerLocator.EthernetGameInfo egi)
+                    {
+                        if (GUILayout.Button($"{egi.Address} {egi.Players}/{egi.MaxPlayers} {egi.Platform}"));
+                        {
+                            transport.address = egi.Address.ToString();
+                        }
+                    }
+                }
+            }
+            //GameServerLocator
+            
+            if (GUILayout.Button("Refresh Server List"))
+            {
+                _serverList = null;
+            }
         }
     }
 }

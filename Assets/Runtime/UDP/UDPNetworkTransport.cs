@@ -6,7 +6,9 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using LiteNetLib;
+using LiteNetLib.Utils;
 using NetBuff.Interface;
+using NetBuff.Misc;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -18,7 +20,7 @@ namespace NetBuff.UDP
         private static byte[] _buffer0 = new byte[_BUFFER_SIZE];
         private static byte[] _buffer1 = new byte[_BUFFER_SIZE];
 
-        public class UDPClientInfo : IClientConnectionInfo
+        private class UDPClientInfo : IClientConnectionInfo
         {
             public int Id { get;}
             public int Latency { get; set;}
@@ -41,6 +43,7 @@ namespace NetBuff.UDP
         [Header("SETTINGS")]
         public string address = "127.0.0.1";
         public int port = 7777;
+        public string password = "";
         
         private UDPClient _client;
         private UDPServer _server;
@@ -57,7 +60,7 @@ namespace NetBuff.UDP
             if (_server != null)
                 return;
             
-            _server = new UDPServer(address, port, this);
+            _server = new UDPServer(address, port, this, password);
             Type = Type == EndType.None ? EndType.Server : EndType.Host;
             OnServerStart?.Invoke();
         }
@@ -181,13 +184,19 @@ namespace NetBuff.UDP
         {
             private NetManager _manager;
             private readonly Dictionary<int, UDPClientInfo> _clients = new Dictionary<int, UDPClientInfo>();
-            private UDPNetworkTransport _transport;
-            public UDPServer(string address, int port, UDPNetworkTransport transport)
+            private readonly UDPNetworkTransport _transport;
+            private readonly int _maxClients = 2;
+            private readonly string _password;
+            public UDPServer(string address, int port, UDPNetworkTransport transport, string password)
             {
+                _password = password;
                 _transport = transport;
-                _manager = new NetManager(this);
-                _manager.EnableStatistics = true;
-                _manager.UpdateTime = 8;
+                _manager = new NetManager(this)
+                {
+                    EnableStatistics = true,
+                    UpdateTime = 8,
+                    UnconnectedMessagesEnabled = true
+                };
                 _manager.Start(IPAddress.Parse(address), IPAddress.IPv6Any, port);
             }
             
@@ -230,8 +239,24 @@ namespace NetBuff.UDP
 
             public void OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType)
             {
-                Debug.LogError("[SERVER] Unconnected message received");
-                //TODO: Implement
+                try
+                {
+                    if (reader.GetString(50) == "server_search")
+                    {
+                        var hasPassword = !string.IsNullOrEmpty(_password);
+                        var writer = new NetDataWriter();
+                        writer.Put("server_answer");
+                        writer.Put(_clients.Count); //player count
+                        writer.Put(_maxClients); //player max count
+                        writer.Put((int) PlatformExtensions.GetPlatform());
+                        writer.Put(hasPassword);
+                        _manager.SendUnconnectedMessage(writer, remoteEndPoint);
+                    }
+                }
+                catch(Exception e)
+                {
+                    Debug.LogError(e);
+                }
             }
 
             public void OnNetworkLatencyUpdate(NetPeer peer, int latency)
@@ -298,19 +323,21 @@ namespace NetBuff.UDP
                 return _clients.Values;
             }
         }
-        
-        public class UDPClient : INetEventListener
+
+        private class UDPClient : INetEventListener
         {
             private NetManager _manager;
             private UDPClientInfo _clientInfo;
-            private UDPNetworkTransport _transport;
+            private readonly UDPNetworkTransport _transport;
             
             public UDPClient(string address, int port, UDPNetworkTransport transport)
             {
                 _transport = transport;
-                _manager = new NetManager(this);
-                _manager.EnableStatistics = true;
-                _manager.UpdateTime = 8;
+                _manager = new NetManager(this)
+                {
+                    EnableStatistics = true,
+                    UpdateTime = 8
+                };
                 _manager.Start();
                 _manager.Connect(address, port, "internal_key");
             }

@@ -6,7 +6,7 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Example/Example.unity
+    path: Assets/Samples/PuzzleGame/Example.unity
     guid: cea79b9c0d223c249bf9f9821bbe7d5e
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
