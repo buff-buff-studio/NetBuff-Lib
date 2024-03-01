@@ -34,6 +34,11 @@ The system provides many features (which some are very worthy to note, so theyâ€
 ```ruby
 https://github.com/buff-buff-studio/NetBuff-Lib.git#package
 ```
+
+### **Credits**
+- **[LiteNetLib](https://github.com/RevenantX/LiteNetLib)** by [RevenantX](https://github.com/RevenantX)
+- **[Serialized Dictionary](https://assetstore.unity.com/packages/tools/utilities/serialized-dictionary-243052)** by [ayellowpaper](https://yellowpaperwastaken.wordpress.com)
+
 # **Documentation**
 
 ## **Main Components**
