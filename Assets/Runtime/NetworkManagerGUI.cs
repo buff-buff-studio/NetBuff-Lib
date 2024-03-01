@@ -108,18 +108,18 @@ namespace NetBuff
         }
 
         
-        private GameServerLocator.GameInfo[] _serverList;
+        private ServerDiscoverer.GameInfo[] _serverList;
 
         private void DrawServerList()
         {
             if (_serverList == null)
             {
-                _serverList = Array.Empty<GameServerLocator.GameInfo>();
-                var list = new List<GameServerLocator.GameInfo>();
+                _serverList = Array.Empty<ServerDiscoverer.GameInfo>();
+                var list = new List<ServerDiscoverer.GameInfo>();
                 
                 if (NetworkManager.Instance.transport is UDPNetworkTransport udp)
                 {
-                    GameServerLocator.FindServers(udp.port, (info) =>
+                    ServerDiscoverer.FindServers(udp.port, (info) =>
                     {
                         list.Add(info);
                         _serverList = list.ToArray();
@@ -131,11 +131,12 @@ namespace NetBuff
             {
                 foreach (var info in _serverList)
                 {
-                    if (info is GameServerLocator.EthernetGameInfo egi)
+                    if (info is ServerDiscoverer.EthernetGameInfo egi)
                     {
-                        if (GUILayout.Button($"{egi.Address} {egi.Players}/{egi.MaxPlayers} {egi.Platform}"));
+                        if (GUILayout.Button($"{egi.Address} - {egi.Players}/{egi.MaxPlayers} - {egi.Platform}"))
                         {
                             transport.address = egi.Address.ToString();
+                            NetworkManager.Instance.StartClient();
                         }
                     }
                 }

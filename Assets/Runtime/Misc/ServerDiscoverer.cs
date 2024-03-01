@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace NetBuff.Misc
 {
-    public static class GameServerLocator
+    public static class ServerDiscoverer
     {
         public class GameInfo
         {
