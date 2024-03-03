@@ -83,7 +83,7 @@ namespace NetBuff
         [SerializeField]
         private Stack<NetworkId> removedPreExistingObjects = new Stack<NetworkId>();
 
-        [SerializeField]
+        [SerializeField, HideInInspector]
         public List<NetworkBehaviour> dirtyBehaviours = new List<NetworkBehaviour>();
         
         private void OnEnable()

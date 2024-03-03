@@ -354,10 +354,19 @@ namespace NetBuff.Misc
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             var value = property.FindPropertyRelative("_value");
+            var type = property.FindPropertyRelative("_type");
+            
+            //first rect 3/3
+            //last rect 1/3
+            var valueRect = new Rect(position.x, position.y, position.width * 3 / 4, position.height);
+            var typeRect = new Rect(position.x + position.width * 3 / 4, position.y, position.width / 4, position.height);
+            
             EditorGUI.BeginChangeCheck();
             EditorStyles.label.normal.textColor = Color.yellow;
-            EditorGUI.PropertyField(position, value, label);
+            EditorGUI.PropertyField(valueRect, value, label);
             EditorStyles.label.normal.textColor = Color.white;
+            
+            EditorGUI.PropertyField(typeRect, type, GUIContent.none);
             if (EditorGUI.EndChangeCheck())
             {
                 property.serializedObject.ApplyModifiedProperties();

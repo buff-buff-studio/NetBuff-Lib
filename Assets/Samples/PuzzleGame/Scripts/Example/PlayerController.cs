@@ -38,8 +38,6 @@ namespace ExamplePlatformer
         public ColorNetworkValue bodyColor = new ColorNetworkValue(Color.white);
 
         public Renderer[] bodyRenderers;
-
-        public GameObject shotPrefab;
         
         public void OnEnable()
         { 
@@ -192,9 +190,6 @@ namespace ExamplePlatformer
             
             if (Input.GetKeyDown(KeyCode.M))
                 bodyColor.Value = Random.ColorHSV(0, 1, 1, 1, 1, 1);
-
-            if (Input.GetKeyDown(KeyCode.T))
-                Spawn(shotPrefab, transform.position + body.forward * 1 + body.up * 1.5f, body.rotation, Vector3.one, true);
             
             if (IsGrounded)
                 velocity.y = Mathf.Max(velocity.y, -1);

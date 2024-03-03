@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 639e7891589f41f48b97437ddb4718ec, type: 3}
-  m_Name: Example
+  m_Name: PuzzleGame
   m_EditorClassIdentifier: 
   prefabs:
     _serializedList:
