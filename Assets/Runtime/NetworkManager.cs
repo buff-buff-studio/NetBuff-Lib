@@ -42,6 +42,7 @@ namespace NetBuff
 
         [Header("SETTINGS")]
         public int defaultTickRate = 50;
+        public bool spawnsPlayer = true;
         
         [Header("REFERENCES")]
         public NetworkTransport transport;
@@ -429,12 +430,19 @@ namespace NetBuff
             #if UNITY_EDITOR
             if (!isClientReloaded)
             {
-                Assert.IsTrue(prefabRegistry.IsPrefabValid(playerPrefab), "Player prefab is not valid");
-                SpawnNetworkObjectForClients(prefabRegistry.GetPrefabId(playerPrefab), Vector3.zero, Quaternion.identity, Vector3.one, clientId);
+                if (spawnsPlayer)
+                {
+                    Assert.IsTrue(prefabRegistry.IsPrefabValid(playerPrefab), "Player prefab is not valid");
+                    SpawnNetworkObjectForClients(prefabRegistry.GetPrefabId(playerPrefab), Vector3.zero, Quaternion.identity, Vector3.one, clientId);
+                }
             }
             #else
-            Assert.IsTrue(prefabRegistry.IsPrefabValid(playerPrefab), "Player prefab is not valid");
-            SpawnNetworkObjectForClients(prefabRegistry.GetPrefabId(playerPrefab), Vector3.zero, Quaternion.identity, Vector3.one, clientId);
+            if (spawnsPlayer)
+            {
+                Assert.IsTrue(prefabRegistry.IsPrefabValid(playerPrefab), "Player prefab is not valid");
+                SpawnNetworkObjectForClients(prefabRegistry.GetPrefabId(playerPrefab), Vector3.zero,
+                    Quaternion.identity, Vector3.one, clientId);
+            }
             #endif
             
             foreach (var identity in networkObjects.Values)
