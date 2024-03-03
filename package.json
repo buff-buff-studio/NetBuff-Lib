@@ -1,0 +1,34 @@
+{
+    "name": "com.buffbuffstudios.netbuff",
+    "version": "1.1.0",
+    "displayName": "NetBuff",
+    "description": "A Buff Buff Multiplayer System",
+    "unity": "2022.3",
+    "documentationUrl": "https://github.com/buff-buff-studio/NetBuff-Lib/blob/main/README.md",
+    "changelogUrl": "https://github.com/buff-buff-studio/NetBuff-Lib/blob/main/README.md",
+    "license": "CC-BY-NC-SA-4.0",
+    "licensesUrl": "https://github.com/buff-buff-studio/NetBuff-Lib/blob/main/LICENSE-CC%20BY-NC-SA",
+    "dependencies": {
+      "com.unity.textmeshpro": "3.0.0"
+   },
+   "keywords": [
+      "network",
+      "multiplayer",
+      "netcode",
+      "netbuff",
+      "buffbuff"
+    ],
+    "author": {
+      "name": "Buff Buff Studios",
+      "email": "buffbuffstudios@gmail.com",
+      "url": "https://buff-buff-studios.itch.io/"
+    },
+    "samples": [
+        {
+            "displayName": "Puzzle Game",
+            "description": "Contains a exemple of a co-op puzzle game using the NetBuff",
+            "path": "Samples~/PuzzleGame"
+        }
+    ]
+  }
+  

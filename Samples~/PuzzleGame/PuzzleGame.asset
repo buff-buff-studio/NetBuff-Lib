@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 639e7891589f41f48b97437ddb4718ec, type: 3}
+  m_Name: PuzzleGame
+  m_EditorClassIdentifier: 
+  prefabs:
+    _serializedList:
+    - Key:
+        high: 922174917
+        low: 1735412866
+      Value: {fileID: 7281657615167336157, guid: edf6b891879c5144ca3b27df112bccdd, type: 3}
+    - Key:
+        high: -1565925038
+        low: 512432709
+      Value: {fileID: 1929699772166020255, guid: 504bac287d3df6b4fbf64510f133a82d, type: 3}
