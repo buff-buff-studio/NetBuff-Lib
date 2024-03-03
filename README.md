@@ -36,6 +36,8 @@ https://github.com/buff-buff-studio/NetBuff-Lib.git#package
 ```
 
 ### **Credits**
+- **Scripts** by [@arnilsenarthur](https://github.com/arnilsenarthur)
+- **Portability for Package** by [@SergioMacellani](https://github.com/SergioMacellani)
 - **[LiteNetLib](https://github.com/RevenantX/LiteNetLib)** by [RevenantX](https://github.com/RevenantX)
 - **[Serialized Dictionary](https://assetstore.unity.com/packages/tools/utilities/serialized-dictionary-243052)** by [ayellowpaper](https://yellowpaperwastaken.wordpress.com)
 
