@@ -28,6 +28,11 @@
             "displayName": "Puzzle Game",
             "description": "Contains a exemple of a co-op puzzle game using the NetBuff",
             "path": "Samples~/PuzzleGame"
+        },
+        {
+            "displayName": "Capture the Flag",
+            "description": "Contains a exemple of a multiplayer CTF using the NetBuff",
+            "path": "Samples~/CaptureTheFlag"
         }
     ]
   }
