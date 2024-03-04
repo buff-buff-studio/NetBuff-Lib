@@ -77,12 +77,15 @@ namespace NetBuff
         #endregion
         
         private readonly Dictionary<Type, PacketListener> _packetListeners = new();
-        
-        [SerializeField]
+
+        [SerializeField, HideInInspector]
+        private List<string> loadedScenes = new List<string>();
+
+        [SerializeField, HideInInspector]
         private SerializedDictionary<NetworkId, NetworkIdentity> networkObjects = new SerializedDictionary<NetworkId, NetworkIdentity>();
         
-        [SerializeField]
-        private Stack<NetworkId> removedPreExistingObjects = new Stack<NetworkId>();
+        [SerializeField, HideInInspector]
+        private List<NetworkId> removedPreExistingObjects = new List<NetworkId>();
 
         [SerializeField, HideInInspector]
         public List<NetworkBehaviour> dirtyBehaviours = new List<NetworkBehaviour>();
@@ -382,6 +385,10 @@ namespace NetBuff
             //Send client id
             var idPacket = new ClientIdPacket {ClientId = clientId};
             transport.SendServerPacket(idPacket, clientId, true);
+            
+            //load scenes
+            foreach (var scene in loadedScenes)
+                SendServerPacket(new NetworkLoadScenePacket {SceneName = scene}, clientId, true);
 
             var prePacket = new NetworkGetPreExistingInfoPacket
             {
@@ -580,6 +587,20 @@ namespace NetBuff
                     list.Add(clientPacket.ClientId);
                     _localClientIds = list.ToArray();
                     return;
+                
+                case NetworkLoadScenePacket loadScenePacket:
+                    if (loadedScenes.Contains(loadScenePacket.SceneName))
+                        return;
+                    loadedScenes.Add(loadScenePacket.SceneName);
+                    SceneManager.LoadScene(loadScenePacket.SceneName, LoadSceneMode.Additive);
+                    return;
+                
+                case NetworkUnloadScenePacket unloadScenePacket:
+                    if (!loadedScenes.Contains(unloadScenePacket.SceneName))
+                        return;
+                    loadedScenes.Remove(unloadScenePacket.SceneName);
+                    SceneManager.UnloadSceneAsync(unloadScenePacket.SceneName);
+                    return;
 
                 case NetworkValuesPacket valuesPacket:
                 {
@@ -708,7 +729,7 @@ namespace NetBuff
         {
             if (!networkObjects.TryGetValue(packet.Id, out var identity)) return;
             if(identity.PrefabId.IsEmpty)
-                removedPreExistingObjects.Push(packet.Id);
+                removedPreExistingObjects.Add(packet.Id);
             networkObjects.Remove(packet.Id);
             OnNetworkObjectDespawned(identity);
             Destroy(identity.gameObject);
@@ -772,6 +793,48 @@ namespace NetBuff
             
             if(EndType == NetworkTransport.EndType.Server)
                 OnClientReceivePacket(packet);
+        }
+        #endregion
+
+        #region Scene Management
+        /// <summary>
+        /// Loads a scene for all the players. Useful for multi-level games
+        /// </summary>
+        /// <param name="sceneName"></param>
+        [ServerOnly]
+        public void LoadScene(string sceneName)
+        {
+            if (loadedScenes.Contains(sceneName))
+                return;
+
+            if (!IsServerRunning)
+                return;
+                
+            loadedScenes.Add(sceneName);
+            SendServerPacket(new NetworkLoadScenePacket()
+            {
+                SceneName = sceneName
+            }, reliable: true);
+        }
+        
+        /// <summary>
+        /// Unloads a scene for all the players. Useful for multi-level games
+        /// </summary>
+        /// <param name="sceneName"></param>
+        [ServerOnly]
+        public void UnloadScene(string sceneName)
+        {
+            if (!loadedScenes.Contains(sceneName))
+                return;
+
+            if (!IsServerRunning)
+                return;
+            
+            loadedScenes.Remove(sceneName);
+            SendServerPacket(new NetworkUnloadScenePacket()
+            {
+                SceneName = sceneName
+            }, reliable: true);
         }
         #endregion
 

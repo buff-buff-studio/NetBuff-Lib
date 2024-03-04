@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using NetBuff;
 using NetBuff.Components;
 using NetBuff.Interface;
