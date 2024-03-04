@@ -21,6 +21,11 @@ namespace NetBuff
         public EndType Type { get; protected set; } = EndType.None;
         public IConnectionInfo ClientConnectionInfo { get; protected set; }
 
+        public string Name { get => name; set => name = value; }
+
+        [SerializeField]
+        private new string name = "server";
+
         #region Callbacks
         public Action<int, IPacket> OnServerPacketReceived { get; set; }
         public Action<IPacket> OnClientPacketReceived { get; set; }

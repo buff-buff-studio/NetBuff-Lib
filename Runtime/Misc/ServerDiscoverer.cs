@@ -12,6 +12,7 @@ namespace NetBuff.Misc
     {
         public class GameInfo
         {
+            public string Name { get; set; }
             public int Players { get; set; }
             public int MaxPlayers { get; set; }
             public Platform Platform { get; set; }
@@ -19,7 +20,7 @@ namespace NetBuff.Misc
 
             public override string ToString()
             {
-                return $"Players: {Players}/{MaxPlayers}, Platform: {Platform}, HasPassword: {HasPassword}";
+                return $"{Name}'s game - Players: {Players}/{MaxPlayers}, Platform: {Platform}, HasPassword: {HasPassword}";
             }
         }
         public class EthernetGameInfo : GameInfo
@@ -81,6 +82,7 @@ namespace NetBuff.Misc
 
                                 if (reader.GetString(50) == "server_answer")
                                 {
+                                    var name = reader.GetString(50);
                                     var players = reader.GetInt();
                                     var maxPlayers = reader.GetInt();
                                     var platform = (Platform)reader.GetInt();
@@ -88,6 +90,7 @@ namespace NetBuff.Misc
 
                                     foundServer(new EthernetGameInfo
                                     {
+                                        Name = name,
                                         Address = address,
                                         Players = players,
                                         MaxPlayers = maxPlayers,

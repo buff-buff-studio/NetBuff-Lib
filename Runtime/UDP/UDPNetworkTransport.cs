@@ -60,7 +60,7 @@ namespace NetBuff.UDP
             if (_server != null)
                 return;
             
-            _server = new UDPServer(address, port, this, password);
+            _server = new UDPServer(address, port, this, password, Name);
             Type = Type == EndType.None ? EndType.Server : EndType.Host;
             OnServerStart?.Invoke();
         }
@@ -187,10 +187,12 @@ namespace NetBuff.UDP
             private readonly UDPNetworkTransport _transport;
             private readonly int _maxClients = 2;
             private readonly string _password;
-            public UDPServer(string address, int port, UDPNetworkTransport transport, string password)
+            private readonly string _name;
+            public UDPServer(string address, int port, UDPNetworkTransport transport, string password, string name)
             {
                 _password = password;
                 _transport = transport;
+                
                 _manager = new NetManager(this)
                 {
                     EnableStatistics = true,
@@ -198,6 +200,8 @@ namespace NetBuff.UDP
                     UnconnectedMessagesEnabled = true
                 };
                 _manager.Start(IPAddress.Parse(address), IPAddress.IPv6Any, port);
+                
+                _name = name.Length > 32 ? name[..32] : name;
             }
             
             public void Close()
@@ -246,6 +250,7 @@ namespace NetBuff.UDP
                         var hasPassword = !string.IsNullOrEmpty(_password);
                         var writer = new NetDataWriter();
                         writer.Put("server_answer");
+                        writer.Put(_name);
                         writer.Put(_clients.Count); //player count
                         writer.Put(_maxClients); //player max count
                         writer.Put((int) PlatformExtensions.GetPlatform());
