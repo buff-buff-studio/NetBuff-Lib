@@ -338,6 +338,10 @@ namespace NetBuff
         /// </summary>
         public virtual void OnServerStart()
         {
+            foreach (var identity in networkObjects.Values)
+                foreach (var behaviour in identity.Behaviours)
+                    behaviour.OnSpawned(false);
+            
             IsServerRunning = true;
         }
 
