@@ -351,6 +351,8 @@ namespace NetBuff
         public virtual void OnServerStop()
         {
             IsServerRunning = false;
+            if(transport.Type is NetworkTransport.EndType.Server)
+                SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
         
         
