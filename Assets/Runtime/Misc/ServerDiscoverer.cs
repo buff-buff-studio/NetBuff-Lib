@@ -91,7 +91,7 @@ namespace NetBuff.Misc
                                     foundServer(new EthernetGameInfo
                                     {
                                         Name = name,
-                                        Address = address,
+                                        Address = address2.Address,
                                         Players = players,
                                         MaxPlayers = maxPlayers,
                                         Platform = platform,
