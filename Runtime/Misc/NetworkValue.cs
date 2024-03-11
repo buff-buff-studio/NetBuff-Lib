@@ -84,7 +84,7 @@ namespace NetBuff.Misc
             
             OnValueChanged?.Invoke(oldValue, newValue);
         }
-
+    
         public override void EditorForceUpdate()
         {
             SetValueCalling(_value);
@@ -96,6 +96,15 @@ namespace NetBuff.Misc
         public override string ToString()
         {
             return $"NetworkValue({_value.ToString()})";
+        }
+
+        /// <summary>
+        /// Shall used only as the starting value before the network is ready
+        /// </summary>
+        /// <param name="value"></param>
+        public void SetDefaultValue(T value)
+        {
+            _value = value;
         }
     }
     

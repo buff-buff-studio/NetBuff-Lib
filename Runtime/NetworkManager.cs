@@ -338,6 +338,10 @@ namespace NetBuff
         /// </summary>
         public virtual void OnServerStart()
         {
+            foreach (var identity in networkObjects.Values)
+                foreach (var behaviour in identity.Behaviours)
+                    behaviour.OnSpawned(false);
+            
             IsServerRunning = true;
         }
 
@@ -347,6 +351,8 @@ namespace NetBuff
         public virtual void OnServerStop()
         {
             IsServerRunning = false;
+            if(transport.Type is NetworkTransport.EndType.Server)
+                SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
         
         
