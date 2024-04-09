@@ -16,6 +16,12 @@ namespace NetBuff.UDP
 {
     public class UDPNetworkTransport : NetworkTransport
     {
+        private const int _BUFFER_SIZE = 65535;
+        private static readonly byte[] _Buffer0 = new byte[_BUFFER_SIZE];
+        private static readonly byte[] _Buffer1 = new byte[_BUFFER_SIZE];
+        private static readonly BinaryWriter _Writer0 = new(new MemoryStream(_Buffer0));
+        private static readonly BinaryWriter _Writer1 = new(new MemoryStream(_Buffer1));
+        
         private class UDPClientInfo : IClientConnectionInfo
         {
             public int Id { get;}
@@ -123,13 +129,6 @@ namespace NetBuff.UDP
             if (_server != null)
                 _server.Tick();
         }
-        
-        private const int _BUFFER_SIZE = 65535;
-        private static readonly byte[] _Buffer0 = new byte[_BUFFER_SIZE];
-        private static readonly byte[] _Buffer1 = new byte[_BUFFER_SIZE];
-        
-        private static readonly BinaryWriter _Writer0 = new(new MemoryStream(_Buffer0));
-        private static readonly BinaryWriter _Writer1 = new(new MemoryStream(_Buffer1));
         
         private static IEnumerable<ArraySegment<byte>> ProcessQueue(Queue<IPacket> queue, int maxSize)
         {
