@@ -1,4 +1,4 @@
-# **NetBuff - A Buff Buff Multiplayer System** <sup>1.0<sup> 
+# **NetBuff - A Buff Buff Multiplayer System** <sup>1.4<sup> 
 
 <p align="center">
   <a href="https://buff-buff-studios.itch.io">
