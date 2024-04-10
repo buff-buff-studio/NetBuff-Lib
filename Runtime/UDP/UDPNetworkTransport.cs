@@ -17,9 +17,11 @@ namespace NetBuff.UDP
     public class UDPNetworkTransport : NetworkTransport
     {
         private const int _BUFFER_SIZE = 65535;
-        private static byte[] _buffer0 = new byte[_BUFFER_SIZE];
-        private static byte[] _buffer1 = new byte[_BUFFER_SIZE];
-
+        private static readonly byte[] _Buffer0 = new byte[_BUFFER_SIZE];
+        private static readonly byte[] _Buffer1 = new byte[_BUFFER_SIZE];
+        private static readonly BinaryWriter _Writer0 = new(new MemoryStream(_Buffer0));
+        private static readonly BinaryWriter _Writer1 = new(new MemoryStream(_Buffer1));
+        
         private class UDPClientInfo : IClientConnectionInfo
         {
             public int Id { get;}
@@ -127,7 +129,7 @@ namespace NetBuff.UDP
             if (_server != null)
                 _server.Tick();
         }
- 
+        
         private static IEnumerable<ArraySegment<byte>> ProcessQueue(Queue<IPacket> queue, int maxSize)
         {
             if (queue.Count == 0)
@@ -136,48 +138,42 @@ namespace NetBuff.UDP
             // If maxSize is -1, we don't need to worry about packet size
             if (maxSize == -1)
             {
-                var writer = new BinaryWriter(new MemoryStream());
+                _Writer0.BaseStream.Position = 0;
                 while (queue.Count > 0)
                 {
                     var packet = queue.Dequeue();
                     var id = PacketRegistry.GetId(packet);
-                    writer.Write(id);
-                    packet.Serialize(writer);
+                    _Writer0.Write(id);
+                    packet.Serialize(_Writer0);
                 }
                 
-                var result = ((MemoryStream) writer.BaseStream).ToArray();
-                yield return new ArraySegment<byte>(result);
+                yield return new ArraySegment<byte>(_Buffer0, 0, (int) _Writer0.BaseStream.Position);
                 yield break;
             }
-
-            if(_buffer0.Length < maxSize)
-                _buffer0 = new byte[maxSize];
-            if(_buffer1.Length < maxSize)
-                _buffer1 = new byte[maxSize];
-
+            
             var end = 0;
             while (queue.Count > 0)
             {
-                var writer = new BinaryWriter(new MemoryStream(_buffer1));
+                _Writer1.BaseStream.Position = 0;
                 var packet = queue.Dequeue();
                 var id = PacketRegistry.GetId(packet);
-                writer.Write(id);
-                packet.Serialize(writer);
+                _Writer1.Write(id);
+                packet.Serialize(_Writer1);
                 
-                var len = writer.BaseStream.Position;
+                var len = _Writer1.BaseStream.Position;
                 if(end + len > maxSize)
                 {
-                    yield return new ArraySegment<byte>(_buffer0, 0, end);
+                    yield return new ArraySegment<byte>(_Buffer0, 0, end);
                     end = 0;
                 }
                 
                 Assert.IsTrue(end + len <= maxSize, $"Packet too large {packet}: {len}");
-                Array.Copy(((MemoryStream) writer.BaseStream).ToArray(), 0, _buffer0, end, len);
+                Buffer.BlockCopy(_Buffer1, 0, _Buffer0, end, (int) len);
                 end += (int) len;
             }
             
             if (end > 0)
-                yield return new ArraySegment<byte>(_buffer0, 0, end);
+                yield return new ArraySegment<byte>(_Buffer0, 0, end);
         }
         
         private class UDPServer : INetEventListener
