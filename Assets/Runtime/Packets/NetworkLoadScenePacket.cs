@@ -14,7 +14,7 @@ namespace NetBuff.Packets
 
         public void Deserialize(BinaryReader reader)
         {
-            reader.ReadString();
+            SceneName = reader.ReadString();
         }
     }
     
