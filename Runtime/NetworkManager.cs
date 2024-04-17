@@ -53,7 +53,7 @@ namespace NetBuff
         [SerializeField, HideInInspector]
         private NetworkTransport.EndType endTypeAfterReload = NetworkTransport.EndType.None;
         [SerializeField, HideInInspector]  
-        private bool isClientReloaded;
+        protected bool isClientReloaded;
         #endif
 
         #region Helper Properties
@@ -468,7 +468,7 @@ namespace NetBuff
                 Assert.IsTrue(prefabRegistry.IsPrefabValid(playerPrefab), "Player prefab is not valid");
                 SpawnNetworkObjectForClients(prefabRegistry.GetPrefabId(playerPrefab), Vector3.zero, Quaternion.identity, Vector3.one, clientId);
             }
-        #endif
+            #endif
         }
 
         /// <summary>
