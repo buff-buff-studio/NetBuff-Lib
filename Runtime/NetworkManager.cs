@@ -440,6 +440,19 @@ namespace NetBuff
                 foreach (var behaviour in identity.Behaviours)
                     behaviour.SendNetworkValuesToClient(clientId);
             
+            SpawnPlayer(clientId);
+
+            foreach (var identity in networkObjects.Values)
+                foreach (var behaviour in identity.Behaviours)
+                    behaviour.OnClientConnected(clientId);
+        }
+
+        /// <summary>
+        /// Spawns a player in the game world.
+        /// </summary>
+        /// <param name="clientId">The ID of the client for whom the player is being spawned.</param>
+        protected virtual void SpawnPlayer(int clientId)
+        {
             #if UNITY_EDITOR
             if (!isClientReloaded)
             {
@@ -453,14 +466,9 @@ namespace NetBuff
             if (spawnsPlayer)
             {
                 Assert.IsTrue(prefabRegistry.IsPrefabValid(playerPrefab), "Player prefab is not valid");
-                SpawnNetworkObjectForClients(prefabRegistry.GetPrefabId(playerPrefab), Vector3.zero,
-                    Quaternion.identity, Vector3.one, clientId);
+                SpawnNetworkObjectForClients(prefabRegistry.GetPrefabId(playerPrefab), Vector3.zero, Quaternion.identity, Vector3.one, clientId);
             }
-            #endif
-            
-            foreach (var identity in networkObjects.Values)
-                foreach (var behaviour in identity.Behaviours)
-                    behaviour.OnClientConnected(clientId);
+        #endif
         }
 
         /// <summary>
