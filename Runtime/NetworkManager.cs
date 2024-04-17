@@ -606,7 +606,7 @@ namespace NetBuff
                     if (loadedScenes.Contains(loadScenePacket.SceneName))
                         return;
                     loadedScenes.Add(loadScenePacket.SceneName);
-                    SceneManager.LoadScene(loadScenePacket.SceneName, LoadSceneMode.Additive);
+                    SceneManager.LoadScene(loadScenePacket.SceneName, (LoadSceneMode) loadScenePacket.LoadSceneMode);
                     return;
                 
                 case NetworkUnloadScenePacket unloadScenePacket:
@@ -815,8 +815,9 @@ namespace NetBuff
         /// Loads a scene for all the players. Useful for multi-level games
         /// </summary>
         /// <param name="sceneName"></param>
+        /// <param name="mode"></param>
         [ServerOnly]
-        public void LoadScene(string sceneName)
+        public void LoadScene(string sceneName, LoadSceneMode mode = LoadSceneMode.Additive)
         {
             if (loadedScenes.Contains(sceneName))
                 return;
@@ -827,10 +828,11 @@ namespace NetBuff
             loadedScenes.Add(sceneName);
             SendServerPacket(new NetworkLoadScenePacket()
             {
-                SceneName = sceneName
+                SceneName = sceneName,
+                LoadSceneMode = (int) mode
             }, reliable: true);
         }
-        
+
         /// <summary>
         /// Unloads a scene for all the players. Useful for multi-level games
         /// </summary>
