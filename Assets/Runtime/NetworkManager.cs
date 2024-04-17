@@ -53,7 +53,7 @@ namespace NetBuff
         [SerializeField, HideInInspector]
         private NetworkTransport.EndType endTypeAfterReload = NetworkTransport.EndType.None;
         [SerializeField, HideInInspector]  
-        private bool isClientReloaded;
+        protected bool isClientReloaded;
         #endif
 
         #region Helper Properties
