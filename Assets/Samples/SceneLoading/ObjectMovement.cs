@@ -8,12 +8,10 @@ namespace Samples.SceneLoading
     {
         private void Update()
         {
-            Debug.LogError("ObjectMovement Update: " + Id);
-            
             if (!HasAuthority)
                 return;
 
-            transform.position = new Vector3(0, (Time.time * 2) % 4, 0);
+            transform.position = new Vector3(0, Time.time * 2 % 4, 0);
         }
     }
 }

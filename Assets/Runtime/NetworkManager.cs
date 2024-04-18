@@ -74,6 +74,32 @@ namespace NetBuff
         [ClientOnly]
         public ReadOnlySpan<int> LocalClientIds => _localClientIds;
         private int[] _localClientIds = Array.Empty<int>();
+
+        [SerializeField, HideInInspector]
+        private List<string> loadedScenes = new List<string>();
+
+        [SerializeField, HideInInspector]
+        private string sourceScene;
+
+        /// <summary>
+        /// Returns the current session entrypoint scene
+        /// </summary>R
+        public string SourceScene => sourceScene;
+
+        /// <summary>
+        /// Returns all loaded scenes
+        /// </summary>
+        public IEnumerable<string> LoadedScenes => loadedScenes;
+
+        /// <summary>
+        /// Returns the count of loaded scenes
+        /// </summary>
+        public int LoadedSceneCount => loadedScenes.Count;
+
+        /// <summary>
+        /// Returns the last loaded scene
+        /// </summary>
+        public string LastLoadedScene => loadedScenes.Count == 0 ? SourceScene : loadedScenes.LastOrDefault();
         #endregion
         
         private readonly Dictionary<Type, PacketListener> _packetListeners = new();
@@ -142,6 +168,9 @@ namespace NetBuff
                 networkObjects.Add(identity.Id, identity);
             }
             #endif
+
+            sourceScene = gameObject.scene.name;
+            loadedScenes.Add(sourceScene);
         }
 
         private void OnDisable()
@@ -261,7 +290,7 @@ namespace NetBuff
         /// <param name="scale"></param>
         /// <param name="owner"></param>
         [ServerOnly]
-        public void SpawnNetworkObjectForClients(NetworkId prefabId, Vector3 position, Quaternion rotation, Vector3 scale,int owner = -1)
+        public void SpawnNetworkObjectForClients(NetworkId prefabId, Vector3 position, Quaternion rotation, Vector3 scale,int owner = -1, int scene = -1)
         {
             var packet = new NetworkObjectSpawnPacket
             {
@@ -272,7 +301,8 @@ namespace NetBuff
                 Rotation = rotation,
                 Scale = scale,
                 IsRetroactive = false,
-                IsActive = prefabRegistry.GetPrefab(prefabId).activeSelf
+                IsActive = prefabRegistry.GetPrefab(prefabId).activeSelf,
+                SceneId = scene
             };
             
             BroadcastServerPacket(packet, true);
@@ -334,6 +364,8 @@ namespace NetBuff
         /// </summary>
         public virtual void OnServerStart()
         {
+            DontDestroyOnLoad(gameObject);
+
             foreach (var identity in networkObjects.Values)
                 foreach (var behaviour in identity.Behaviours)
                     behaviour.OnSpawned(false);
@@ -348,7 +380,7 @@ namespace NetBuff
         {
             IsServerRunning = false;
             if(transport.Type is NetworkTransport.EndType.Server)
-                SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+                ResetEnvironment();
         }
         
         
@@ -401,7 +433,8 @@ namespace NetBuff
                         Position = t.position,
                         Rotation = t.rotation,
                         Scale = t.localScale,
-                        IsActive = identity.gameObject.activeSelf
+                        IsActive = identity.gameObject.activeSelf,
+                        SceneId = GetSceneId(identity.gameObject.scene.name)
                     };
                 }).ToArray(),
                 RemovedObjects = removedPreExistingObjects.ToArray(),
@@ -424,7 +457,8 @@ namespace NetBuff
                     Rotation = t.rotation,
                     Scale = t.localScale,
                     IsActive = identity.gameObject.activeSelf,
-                    IsRetroactive = true
+                    IsRetroactive = true,
+                    SceneId = 0
                 };
                 SendServerPacket(packet, clientId, true);
             }
@@ -489,6 +523,7 @@ namespace NetBuff
         [ClientOnly]
         public virtual void OnConnect()
         {
+            DontDestroyOnLoad(gameObject);
             IsClientRunning = true;
         }
         
@@ -498,7 +533,7 @@ namespace NetBuff
         /// </summary>
         [ClientOnly]
         public virtual void OnDisconnect()
-        {
+        {            
             IsClientRunning = false;
             
             #if UNITY_EDITOR
@@ -509,7 +544,7 @@ namespace NetBuff
                     foreach (var behaviour in identity.Behaviours)
                         behaviour.OnActiveChanged(false);
                 
-                SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+                ResetEnvironment();
             }
         }
         
@@ -635,7 +670,7 @@ namespace NetBuff
                     return;
                 
                 case NetworkLoadScenePacket loadScenePacket:
-                    _LoadSceneLocally(loadScenePacket.SceneName);
+                    _ = _LoadSceneLocally(loadScenePacket.SceneName);
                     return;
                 
                 case NetworkUnloadScenePacket unloadScenePacket:
@@ -668,11 +703,11 @@ namespace NetBuff
                 behaviour.OnActiveChanged(activePacket.IsActive);
         }
 
-        private void HandlePreExistingInfoPacket(NetworkGetPreExistingInfoPacket preExistingInfoPacket)
+        private async void HandlePreExistingInfoPacket(NetworkGetPreExistingInfoPacket preExistingInfoPacket)
         {
             foreach (var sceneName in preExistingInfoPacket.SceneNames)
-                _LoadSceneLocally(sceneName);
-            
+                await _LoadSceneLocally(sceneName);
+        
             foreach (var preExistingObject in preExistingInfoPacket.PreExistingObjects)
             {
                 if (!networkObjects.ContainsKey(preExistingObject.Id))
@@ -684,6 +719,9 @@ namespace NetBuff
                 _OwnerIdField.SetValue(identity, preExistingObject.OwnerId);
                 _PrefabIdField.SetValue(identity, preExistingObject.PrefabId);
                 identity.gameObject.SetActive(preExistingObject.IsActive);
+                var scene = GetSceneName(preExistingObject.SceneId);
+                if (scene != obj.scene.name && loadedScenes.Contains(scene))
+                    SceneManager.MoveGameObjectToScene(obj, SceneManager.GetSceneByName(scene));
                 OnNetworkObjectSpawned(identity, true);
             }
             
@@ -707,6 +745,11 @@ namespace NetBuff
             var obj = Instantiate(prefab, packet.Position, packet.Rotation);
             obj.transform.localScale = packet.Scale;
             var identity = obj.GetComponent<NetworkIdentity>();
+            
+            var scene = GetSceneName(packet.SceneId);
+            if (scene != obj.scene.name && loadedScenes.Contains(scene))
+                SceneManager.MoveGameObjectToScene(obj, SceneManager.GetSceneByName(scene));
+
             if (identity != null)
             {
                 _IDField.SetValue(identity, packet.Id);
@@ -810,22 +853,55 @@ namespace NetBuff
         }
         
         #region Scene Management
-        [SerializeField, HideInInspector]
-        public List<string> loadedScenes = new List<string>();
-        
-        private void _LoadSceneLocally(string sceneName)
+        /// <summary>
+        /// Returns the network id of a scene
+        /// </summary>
+        /// <param name="sceneName"></param>
+        /// <returns></returns>
+        public int GetSceneId(string sceneName)
+        {
+            return loadedScenes.IndexOf(sceneName);
+        }
+
+        /// <summary>
+        /// Returns the name of a scene
+        /// </summary>
+        /// <param name="sceneId"></param>
+        /// <returns></returns>
+        public string GetSceneName(int sceneId)
+        {
+            if(sceneId == -1)
+                return LastLoadedScene;
+            return loadedScenes[sceneId];
+        }
+
+        private async Awaitable _LoadSceneLocally(string sceneName)
         {
             if (loadedScenes.Contains(sceneName))
                 return;
             
             loadedScenes.Add(sceneName);
-            var scene = SceneManager.LoadScene(sceneName, new LoadSceneParameters(LoadSceneMode.Additive));
+        
+            //Load the scene itself
+            var async = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
+            while (!async.isDone)
+            {
+                await Awaitable.NextFrameAsync();
+            }
+
+            await Awaitable.NextFrameAsync();
+            var scene = SceneManager.GetSceneByName(sceneName);
+
             foreach (var root in scene.GetRootGameObjects())
             {
                 foreach (var identity in root.GetComponentsInChildren<NetworkIdentity>())
                 {
                     if (networkObjects.ContainsKey(identity.Id))
                         continue;
+
+                    if(removedPreExistingObjects.Contains(identity.Id))
+                        removedPreExistingObjects.Remove(identity.Id);
+
                     networkObjects.Add(identity.Id, identity);
                     OnNetworkObjectSpawned(identity, false);
                 }
@@ -875,6 +951,9 @@ namespace NetBuff
         [ServerOnly]
         public void UnloadScene(string sceneName)
         {
+            if(sceneName == sourceScene)
+                throw new Exception("Cannot unload the source scene");
+
             var packet = new NetworkUnloadScenePacket
             {
                 SceneName = sceneName
@@ -888,10 +967,17 @@ namespace NetBuff
         }
         
         /*
-         * - load scene
-         * - unload scene
          * - move to scene
          */
+
+        /// <summary>
+        /// Called to reset the entire network environment
+        /// </summary>
+        public virtual void ResetEnvironment()
+        {
+            Destroy(gameObject);
+            SceneManager.LoadScene(SourceScene);
+        }
     }
     
     #if UNITY_EDITOR

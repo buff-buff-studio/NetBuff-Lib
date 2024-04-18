@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using NetBuff.Interface;
+using NetBuff.Misc;
 
 namespace NetBuff.Packets
 {
@@ -29,7 +30,25 @@ namespace NetBuff.Packets
 
         public void Deserialize(BinaryReader reader)
         {
-            reader.ReadString();
+            SceneName = reader.ReadString();
+        }
+    }
+
+    public class NetworkMoveObjectScenePacket : IPacket
+    {
+        public NetworkId Id { get; set; }
+        public int SceneId { get; set; }
+
+        public void Serialize(BinaryWriter writer)
+        {
+            Id.Serialize(writer);
+            writer.Write(SceneId);
+        }
+
+        public void Deserialize(BinaryReader reader)
+        {
+            Id = NetworkId.Read(reader);
+            SceneId = reader.ReadInt32();
         }
     }
 }

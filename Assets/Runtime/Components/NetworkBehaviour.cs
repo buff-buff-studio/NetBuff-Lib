@@ -511,15 +511,15 @@ namespace NetBuff.Components
         /// <param name="active"></param>
         /// <param name="owner"></param>
         /// <returns></returns>
-        public static NetworkId Spawn(NetworkId prefabId, Vector3 position, Quaternion rotation, Vector3 scale, bool active, int owner = -1)
+        public static NetworkId Spawn(NetworkId prefabId, Vector3 position, Quaternion rotation, Vector3 scale, bool active, int owner = -1, int scene = -1)
         {
             if (!NetworkManager.Instance.prefabRegistry.IsPrefabValid(prefabId))
                 throw new InvalidOperationException("The prefab is not registered");
             
-            return InternalSpawn(prefabId, position, rotation, scale, active, owner);
+            return InternalSpawn(prefabId, position, rotation, scale, active, owner, scene);
         }
         
-        private static NetworkId InternalSpawn(NetworkId prefabId, Vector3 position, Quaternion rotation, Vector3 scale, bool active, int owner)
+        private static NetworkId InternalSpawn(NetworkId prefabId, Vector3 position, Quaternion rotation, Vector3 scale, bool active, int owner, int scene = -1)
         {
             var packet = new NetworkObjectSpawnPacket
             {
@@ -530,7 +530,8 @@ namespace NetBuff.Components
                 Scale = scale,
                 IsActive = active,
                 IsRetroactive = false,
-                OwnerId = owner
+                OwnerId = owner,
+                SceneId = scene
             };
 
             if (NetworkManager.Instance.IsServerRunning)

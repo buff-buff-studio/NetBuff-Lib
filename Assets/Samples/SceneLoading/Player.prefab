@@ -13,6 +13,8 @@ GameObject:
   - component: {fileID: 5175029939786987723}
   - component: {fileID: 5842168290613024161}
   - component: {fileID: 4334053772280108126}
+  - component: {fileID: 1058682444577554496}
+  - component: {fileID: 2627389522665372339}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -127,3 +129,32 @@ MonoBehaviour:
   prefabId:
     high: 0
     low: 0
+--- !u!114 &1058682444577554496
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8412692207167386886}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a7244ab177df82c4fa327d91ba4faaad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &2627389522665372339
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8412692207167386886}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6e25519dc96460b8011f9bfd913a40f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tickRate: -1
+  positionThreshold: 0.001
+  rotationThreshold: 0.001
+  scaleThreshold: 0.001
+  syncMode: 63

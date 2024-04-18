@@ -345,6 +345,8 @@ namespace NetBuff.UDP
             
             public void Close()
             {
+                if(_manager == null)
+                    return;
                 _manager.Stop();
                 _manager = null;
                 _transport.OnDisconnect?.Invoke();

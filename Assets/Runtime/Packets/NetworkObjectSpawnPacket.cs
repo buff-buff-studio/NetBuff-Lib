@@ -15,7 +15,7 @@ namespace NetBuff.Packets
         public Vector3 Scale { get; set; }
         public bool IsActive { get; set; }
         public bool IsRetroactive { get; set; }
-        
+        public int SceneId { get; set; }     
         public void Serialize(BinaryWriter writer)
         {
             Id.Serialize(writer);
@@ -33,6 +33,7 @@ namespace NetBuff.Packets
             writer.Write(Scale.z);
             writer.Write(IsRetroactive);
             writer.Write(IsActive);
+            writer.Write(SceneId);
         }
 
         public void Deserialize(BinaryReader reader)
@@ -45,6 +46,7 @@ namespace NetBuff.Packets
             Scale = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
             IsRetroactive = reader.ReadBoolean();
             IsActive = reader.ReadBoolean();
+            SceneId = reader.ReadInt32();
         }
     }
 }

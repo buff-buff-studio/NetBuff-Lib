@@ -1,7 +1,7 @@
-﻿using System;
-using NetBuff;
+﻿using NetBuff;
 using NetBuff.Components;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Samples.SceneLoading
 {
@@ -13,7 +13,7 @@ namespace Samples.SceneLoading
         {
             if (IsServer)
             {
-                if (Input.GetKeyDown(KeyCode.S))
+                if (Input.GetKeyDown(KeyCode.K))
                 {
                     if(NetworkManager.Instance.IsSceneLoaded(scene))
                         NetworkManager.Instance.UnloadScene(scene);

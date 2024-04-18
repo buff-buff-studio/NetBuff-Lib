@@ -12,16 +12,15 @@ namespace NetBuff.Packets
             public NetworkId Id { get; set; }
             public NetworkId PrefabId { get; set; }
             public int OwnerId { get; set; }
-        
             public Vector3 Position { get; set; }
             public Quaternion Rotation { get; set; }
             public Vector3 Scale { get; set; }
             public bool IsActive { get; set; }
+            public int SceneId { get; set; }
         }  
         
         public PreExistingState[] PreExistingObjects { get; set; }
         public NetworkId[] RemovedObjects { get; set; }
-        
         public string[] SceneNames { get; set; }
         
         public void Serialize(BinaryWriter writer)
