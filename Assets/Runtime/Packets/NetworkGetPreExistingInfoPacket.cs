@@ -22,6 +22,8 @@ namespace NetBuff.Packets
         public PreExistingState[] PreExistingObjects { get; set; }
         public NetworkId[] RemovedObjects { get; set; }
         
+        public string[] SceneNames { get; set; }
+        
         public void Serialize(BinaryWriter writer)
         {
             writer.Write(PreExistingObjects.Length);
@@ -47,6 +49,12 @@ namespace NetBuff.Packets
             {
                 removedObject.Serialize(writer);
             }
+            
+            writer.Write(SceneNames.Length);
+            foreach (var sceneName in SceneNames)
+            {
+                writer.Write(sceneName);
+            }
         }
         
         public void Deserialize(BinaryReader reader)
@@ -71,6 +79,13 @@ namespace NetBuff.Packets
             for (var i = 0; i < removedObjectsLength; i++)
             {
                 RemovedObjects[i] = NetworkId.Read(reader);
+            }
+            
+            var sceneNamesLength = reader.ReadInt32();
+            SceneNames = new string[sceneNamesLength];
+            for (var i = 0; i < sceneNamesLength; i++)
+            {
+                SceneNames[i] = reader.ReadString();
             }
         }
     }

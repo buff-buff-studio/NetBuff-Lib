@@ -43,7 +43,7 @@ namespace NetBuff
         [Header("SETTINGS")]
         public int defaultTickRate = 50;
         public bool spawnsPlayer = true;
-        
+ 
         [Header("REFERENCES")]
         public NetworkTransport transport;
         public NetworkPrefabRegistry prefabRegistry;
@@ -77,9 +77,6 @@ namespace NetBuff
         #endregion
         
         private readonly Dictionary<Type, PacketListener> _packetListeners = new();
-
-        [SerializeField, HideInInspector]
-        private List<string> loadedScenes = new List<string>();
 
         [SerializeField, HideInInspector]
         private SerializedDictionary<NetworkId, NetworkIdentity> networkObjects = new SerializedDictionary<NetworkId, NetworkIdentity>();
@@ -332,7 +329,6 @@ namespace NetBuff
         #endregion
         
         #region Virtual Methods
-
         /// <summary>
         /// Called when the server starts
         /// </summary>
@@ -391,11 +387,7 @@ namespace NetBuff
             //Send client id
             var idPacket = new ClientIdPacket {ClientId = clientId};
             transport.SendServerPacket(idPacket, clientId, true);
-            
-            //load scenes
-            foreach (var scene in loadedScenes)
-                SendServerPacket(new NetworkLoadScenePacket {SceneName = scene}, clientId, true);
-
+        
             var prePacket = new NetworkGetPreExistingInfoPacket
             {
                 PreExistingObjects = networkObjects.Values.Where(identity => identity.PrefabId.IsEmpty).Select(identity =>
@@ -412,7 +404,8 @@ namespace NetBuff
                         IsActive = identity.gameObject.activeSelf
                     };
                 }).ToArray(),
-                RemovedObjects = removedPreExistingObjects.ToArray()
+                RemovedObjects = removedPreExistingObjects.ToArray(),
+                SceneNames = loadedScenes.ToArray()
             };
 
             SendServerPacket(prePacket, clientId, true);
@@ -601,21 +594,7 @@ namespace NetBuff
                     list.Add(clientPacket.ClientId);
                     _localClientIds = list.ToArray();
                     return;
-                
-                case NetworkLoadScenePacket loadScenePacket:
-                    if (loadedScenes.Contains(loadScenePacket.SceneName))
-                        return;
-                    loadedScenes.Add(loadScenePacket.SceneName);
-                    SceneManager.LoadScene(loadScenePacket.SceneName, LoadSceneMode.Additive);
-                    return;
-                
-                case NetworkUnloadScenePacket unloadScenePacket:
-                    if (!loadedScenes.Contains(unloadScenePacket.SceneName))
-                        return;
-                    loadedScenes.Remove(unloadScenePacket.SceneName);
-                    SceneManager.UnloadSceneAsync(unloadScenePacket.SceneName);
-                    return;
-
+            
                 case NetworkValuesPacket valuesPacket:
                 {
                     if (!networkObjects.TryGetValue(valuesPacket.IdentityId, out var identity)) return;
@@ -654,6 +633,14 @@ namespace NetBuff
                 case NetworkGetPreExistingInfoPacket preExistingInfoPacket:
                     HandlePreExistingInfoPacket(preExistingInfoPacket);
                     return;
+                
+                case NetworkLoadScenePacket loadScenePacket:
+                    _LoadSceneLocally(loadScenePacket.SceneName);
+                    return;
+                
+                case NetworkUnloadScenePacket unloadScenePacket:
+                    _UnloadSceneLocally(unloadScenePacket.SceneName);
+                    return;
 
                 case IOwnedPacket ownedPacket:
                 {
@@ -683,6 +670,9 @@ namespace NetBuff
 
         private void HandlePreExistingInfoPacket(NetworkGetPreExistingInfoPacket preExistingInfoPacket)
         {
+            foreach (var sceneName in preExistingInfoPacket.SceneNames)
+                _LoadSceneLocally(sceneName);
+            
             foreach (var preExistingObject in preExistingInfoPacket.PreExistingObjects)
             {
                 if (!networkObjects.ContainsKey(preExistingObject.Id))
@@ -809,49 +799,7 @@ namespace NetBuff
                 OnClientReceivePacket(packet);
         }
         #endregion
-
-        #region Scene Management
-        /// <summary>
-        /// Loads a scene for all the players. Useful for multi-level games
-        /// </summary>
-        /// <param name="sceneName"></param>
-        [ServerOnly]
-        public void LoadScene(string sceneName)
-        {
-            if (loadedScenes.Contains(sceneName))
-                return;
-
-            if (!IsServerRunning)
-                return;
-                
-            loadedScenes.Add(sceneName);
-            SendServerPacket(new NetworkLoadScenePacket()
-            {
-                SceneName = sceneName
-            }, reliable: true);
-        }
         
-        /// <summary>
-        /// Unloads a scene for all the players. Useful for multi-level games
-        /// </summary>
-        /// <param name="sceneName"></param>
-        [ServerOnly]
-        public void UnloadScene(string sceneName)
-        {
-            if (!loadedScenes.Contains(sceneName))
-                return;
-
-            if (!IsServerRunning)
-                return;
-            
-            loadedScenes.Remove(sceneName);
-            SendServerPacket(new NetworkUnloadScenePacket()
-            {
-                SceneName = sceneName
-            }, reliable: true);
-        }
-        #endregion
-
         private void Update()
         {
             //Update dirty behaviours
@@ -860,10 +808,94 @@ namespace NetBuff
 
             dirtyBehaviours.Clear();
         }
+        
+        #region Scene Management
+        [SerializeField, HideInInspector]
+        public List<string> loadedScenes = new List<string>();
+        
+        private void _LoadSceneLocally(string sceneName)
+        {
+            if (loadedScenes.Contains(sceneName))
+                return;
+            
+            loadedScenes.Add(sceneName);
+            var scene = SceneManager.LoadScene(sceneName, new LoadSceneParameters(LoadSceneMode.Additive));
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                foreach (var identity in root.GetComponentsInChildren<NetworkIdentity>())
+                {
+                    if (networkObjects.ContainsKey(identity.Id))
+                        continue;
+                    networkObjects.Add(identity.Id, identity);
+                    OnNetworkObjectSpawned(identity, false);
+                }
+            }
+        }
+        
+        private void _UnloadSceneLocally(string sceneName)
+        {
+            if (!loadedScenes.Contains(sceneName))
+                return;
+            
+            loadedScenes.Remove(sceneName);
+            var scene = SceneManager.GetSceneByName(sceneName);
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                foreach (var identity in root.GetComponentsInChildren<NetworkIdentity>())
+                {
+                    if (!networkObjects.ContainsKey(identity.Id))
+                        continue;
+                    networkObjects.Remove(identity.Id);
+                    OnNetworkObjectDespawned(identity);
+                }
+            }
+            SceneManager.UnloadSceneAsync(scene);
+        }
+        #endregion
+        
+        
+        /// <summary>
+        /// Load a scene for all clients
+        /// </summary>
+        /// <param name="sceneName"></param>
+        [ServerOnly]
+        public void LoadScene(string sceneName)
+        {
+            var packet = new NetworkLoadScenePacket
+            {
+                SceneName = sceneName
+            };
+            BroadcastServerPacket(packet, true);
+        }
+        
+        /// <summary>
+        /// Unload a scene for all clients
+        /// </summary>
+        /// <param name="sceneName"></param>
+        [ServerOnly]
+        public void UnloadScene(string sceneName)
+        {
+            var packet = new NetworkUnloadScenePacket
+            {
+                SceneName = sceneName
+            };
+            BroadcastServerPacket(packet, true);
+        }
+        
+        public bool IsSceneLoaded(string sceneName)
+        {
+            return loadedScenes.Contains(sceneName);
+        }
+        
+        /*
+         * - load scene
+         * - unload scene
+         * - move to scene
+         */
     }
     
     #if UNITY_EDITOR
-    [CustomEditor(typeof(NetworkManager))]
+    [CustomEditor(typeof(NetworkManager), true)]
     public class NetworkManagerEditor : Editor
     {
         private static readonly FieldInfo _IDField = typeof(NetworkIdentity).GetField("id", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -872,11 +904,26 @@ namespace NetBuff
         {
             base.OnInspectorGUI();
 
-            if (!GUILayout.Button("Regenerate Ids")) return;
-            foreach (var identity in FindObjectsByType<NetworkIdentity>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            if (GUILayout.Button("Regenerate Ids"))
             {
-                _IDField.SetValue(identity, NetworkId.New());
-                EditorUtility.SetDirty(identity);
+                foreach (var identity in FindObjectsByType<NetworkIdentity>(FindObjectsInactive.Include,
+                             FindObjectsSortMode.None))
+                {
+                    _IDField.SetValue(identity, NetworkId.New());
+                    EditorUtility.SetDirty(identity);
+                }
+            }
+
+            if (GUILayout.Button("Dump Ids"))
+            {
+                var path = EditorUtility.SaveFilePanel("Save Ids", "", "Ids", "txt");
+                if (path.Length != 0)
+                {
+                    var ids = NetworkManager.Instance.GetNetworkObjects();
+
+                    System.IO.File.WriteAllText(path, string.Join("\n", ids.Select(x => $"{x.gameObject.name}: {x.Id}")));
+                    System.Diagnostics.Process.Start(path);
+                }
             }
         }
     }

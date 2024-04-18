@@ -65,6 +65,11 @@ namespace NetBuff.Components
         public ReadOnlySpan<NetworkValue> Values => new ReadOnlySpan<NetworkValue>(_values);
         private NetworkValue[] _values;
         private Queue<byte> _dirtyValues = new Queue<byte>();
+        
+        /// <summary>
+        /// Returns if local environment is a server
+        /// </summary>
+        public bool IsServer => NetworkManager.Instance != null && NetworkManager.Instance.IsServerRunning;
 
         #region Values
 
@@ -536,5 +541,7 @@ namespace NetBuff.Components
             return packet.Id;
         }
         #endregion
+        
+        
     }
 }
