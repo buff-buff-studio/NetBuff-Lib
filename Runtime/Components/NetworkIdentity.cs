@@ -67,6 +67,11 @@ namespace NetBuff.Components
         
         private NetworkBehaviour[] _behaviours;
 
+        public void OnDestroy()
+        {
+            Debug.Log(gameObject.name);
+        }
+
         /// <summary>
         /// Returns all NetworkBehaviours attached to this object
         /// </summary>
