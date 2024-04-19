@@ -499,7 +499,7 @@ namespace NetBuff
             prePacket.NetworkValues = values.ToArray();
 
             SendServerPacket(prePacket, clientId, true);
-            SpawnPlayer(clientId);
+            OnSpawnPlayer(clientId);
 
             foreach (var identity in networkObjects.Values)
                 foreach (var behaviour in identity.Behaviours)
@@ -510,7 +510,7 @@ namespace NetBuff
         /// Spawns a player in the game world.
         /// </summary>
         /// <param name="clientId">The ID of the client for whom the player is being spawned.</param>
-        protected virtual void SpawnPlayer(int clientId)
+        protected virtual void OnSpawnPlayer(int clientId)
         {
             #if UNITY_EDITOR
             if (!isClientReloaded)
