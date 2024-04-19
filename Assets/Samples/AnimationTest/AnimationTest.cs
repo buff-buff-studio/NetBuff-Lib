@@ -5,17 +5,17 @@ namespace Samples.AnimationTest
 {
     public class AnimationTest : NetworkBehaviour
     {
+        private static readonly int _Walking = Animator.StringToHash("walking");
+        
         public Animator animator;
-
         public bool waving = false;
-
+        
         public void Update()
         {
             if (!HasAuthority)
                 return;
-            float v = 1;
-            v = Mathf.Lerp(animator.GetFloat("walking"), Input.GetAxisRaw("Vertical"), Time.deltaTime * 3);
-            animator.SetFloat("walking", v);
+            var v = Mathf.Lerp(animator.GetFloat(_Walking), Input.GetAxisRaw("Vertical"), Time.deltaTime * 3);
+            animator.SetFloat(_Walking, v);
 
             if (Input.GetKeyDown(KeyCode.A))
             {
