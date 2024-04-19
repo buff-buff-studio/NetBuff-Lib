@@ -10,6 +10,7 @@ namespace NetBuff.Components
     /// <summary>
     /// Component that syncs the transform of a game object over the network.
     /// </summary>
+    [Icon("Assets/Editor/Icons/NetworkTransform.png")]
     public class NetworkTransform : NetworkBehaviour
     {
         #region Enum

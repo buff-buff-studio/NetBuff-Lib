@@ -8,6 +8,7 @@ namespace NetBuff.Components
     /// Component that syncs the transform and rigidbody of a game object over the network.
     /// </summary>
     [RequireComponent(typeof(Rigidbody))]
+    [Icon("Assets/Editor/Icons/NetworkRigidbodyTransform.png")]
     public class NetworkRigidbodyTransform : NetworkTransform
     {
         #region Public Fields

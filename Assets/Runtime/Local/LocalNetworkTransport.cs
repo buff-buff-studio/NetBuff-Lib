@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NetBuff.Interface;
+using UnityEngine;
 
 namespace NetBuff.Local
 {
+    [Icon("Assets/Editor/Icons/LocalNetworkTransport.png")]
     public class LocalNetworkTransport : NetworkTransport
     {
         private Queue<Action> _dispatcher = new Queue<Action>();
@@ -33,7 +35,6 @@ namespace NetBuff.Local
             OnConnect.Invoke();
             OnClientConnected.Invoke(id);
         }
-        
         
         public override void StartHost(int magicNumber)
         {

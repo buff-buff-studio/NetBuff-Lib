@@ -13,6 +13,7 @@ namespace NetBuff.Components
     /// Base class for all network object components
     /// </summary>
     [RequireComponent(typeof(NetworkIdentity))]
+    [Icon("Assets/Editor/Icons/NetworkBehaviour.png")]
     public abstract class NetworkBehaviour : MonoBehaviour
     {
         #region Internal Fields

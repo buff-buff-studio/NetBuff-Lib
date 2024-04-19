@@ -15,6 +15,7 @@ namespace NetBuff
     /// <summary>
     /// Main network system class. Holds the network state and manages the network objects.
     /// </summary>
+    [Icon("Assets/Editor/Icons/NetworkManager.png")]
     public class NetworkManager : MonoBehaviour
     {
         private static readonly FieldInfo _IDField = typeof(NetworkIdentity).GetField("id", BindingFlags.NonPublic | BindingFlags.Instance);

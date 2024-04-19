@@ -10,6 +10,7 @@ namespace NetBuff
     /// Debug GUI for NetworkManager
     /// </summary>
     [RequireComponent(typeof(NetworkManager))]
+    [Icon("Assets/Editor/Icons/NetworkManagerGUI.png")]
     public class NetworkManagerGUI : MonoBehaviour
     {
         private void OnGUI()

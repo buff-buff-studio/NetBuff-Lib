@@ -10,6 +10,7 @@ namespace NetBuff
     /// Used to store prefabs for networked objects, to reference them across the network
     /// </summary>
     [CreateAssetMenu(fileName = "NetworkPrefabRegistry", menuName = "BuffBuffNetcode/NetworkPrefabRegistry", order = 0)]
+    [Icon("Assets/Editor/Icons/NetworkPrefabRegistry.png")]
     public class NetworkPrefabRegistry : ScriptableObject
     {
         [SerializeField]

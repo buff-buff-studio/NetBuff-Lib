@@ -13,6 +13,7 @@ namespace NetBuff.Components
     /// Component that syncs a animator state and parameters over the network
     /// </summary>
     [SuppressMessage("ReSharper", "ParameterHidesMember")]
+    [Icon("Assets/Editor/Icons/NetworkAnimator.png")]
     public class NetworkAnimator : NetworkBehaviour, INetworkBehaviourSerializer
     {
         #region Public Fields
