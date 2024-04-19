@@ -133,7 +133,7 @@ namespace NetBuff.Components
 
             var packet = new NetworkValuesPacket
             {
-                IdentityId = Id,
+                Id = Id,
                 BehaviourId = BehaviourId,
                 Payload = ((MemoryStream) writer.BaseStream).ToArray()
             };
@@ -150,15 +150,26 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Send a packet to a specific client to sync all the NetowrkValues of this behaviour
+        /// Send a packet to a specific client to sync all the NetworkValues of this behaviour
         /// </summary>
         /// <param name="clientId"></param>
         [ServerOnly]
         public void SendNetworkValuesToClient(int clientId)
         {
+            var packet = GetPreExistingValuesPacket();
+            if(packet != null)
+                ServerSendPacket(packet, clientId, true);
+        }
+        
+        /// <summary>
+        /// Creates a packet containing all the NetworkValues of this behaviour
+        /// </summary>
+        /// <returns></returns>
+        [ServerOnly]
+        public NetworkValuesPacket GetPreExistingValuesPacket()
+        {
             if(_values == null || _values.Length == 0)
-                return;
-
+                return null;
             var writer = new BinaryWriter(new MemoryStream());
             writer.Write((byte) _values.Length);
 
@@ -169,14 +180,12 @@ namespace NetBuff.Components
                 _values[i].Serialize(writer);
             }
 
-            var packet = new NetworkValuesPacket
+            return new NetworkValuesPacket
             {
-                IdentityId = Id,
+                Id = Id,
                 BehaviourId = BehaviourId,
                 Payload = ((MemoryStream) writer.BaseStream).ToArray()
             };
-
-            ServerSendPacket(packet, clientId, true);
         }
 
         /// <summary>

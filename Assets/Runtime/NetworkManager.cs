@@ -450,15 +450,15 @@ namespace NetBuff
                 RemovedObjects = removedPreExistingObjects.ToArray(),
                 SceneNames = loadedScenes.ToArray()
             };
-
-            SendServerPacket(prePacket, clientId, true);
             
+            var spawns = new List<NetworkObjectSpawnPacket>();
+
             foreach (var identity in networkObjects.Values)
             {
                 if(identity.PrefabId.IsEmpty) continue;
                 
                 var t = identity.transform;
-                var packet = new NetworkObjectSpawnPacket
+                spawns.Add(new NetworkObjectSpawnPacket
                 {
                     Id = identity.Id,
                     PrefabId = identity.PrefabId,
@@ -469,14 +469,25 @@ namespace NetBuff
                     IsActive = identity.gameObject.activeSelf,
                     IsRetroactive = true,
                     SceneId = GetSceneId(identity.gameObject.scene.name)
-                };
-                SendServerPacket(packet, clientId, true);
+                });
             }
-
+            prePacket.SpawnedObjects = spawns.ToArray();
+            
+            var values = new List<NetworkValuesPacket>();
+            
+            //Network variables
             foreach (var identity in networkObjects.Values)
                 foreach (var behaviour in identity.Behaviours)
-                    behaviour.SendNetworkValuesToClient(clientId);
-            
+                {
+                    var packet = behaviour.GetPreExistingValuesPacket();
+                    if(packet == null)
+                        continue;
+                    values.Add(packet);
+                }
+
+            prePacket.NetworkValues = values.ToArray();
+
+            SendServerPacket(prePacket, clientId, true);
             SpawnPlayer(clientId);
 
             foreach (var identity in networkObjects.Values)
@@ -568,7 +579,7 @@ namespace NetBuff
             {
                 case NetworkValuesPacket valuesPacket:
                 {
-                    if (!networkObjects.TryGetValue(valuesPacket.IdentityId, out _)) return;
+                    if (!networkObjects.TryGetValue(valuesPacket.Id, out _)) return;
                     BroadcastServerPacketExceptFor(valuesPacket, clientId, true);
                     return;
                 }
@@ -650,7 +661,7 @@ namespace NetBuff
             
                 case NetworkValuesPacket valuesPacket:
                 {
-                    if (!networkObjects.TryGetValue(valuesPacket.IdentityId, out var identity)) return;
+                    if (!networkObjects.TryGetValue(valuesPacket.Id, out var identity)) return;
                     foreach (var behaviour in identity.Behaviours)
                         if (behaviour.BehaviourId == valuesPacket.BehaviourId)
                         {
@@ -768,6 +779,19 @@ namespace NetBuff
                     Destroy(identity.gameObject);
                 }
             }
+            
+            foreach (var spawnedObject in preExistingInfoPacket.SpawnedObjects)
+                HandleSpawnPacket(spawnedObject);
+            
+            foreach (var valuesPacket in preExistingInfoPacket.NetworkValues)
+            {
+                if (!networkObjects.TryGetValue(valuesPacket.Id, out var identity)) return;
+                foreach (var behaviour in identity.Behaviours)
+                    if (behaviour.BehaviourId == valuesPacket.BehaviourId)
+                    {
+                        behaviour.ApplyDirtyValues(valuesPacket.Payload);
+                    }
+            }
         }
         #endregion
         
@@ -783,9 +807,6 @@ namespace NetBuff
             var obj = Instantiate(prefab, packet.Position, packet.Rotation);
             obj.transform.localScale = packet.Scale;
             var identity = obj.GetComponent<NetworkIdentity>();
-            
-            Debug.Log($"Spawned {obj.name} with id {packet.Id} with {packet.SceneId}");
-            
             var scene = GetSceneName(packet.SceneId);
             if (scene != obj.scene.name && loadedScenes.Contains(scene))
                 SceneManager.MoveGameObjectToScene(obj, SceneManager.GetSceneByName(scene));

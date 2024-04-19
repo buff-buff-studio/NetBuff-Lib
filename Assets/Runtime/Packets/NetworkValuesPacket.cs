@@ -7,13 +7,13 @@ namespace NetBuff.Packets
 {
     public class NetworkValuesPacket : IPacket
     {
-        public NetworkId IdentityId { get; set; }
+        public NetworkId Id { get; set; }
         public byte BehaviourId { get; set; }
         public byte[] Payload { get; set; }
 
         public void Serialize(BinaryWriter writer)
         {
-            IdentityId.Serialize(writer);
+            Id.Serialize(writer);
             writer.Write(BehaviourId);
             writer.Write(Payload.Length);
             writer.Write(Payload);
@@ -21,7 +21,7 @@ namespace NetBuff.Packets
 
         public void Deserialize(BinaryReader reader)
         {
-            IdentityId = NetworkId.Read(reader);
+            Id = NetworkId.Read(reader);
             BehaviourId = reader.ReadByte();
             var length = reader.ReadInt32();
             Payload = reader.ReadBytes(length);
