@@ -10,6 +10,7 @@ using NetBuff.Packets;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
+using Random = UnityEngine.Random;
 
 namespace NetBuff
 {
@@ -21,8 +22,10 @@ namespace NetBuff
         private static readonly FieldInfo _IDField = typeof(NetworkIdentity).GetField("id", BindingFlags.NonPublic | BindingFlags.Instance);
         private static readonly FieldInfo _OwnerIdField = typeof(NetworkIdentity).GetField("ownerId", BindingFlags.NonPublic | BindingFlags.Instance);
         private static readonly FieldInfo _PrefabIdField = typeof(NetworkIdentity).GetField("prefabId", BindingFlags.NonPublic | BindingFlags.Instance);
-        
-        [Header("SETTINGS")]
+
+        [Header("SETTINGS")] 
+        //Used to check if the communication is being done on the same system
+        public int magicNumber = _GenerateMagicNumber();
         public int defaultTickRate = 50;
         public bool spawnsPlayer = true;
  
@@ -194,7 +197,7 @@ namespace NetBuff
         #region Helper Methods
         public void StartClient()
         {
-            transport.StartClient();
+            transport.StartClient(magicNumber);
         }
         
         public void StartServer()
@@ -204,7 +207,7 @@ namespace NetBuff
         
         public void StartHost()
         {
-            transport.StartHost();
+            transport.StartHost(magicNumber);
         }
         
         public void Close()
@@ -1087,6 +1090,12 @@ namespace NetBuff
         public virtual void OnClearEnvironment()
         {
             SceneManager.LoadScene(SourceScene);
+        }
+        
+        private static int _GenerateMagicNumber()
+        {
+            var rnd = new System.Random();
+            return rnd.Next(1_000_000, 9_999_999);
         }
     }
 }

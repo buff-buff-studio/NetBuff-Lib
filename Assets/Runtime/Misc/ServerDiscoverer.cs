@@ -29,12 +29,11 @@ namespace NetBuff.Misc
 
             public override string ToString()
             {
-                return
-                    $"Address: {Address}, Players: {Players}/{MaxPlayers}, Platform: {Platform}, HasPassword: {HasPassword}";
+                return $"Address: {Address}, Players: {Players}/{MaxPlayers}, Platform: {Platform}, HasPassword: {HasPassword}";
             }
         }
         
-        public static async void FindServers(int port, Action<GameInfo> foundServer, Action finalized)
+        public static async void FindServers(int magicNumber, int port, Action<GameInfo> foundServer, Action finalized)
         {
             var waiting = 0;
 
@@ -71,6 +70,7 @@ namespace NetBuff.Misc
                                 var writer = new NetDataWriter();
                                 writer.Put((byte)8);
                                 writer.Put("server_search");
+                                writer.Put(magicNumber);
                                 var data = writer.CopyData();
                                 await udpClient.SendAsync(data, data.Length, new IPEndPoint(IPAddress.Broadcast, port));
 

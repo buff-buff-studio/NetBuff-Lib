@@ -46,14 +46,15 @@ namespace NetBuff.UDP
         public string address = "127.0.0.1";
         public int port = 7777;
         public string password = "";
+        public int maxClients = 10;
         
         private UDPClient _client;
         private UDPServer _server;
         
-        public override void StartHost()
+        public override void StartHost(int magicNumber)
         {
             StartServer();
-            StartClient();
+            StartClient(magicNumber);
             Type = EndType.Host;
         }
 
@@ -62,17 +63,17 @@ namespace NetBuff.UDP
             if (_server != null)
                 return;
             
-            _server = new UDPServer(address, port, this, password, Name);
+            _server = new UDPServer(address, port, this, password, Name, maxClients);
             Type = Type == EndType.None ? EndType.Server : EndType.Host;
             OnServerStart?.Invoke();
         }
 
-        public override void StartClient()
+        public override void StartClient(int magicNumber)
         {
             if (_client != null)
                 return;
             
-            _client = new UDPClient(address, port, this);
+            _client = new UDPClient(magicNumber, address, port, this, password);
             Type = Type == EndType.None ? EndType.Client : EndType.Host;
         }
 
@@ -184,10 +185,11 @@ namespace NetBuff.UDP
             private readonly int _maxClients = 2;
             private readonly string _password;
             private readonly string _name;
-            public UDPServer(string address, int port, UDPNetworkTransport transport, string password, string name)
+            public UDPServer(string address, int port, UDPNetworkTransport transport, string password, string name, int maxClients)
             {
                 _password = password;
                 _transport = transport;
+                _maxClients = maxClients;
                 
                 _manager = new NetManager(this)
                 {
@@ -241,6 +243,11 @@ namespace NetBuff.UDP
             {
                 if (reader.GetString(50) == "server_search")
                 {
+                    //Check magic number
+                    var magicNumber = reader.GetInt();
+                    if(NetworkManager.Instance.magicNumber != magicNumber)
+                        return;
+                    
                     var hasPassword = !string.IsNullOrEmpty(_password);
                     var writer = new NetDataWriter();
                     writer.Put("server_answer");
@@ -260,6 +267,36 @@ namespace NetBuff.UDP
 
             public void OnConnectionRequest(ConnectionRequest request)
             {
+                var data = request.Data;
+                var writer = new NetDataWriter();
+                
+                var magicNumber = data.GetInt();
+                if(NetworkManager.Instance.magicNumber != magicNumber)
+                {
+                    writer.Put("wrong_magic_number");
+                    request.Reject(writer);
+                    return;
+                }
+                
+                if(_clients.Count >= _maxClients)
+                {
+                    writer.Put("server_full");
+                    request.Reject(writer);
+                    return;
+                }
+                
+                var hasPassword = !string.IsNullOrEmpty(_password);
+                if (hasPassword)
+                {
+                    var password = data.GetString();
+                    if (password != _password)
+                    {
+                        writer.Put("wrong_password");
+                        request.Reject(writer);
+                        return;
+                    }
+                }
+                
                 request.Accept();
             }
 
@@ -324,7 +361,7 @@ namespace NetBuff.UDP
             private UDPClientInfo _clientInfo;
             private readonly UDPNetworkTransport _transport;
             
-            public UDPClient(string address, int port, UDPNetworkTransport transport)
+            public UDPClient(int magicNumber, string address, int port, UDPNetworkTransport transport, string password)
             {
                 _transport = transport;
                 _manager = new NetManager(this)
@@ -333,7 +370,11 @@ namespace NetBuff.UDP
                     UpdateTime = 8
                 };
                 _manager.Start();
-                _manager.Connect(address, port, "internal_key");
+                
+                var writer = new NetDataWriter();
+                writer.Put(magicNumber);
+                writer.Put(password);
+                _manager.Connect(address, port, writer);
             }
             
             public void Close()
@@ -351,15 +392,22 @@ namespace NetBuff.UDP
                 _transport.ClientConnectionInfo = _clientInfo;
                 _transport.OnConnect?.Invoke();
             }
-
+            
             public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
-            {  
-                _transport.OnDisconnect?.Invoke(_ToSnakeCase(disconnectInfo.Reason.ToString()));
+            {
+                var reason = _ToSnakeCase(disconnectInfo.Reason.ToString());
+                if (disconnectInfo.AdditionalData.AvailableBytes > 0)
+                {
+                    var reader = disconnectInfo.AdditionalData;
+                    reason = reader.GetString();
+                }
+                _transport.OnDisconnect?.Invoke(reason);
                 _transport.ClientConnectionInfo = _clientInfo = null;
             }
 
             public void OnNetworkError(IPEndPoint endPoint, SocketError socketError)
             {
+                
             }
 
             public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)

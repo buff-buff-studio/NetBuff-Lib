@@ -37,7 +37,7 @@ namespace NetBuff.Local
         }
         
         
-        public override void StartHost()
+        public override void StartHost(int magicNumber)
         {
             Type = EndType.Host;
             OnServerStart?.Invoke();
@@ -58,7 +58,7 @@ namespace NetBuff.Local
             OnServerStart?.Invoke();
         }
 
-        public override void StartClient()
+        public override void StartClient(int magicNumber)
         {
             if (Type == EndType.None)
                 throw new Exception("Cannot start client without a host or server");

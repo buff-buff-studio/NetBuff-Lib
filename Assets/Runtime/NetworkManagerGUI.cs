@@ -76,7 +76,7 @@ namespace NetBuff
             
             if (NetworkManager.Instance.EndType == NetworkTransport.EndType.None)
             {
-                GUILayout.BeginArea(new Rect(220, 10, 300, 400));
+                GUILayout.BeginArea(new Rect(220, 10, 350, 400));
                 DrawServerList();
                 GUILayout.EndArea();
             }
@@ -120,7 +120,7 @@ namespace NetBuff
                 
                 if (NetworkManager.Instance.transport is UDPNetworkTransport udp)
                 {
-                    ServerDiscoverer.FindServers(udp.port, (info) =>
+                    ServerDiscoverer.FindServers(NetworkManager.Instance.magicNumber, udp.port, (info) =>
                     {
                         list.Add(info);
                         _serverList = list.ToArray();
@@ -134,7 +134,7 @@ namespace NetBuff
                 {
                     if (info is ServerDiscoverer.EthernetGameInfo egi)
                     {
-                        if (GUILayout.Button($"{egi.Address} - {egi.Players}/{egi.MaxPlayers} - {egi.Platform}"))
+                        if (GUILayout.Button($"{egi.Address} - {egi.Players}/{egi.MaxPlayers} - {egi.Platform} [{egi.HasPassword}]"))
                         {
                             transport.address = egi.Address.ToString();
                             NetworkManager.Instance.StartClient();
