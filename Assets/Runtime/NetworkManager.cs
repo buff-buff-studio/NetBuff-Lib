@@ -292,6 +292,9 @@ namespace NetBuff
         [ServerOnly]
         public void SpawnNetworkObjectForClients(NetworkId prefabId, Vector3 position, Quaternion rotation, Vector3 scale,int owner = -1, int scene = -1)
         {
+            if(!IsServerRunning)
+                throw new Exception("This method can only be called on the server");
+            
             var packet = new NetworkObjectSpawnPacket
             {
                 Id = NetworkId.New(),
@@ -316,6 +319,9 @@ namespace NetBuff
         [ServerOnly]
         public void SetNetworkObjectOwnerForClients(NetworkId id, int owner)
         {
+            if(!IsServerRunning)
+                throw new Exception("This method can only be called on the server");
+            
             var packet = new NetworkObjectOwnerPacket
             {
                 Id = id,
@@ -333,6 +339,9 @@ namespace NetBuff
         [ServerOnly]
         public void SetNetworkObjectActiveForClients(NetworkId id, bool active)
         {
+            if(!IsServerRunning)
+                throw new Exception("This method can only be called on the server");
+            
             var packet = new NetworkObjectActivePacket
             {
                 Id = id,
@@ -349,6 +358,9 @@ namespace NetBuff
         [ServerOnly]
         public void DespawnNetworkObjectForClients(NetworkId id)
         {
+            if(!IsServerRunning)
+                throw new Exception("This method can only be called on the server");
+            
             var packet = new NetworkObjectDespawnPacket
             {
                 Id = id
@@ -603,6 +615,16 @@ namespace NetBuff
                     return;
                 }
                 
+                case NetworkMoveObjectScenePacket moveObjectScenePacket:
+                {
+                    if (!networkObjects.TryGetValue(moveObjectScenePacket.Id, out var identity)) return;
+                    if (identity.OwnerId != clientId) return;
+                    
+                    //Apply the scene move
+                    MoveObjectToScene(moveObjectScenePacket.Id, moveObjectScenePacket.SceneId);
+                    return;
+                }
+
                 case IOwnedPacket ownedPacket:
                 {
                     if (!networkObjects.TryGetValue(ownedPacket.Id, out var identity)) return;
@@ -672,6 +694,16 @@ namespace NetBuff
                 case NetworkLoadScenePacket loadScenePacket:
                     _ = _LoadSceneLocally(loadScenePacket.SceneName);
                     return;
+
+                case NetworkMoveObjectScenePacket moveObjectScenePacket:
+                {
+                    if (!networkObjects.TryGetValue(moveObjectScenePacket.Id, out var identity)) return;
+                    var obj = identity.gameObject;
+                    var scene = GetSceneName(moveObjectScenePacket.SceneId);
+                    if (scene != obj.scene.name && loadedScenes.Contains(scene))
+                        SceneManager.MoveGameObjectToScene(obj, SceneManager.GetSceneByName(scene));
+                    return;
+                }
                 
                 case NetworkUnloadScenePacket unloadScenePacket:
                     _UnloadSceneLocally(unloadScenePacket.SceneName);
@@ -791,6 +823,9 @@ namespace NetBuff
         [ClientOnly]
         public void SendClientPacket(IPacket packet, bool reliable = false)
         {
+            if(!IsClientRunning)
+                throw new Exception("This method can only be called on the client");
+            
             transport.SendClientPacket(packet, reliable);
         }
         
@@ -803,6 +838,9 @@ namespace NetBuff
         [ServerOnly]
         public void SendServerPacket(IPacket packet, int target = -1, bool reliable = false)
         {
+            if(!IsServerRunning)
+                throw new Exception("This method can only be called on the server");
+            
             transport.SendServerPacket(packet, target, reliable);
             
             if(EndType == NetworkTransport.EndType.Server)
@@ -817,6 +855,9 @@ namespace NetBuff
         [ServerOnly]
         public void BroadcastServerPacket(IPacket packet, bool reliable = false)
         {
+            if(!IsServerRunning)
+                throw new Exception("This method can only be called on the server");
+            
             transport.BroadcastServerPacket(packet, reliable);
             
             if(EndType == NetworkTransport.EndType.Server)
@@ -832,6 +873,9 @@ namespace NetBuff
         [ServerOnly]
         public void BroadcastServerPacketExceptFor(IPacket packet, int except, bool reliable = false)
         {
+            if(!IsServerRunning)
+                throw new Exception("This method can only be called on the server");
+            
             foreach (var client in transport.GetClients())
             {
                 if (client.Id != except)
@@ -937,6 +981,9 @@ namespace NetBuff
         [ServerOnly]
         public void LoadScene(string sceneName)
         {
+            if(!IsServerRunning)
+                throw new Exception("This method can only be called on the server");
+            
             var packet = new NetworkLoadScenePacket
             {
                 SceneName = sceneName
@@ -951,6 +998,9 @@ namespace NetBuff
         [ServerOnly]
         public void UnloadScene(string sceneName)
         {
+            if(!IsServerRunning)
+                throw new Exception("This method can only be called on the server");
+            
             if(sceneName == sourceScene)
                 throw new Exception("Cannot unload the source scene");
 
@@ -961,14 +1011,33 @@ namespace NetBuff
             BroadcastServerPacket(packet, true);
         }
         
+        /// <summary>
+        /// Returns if a scene is loaded
+        /// </summary>
+        /// <param name="sceneName"></param>
+        /// <returns></returns>
         public bool IsSceneLoaded(string sceneName)
         {
             return loadedScenes.Contains(sceneName);
         }
-        
-        /*
-         * - move to scene
-         */
+
+        /// <summary>
+        /// Moves an object to a specific scene
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="sceneId"></param>
+        public void MoveObjectToScene(NetworkId id, int sceneId)
+        {
+            if(!IsServerRunning)
+                throw new Exception("This method can only be called on the server");
+
+            var packet = new NetworkMoveObjectScenePacket
+            {
+                Id = id,
+                SceneId = sceneId
+            };
+            BroadcastServerPacket(packet, true);
+        }
 
         /// <summary>
         /// Called to reset the entire network environment

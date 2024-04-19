@@ -432,6 +432,81 @@ namespace NetBuff.Components
         }
         #endregion
 
+        #region Scene Moving
+        /// <summary>
+        /// Moves the object to a different scene
+        /// </summary>
+        /// <param name="sceneId"></param>
+        [ServerOnly]
+        public void MoveToScene(int sceneId)
+        {
+            if(!HasAuthority)
+                throw new InvalidOperationException("Only the object owner can move it to a different scene");
+
+            SendPacket(new NetworkMoveObjectScenePacket{Id = Id, SceneId = sceneId}, true);
+        }
+
+        /// <summary>
+        /// Moves the object to a different scene
+        /// </summary>
+        /// <param name="sceneName"></param>
+        [ServerOnly]
+        public void MoveToScene(string sceneName)
+        {
+            if(!HasAuthority)
+                throw new InvalidOperationException("Only the object owner can move it to a different scene");
+
+            SendPacket(new NetworkMoveObjectScenePacket{Id = Id, SceneId = NetworkManager.Instance.GetSceneId(sceneName)}, true);
+        }
+        #endregion
+
+        #region Scene Utils
+        /// <summary>
+        /// Returns the number of scenes loaded
+        /// </summary>
+        public int LoadedSceneCount => NetworkManager.Instance.LoadedSceneCount;
+
+        /// <summary>
+        /// Returns the name of the source scene
+        /// </summary>
+        /// <returns></returns>
+        public string SourceScene => NetworkManager.Instance.SourceScene;
+
+        /// <summary>
+        /// Returns the name of the last loaded scene
+        /// </summary>
+        public string LastLoadedScene => NetworkManager.Instance.LastLoadedScene;
+
+        /// <summary>
+        /// Returns all loaded scenes
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<string> GetLoadedScenes()
+        {
+            return NetworkManager.Instance.LoadedScenes;
+        }
+
+        /// <summary>
+        /// Returns the id of a scene by its name
+        /// </summary>
+        /// <param name="sceneName"></param>
+        /// <returns></returns>
+        public int GetSceneId(string sceneName)
+        {
+            return NetworkManager.Instance.GetSceneId(sceneName);
+        }
+
+        /// <summary>
+        /// Returns the name of a scene by its id
+        /// </summary>
+        /// <param name="sceneId"></param>
+        /// <returns></returns>
+        public string GetSceneName(int sceneId)
+        {
+            return NetworkManager.Instance.GetSceneName(sceneId);
+        }
+        #endregion
+
         #region Spawning
         /// <summary>
         /// Spawns a new object across the network
