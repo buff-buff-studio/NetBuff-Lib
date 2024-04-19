@@ -100,7 +100,7 @@ namespace NetBuff.Editor
             {
                 EditorGUILayout.BeginHorizontal();
                 EditorGUILayout.Space(5);
-                EditorGUILayout.LabelField("Scene: ", GUILayout.Width(45.0f));
+                EditorGUILayout.LabelField("Scene ", GUILayout.Width(40.0f));
                 var newSceneIndex = EditorGUILayout.Popup(sceneIndex, _scenes.Select(x => x.name).ToArray(), GUILayout.Width(150.0f));
                 EditorGUILayout.EndHorizontal();
                 if (newSceneIndex == sceneIndex) return;
