@@ -958,6 +958,7 @@ namespace NetBuff
                 return;
             
             loadedScenes.Remove(sceneName);
+            
             var scene = SceneManager.GetSceneByName(sceneName);
             foreach (var root in scene.GetRootGameObjects())
             {
@@ -1008,6 +1009,7 @@ namespace NetBuff
             {
                 SceneName = sceneName
             };
+
             BroadcastServerPacket(packet, true);
         }
         
