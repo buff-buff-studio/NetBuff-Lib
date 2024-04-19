@@ -6,7 +6,7 @@ namespace CTF
     public class Shot : NetworkBehaviour
     {
         public float lifeTime = 5.0f;
-        public Rigidbody rigidbody;
+        public new Rigidbody rigidbody;
 
         public override void OnSpawned(bool isRetroactive)
         {

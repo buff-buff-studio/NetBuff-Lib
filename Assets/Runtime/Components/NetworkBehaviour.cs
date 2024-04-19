@@ -222,6 +222,8 @@ namespace NetBuff.Components
         /// <exception cref="InvalidOperationException"></exception>
         public void MarkValueDirty(NetworkValue value)
         {
+            if (_values == null)
+                return;
             var index = Array.IndexOf(_values, value);
             if (index == -1)
                 throw new InvalidOperationException("The value is not attached to this behaviour");
