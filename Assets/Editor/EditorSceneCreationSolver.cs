@@ -19,10 +19,9 @@ namespace NetBuff.Editor
             var type = AssetDatabase.GetMainAssetTypeAtPath(assetName);
             if (type != null)
                 return;
+            
             if (assetName.EndsWith(".unity"))
-            {
                 EditorCoroutineUtility.StartCoroutineOwnerless(WaitCreation(assetName));
-            }
         }
 
         private static readonly Regex _RegexGameObject = new Regex("^GameObject:.*$"); 
