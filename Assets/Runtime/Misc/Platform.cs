@@ -11,7 +11,7 @@ namespace NetBuff.Misc
         
         Mobile,
         Android,
-        iOS,
+        IOS,
         
         Unknown
     }
@@ -33,7 +33,7 @@ namespace NetBuff.Misc
                 case RuntimePlatform.Android:
                     return Platform.Android;
                 case RuntimePlatform.IPhonePlayer:
-                    return Platform.iOS;
+                    return Platform.IOS;
                 default:
                     return Platform.Unknown;
             }

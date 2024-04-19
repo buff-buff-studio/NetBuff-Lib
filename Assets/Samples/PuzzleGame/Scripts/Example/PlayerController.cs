@@ -1,12 +1,10 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
-using NetBuff;
 using NetBuff.Components;
 using NetBuff.Interface;
 using NetBuff.Misc;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
 namespace ExamplePlatformer
@@ -46,12 +44,12 @@ namespace ExamplePlatformer
             InvokeRepeating(nameof(Tick), 0, 1f / tickRate);
             WithValues(nickname, bodyColor);
 
-            nickname.OnValueChanged += (oldValue, newValue) =>
+            nickname.OnValueChanged += (_, newValue) =>
             {
                 headplate.text = newValue;
             };
             
-            bodyColor.OnValueChanged += (oldValue, newValue) =>
+            bodyColor.OnValueChanged += (_, newValue) =>
             {
                 foreach (var r in bodyRenderers)
                 {

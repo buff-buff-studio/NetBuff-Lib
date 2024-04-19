@@ -15,9 +15,11 @@ namespace NetBuff.Components
     public class NetworkAnimator : NetworkBehaviour
     {
         private float _animatorSpeed;
+        /*
         private int[] _animationHash;
         private int[] _transitionHash;
         private float[] _layerWeight;
+        */
         
         private AnimatorControllerParameter[] _parameters;
         private int[] _intParameters;
@@ -40,10 +42,12 @@ namespace NetBuff.Components
             _floatParameters = new float[_parameters.Length];
             _boolParameters = new bool[_parameters.Length];
 
+            /*
             var layerCount = animator.layerCount;
             _animationHash = new int[layerCount];
             _transitionHash = new int[layerCount];
             _layerWeight = new float[layerCount];
+            */
             
             InvokeRepeating(nameof(Tick), 0, 1f / (tickRate == -1 ? NetworkManager.Instance.defaultTickRate : tickRate));
         }
@@ -200,6 +204,7 @@ namespace NetBuff.Components
             return changed;
         }
         
+/*
         private bool CheckAnimStateChanged(out int stateHash, out float normalizedTime, int layerId)
         {
             var change = false;
@@ -242,6 +247,7 @@ namespace NetBuff.Components
             }
             return change;
         }
+*/
         
         private void ApplyAnimatorSyncPacket(AnimatorSyncPacket packet)
         {

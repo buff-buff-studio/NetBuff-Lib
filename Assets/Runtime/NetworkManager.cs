@@ -594,9 +594,8 @@ namespace NetBuff
         {
             switch (packet)
             {
-                case NetworkPreExistingResponsePacket responsePacket:
+                case NetworkPreExistingResponsePacket _:
                 {
-                    
                     #if UNITY_EDITOR
                     if (!isClientReloaded)
                     {
@@ -994,6 +993,9 @@ namespace NetBuff
         {
             if(sceneId == -1)
                 return LastLoadedScene;
+            
+            if(sceneId < 0 || sceneId >= loadedScenes.Count)
+                throw new Exception("Invalid scene id");
             
             return loadedScenes[sceneId];
         }

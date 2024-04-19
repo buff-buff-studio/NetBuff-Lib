@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NetBuff.Interface;
-using UnityEngine;
 
 namespace NetBuff.Local
 {
@@ -24,7 +23,7 @@ namespace NetBuff.Local
             }
         }
         
-        private int _nextClientId = 0;
+        private int _nextClientId;
         private readonly Dictionary<int, LocalClientConnectionInfo> _clients = new Dictionary<int, LocalClientConnectionInfo>();
         
         private void CreatePlayer()
@@ -65,7 +64,7 @@ namespace NetBuff.Local
             
             Type = EndType.Host;
             CreatePlayer();
-            CreateOtherPlayer();;
+            CreateOtherPlayer();
         }
 
         public override void Close()
@@ -106,12 +105,12 @@ namespace NetBuff.Local
 
         public override void ClientDisconnect(string reason)
         {
-            throw new System.NotImplementedException();
+            
         }
 
         public override void ServerDisconnect(int id, string reason)
         {
-            throw new System.NotImplementedException();   
+            
         }
 
         public override void SendClientPacket(IPacket packet, bool reliable = false)

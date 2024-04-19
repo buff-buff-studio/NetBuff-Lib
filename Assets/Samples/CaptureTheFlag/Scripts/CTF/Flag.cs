@@ -5,7 +5,7 @@ namespace CTF
 {
     public class Flag : NetworkBehaviour
     {
-        public int team = 0;
+        public int team;
         
         public Renderer flagRenderer;
 

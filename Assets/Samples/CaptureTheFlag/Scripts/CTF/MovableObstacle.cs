@@ -1,5 +1,4 @@
-﻿using System;
-using NetBuff;
+﻿using NetBuff;
 using NetBuff.Components;
 using UnityEngine;
 
