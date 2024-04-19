@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using NetBuff.Interface;
 using NetBuff.Misc;
 using NetBuff.Packets;
@@ -15,13 +16,20 @@ namespace NetBuff.Components
     /// </summary>
     public sealed class NetworkIdentity : MonoBehaviour
     {
+        #region Internal Fields
         [SerializeField]
         private NetworkId id;
+        
         [SerializeField]
         private int ownerId = -1;
+        
         [SerializeField]
         private NetworkId prefabId = NetworkId.Empty;
         
+        private NetworkBehaviour[] _behaviours;
+        #endregion
+
+        #region Helper Properties
         /// <summary>
         /// Returns the NetworkId of this object
         /// </summary>
@@ -36,12 +44,6 @@ namespace NetBuff.Components
         /// Returns the prefab used to spawn this object (Will be empty for pre-spawned objects)
         /// </summary>
         public NetworkId PrefabId => prefabId;
-        
-        /// <summary>
-        /// Returns if the object is owned by some client
-        /// If the object is owned by the server/host, this will return false
-        /// </summary>
-        public bool IsOwnedByClient => ownerId != -1;
         
         /// <summary>
         /// Returns if the local client has authority over this object
@@ -65,8 +67,39 @@ namespace NetBuff.Components
             }
         }
         
-        private NetworkBehaviour[] _behaviours;
+        /// <summary>
+        /// Returns if the object is owned by some client
+        /// If the object is owned by the server/host, this will return false
+        /// </summary>
+        public bool IsOwnedByClient => ownerId != -1;
+        
+        /// <summary>
+        /// Returns the id of the scene the object is in
+        /// </summary>
+        public int SceneId => GetSceneId(gameObject.scene.name);
+        
+        /// <summary>
+        /// Returns if local environment is a server
+        /// </summary>
+        public bool IsServer => NetworkManager.Instance != null && NetworkManager.Instance.IsServerRunning;
+        
+        /// <summary>
+        /// Returns the number of scenes loaded
+        /// </summary>
+        public int LoadedSceneCount => NetworkManager.Instance.LoadedSceneCount;
 
+        /// <summary>
+        /// Returns the name of the source scene
+        /// </summary>
+        /// <returns></returns>
+        public string SourceScene => NetworkManager.Instance.SourceScene;
+
+        /// <summary>
+        /// Returns the name of the last loaded scene
+        /// </summary>
+        public string LastLoadedScene => NetworkManager.Instance.LastLoadedScene;
+
+        
         /// <summary>
         /// Returns all NetworkBehaviours attached to this object
         /// </summary>
@@ -80,7 +113,21 @@ namespace NetBuff.Components
                 return _behaviours;
             }
         }
-        
+        #endregion
+
+        #region Unity Callbacks
+        private void OnValidate()
+        {
+            #if UNITY_EDITOR
+            var identities = FindObjectsByType<NetworkIdentity>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            if (identities.Where(identity => identity != this).All(identity => identity.id != id)) return;
+            id = NetworkId.New();
+            EditorUtility.SetDirty(this);
+            #endif
+        }
+        #endregion
+
+        #region Packet Methods
         /// <summary>
         /// Broadcasts a packet to all clients
         /// </summary>
@@ -137,7 +184,9 @@ namespace NetBuff.Components
         {
             return NetworkManager.Instance.GetPacketListener<T>();
         }
+        #endregion
 
+        #region Object Methods
         /// <summary>
         /// Tries to despawn the object across all clients (If you have authority)
         /// </summary>
@@ -183,6 +232,46 @@ namespace NetBuff.Components
         } 
         
         /// <summary>
+        /// Returns a network object by its id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public NetworkIdentity GetNetworkObject(NetworkId id)
+        {
+            return NetworkManager.Instance.GetNetworkObject(id);
+        }
+        
+        /// <summary>
+        /// Returns all network objects
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<NetworkIdentity> GetNetworkObjects()
+        {
+            return NetworkManager.Instance.GetNetworkObjects();
+        }
+        
+        /// <summary>
+        /// Returns the count of network objects
+        /// </summary>
+        /// <returns></returns>
+        public int GetNetworkObjectCount()
+        {
+            return NetworkManager.Instance.GetNetworkObjectCount();
+        }
+        
+        /// <summary>
+        /// Returns all network objects owned by a specific client (Use -1 to get all objects owned by the server)
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <returns></returns>
+        public IEnumerable<NetworkIdentity> GetNetworkObjectsOwnedBy(int clientId)
+        {
+            return NetworkManager.Instance.GetNetworkObjectsOwnedBy(clientId);
+        }
+        #endregion
+        
+        #region Client Methods
+        /// <summary>
         /// Returns the local client index of the specified client id
         /// </summary>
         /// <param name="clientId"></param>
@@ -192,15 +281,208 @@ namespace NetBuff.Components
         {
             return NetworkManager.Instance.LocalClientIds.IndexOf(clientId);
         }
+        #endregion
         
-        private void OnValidate()
+        #region Prefabs
+        /// <summary>
+        /// Returns the registered prefab by its id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public GameObject GetPrefabById(NetworkId id)
         {
-            #if UNITY_EDITOR
-            var identities = FindObjectsByType<NetworkIdentity>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            if (identities.Where(identity => identity != this).All(identity => identity.id != id)) return;
-            id = NetworkId.New();
-            EditorUtility.SetDirty(this);
-            #endif
+            return NetworkManager.Instance.prefabRegistry.GetPrefab(id);
         }
+        
+        /// <summary>
+        /// Returns the id of a registered prefab
+        /// </summary>
+        /// <param name="prefab"></param>
+        /// <returns></returns>
+        public NetworkId GetIdForPrefab(GameObject prefab)
+        {
+            return NetworkManager.Instance.prefabRegistry.GetPrefabId(prefab);
+        }
+        
+        /// <summary>
+        /// Returns if a given prefab id is registered
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public bool IsPrefabValid(NetworkId id)
+        {
+            return NetworkManager.Instance.prefabRegistry.IsPrefabValid(id);
+        }
+        #endregion
+        
+        #region Scene Moving
+        /// <summary>
+        /// Moves the object to a different scene
+        /// </summary>
+        /// <param name="sceneId"></param>
+        public void MoveToScene(int sceneId)
+        {
+            if(!HasAuthority)
+                throw new InvalidOperationException("Only the object owner can move it to a different scene");
+
+            SendPacket(new NetworkObjectMoveScenePacket{Id = Id, SceneId = sceneId}, true);
+        }
+
+        /// <summary>
+        /// Moves the object to a different scene
+        /// </summary>
+        /// <param name="sceneName"></param>
+        public void MoveToScene(string sceneName)
+        {
+            if(!HasAuthority)
+                throw new InvalidOperationException("Only the object owner can move it to a different scene");
+
+            SendPacket(new NetworkObjectMoveScenePacket{Id = Id, SceneId = NetworkManager.Instance.GetSceneId(sceneName)}, true);
+        }
+        #endregion
+        
+        #region Scene Utils
+        /// <summary>
+        /// Returns all loaded scenes
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<string> GetLoadedScenes()
+        {
+            return NetworkManager.Instance.LoadedScenes;
+        }
+
+        /// <summary>
+        /// Returns the id of a scene by its name
+        /// </summary>
+        /// <param name="sceneName"></param>
+        /// <returns></returns>
+        public int GetSceneId(string sceneName)
+        {
+            return NetworkManager.Instance.GetSceneId(sceneName);
+        }
+
+        /// <summary>
+        /// Returns the name of a scene by its id
+        /// </summary>
+        /// <param name="sceneId"></param>
+        /// <returns></returns>
+        public string GetSceneName(int sceneId)
+        {
+            return NetworkManager.Instance.GetSceneName(sceneId);
+        }
+        #endregion
+        
+        #region Spawning
+        /// <summary>
+        /// Spawns a new object across the network
+        /// </summary>
+        /// <param name="prefab"></param>
+        /// <returns></returns>
+        public static NetworkId Spawn(GameObject prefab)
+        {
+            return Spawn(prefab, Vector3.zero, Quaternion.identity, Vector3.one, true);
+        }
+
+        /// <summary>
+        /// Spawns a new object across the network
+        /// </summary>
+        /// <param name="prefab"></param>
+        /// <param name="position"></param>
+        /// <param name="rotation"></param>
+        /// <param name="active"></param>
+        /// <returns></returns>
+        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation, bool active)
+        {
+            return Spawn(prefab, position, rotation, Vector3.one, active);
+        }
+
+        /// <summary>
+        /// Spawns a new object across the network
+        /// </summary>
+        /// <param name="prefab"></param>
+        /// <param name="position"></param>
+        /// <param name="rotation"></param>
+        /// <param name="owner"></param>
+        /// <returns></returns>
+        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation, int owner)
+        {
+            return Spawn(prefab, position, rotation, Vector3.one, true, owner);
+        }
+        
+        /// <summary>
+        /// Spawns a new object across the network
+        /// </summary>
+        /// <param name="prefab"></param>
+        /// <param name="position"></param>
+        /// <param name="rotation"></param>
+        /// <returns></returns>
+        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation)
+        {
+            return Spawn(prefab, position, rotation, Vector3.one, true);
+        }
+
+        /// <summary>
+        /// Spawns a new object across the network
+        /// </summary>
+        /// <param name="prefab"></param>
+        /// <param name="position"></param>
+        /// <param name="rotation"></param>
+        /// <param name="scale"></param>
+        /// <param name="active"></param>
+        /// <param name="owner"></param>
+        /// <param name="scene"></param>
+        /// <returns></returns>
+        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation, Vector3 scale, bool active, int owner = -1, int scene = -1)
+        {
+            //var get it id
+            var id = NetworkManager.Instance.prefabRegistry.GetPrefabId(prefab);
+            if (id == NetworkId.Empty)
+                throw new InvalidOperationException("The prefab is not registered");
+            
+            return _InternalSpawn(id, position, rotation, scale, active, owner, scene);
+        }
+
+        /// <summary>
+        /// Spawns a new object across the network
+        /// </summary>
+        /// <param name="prefabId"></param>
+        /// <param name="position"></param>
+        /// <param name="rotation"></param>
+        /// <param name="scale"></param>
+        /// <param name="active"></param>
+        /// <param name="owner"></param>
+        /// <param name="scene"></param>
+        /// <returns></returns>
+        public static NetworkId Spawn(NetworkId prefabId, Vector3 position, Quaternion rotation, Vector3 scale, bool active, int owner = -1, int scene = -1)
+        {
+            if (!NetworkManager.Instance.prefabRegistry.IsPrefabValid(prefabId))
+                throw new InvalidOperationException("The prefab is not registered");
+                
+            return _InternalSpawn(prefabId, position, rotation, scale, active, owner, scene);
+        }
+        
+        private static NetworkId _InternalSpawn(NetworkId prefabId, Vector3 position, Quaternion rotation, Vector3 scale, bool active, int owner, int scene)
+        {
+            var packet = new NetworkObjectSpawnPacket
+            {
+                Id = NetworkId.New(),
+                PrefabId = prefabId,
+                Position = position,
+                Rotation = rotation,
+                Scale = scale,
+                IsActive = active,
+                IsRetroactive = false,
+                OwnerId = owner,
+                SceneId = scene
+            };
+
+            if (NetworkManager.Instance.IsServerRunning)
+                NetworkManager.Instance.BroadcastServerPacket(packet, true);
+            else
+                NetworkManager.Instance.SendClientPacket(packet, true);
+            
+            return packet.Id;
+        }
+        #endregion
     }
 }

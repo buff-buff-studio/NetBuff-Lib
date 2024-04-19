@@ -15,6 +15,15 @@ namespace NetBuff.Components
     [SuppressMessage("ReSharper", "ParameterHidesMember")]
     public class NetworkAnimator : NetworkBehaviour, INetworkBehaviourSerializer
     {
+        #region Public Fields
+        [Header("SETTINGS")]
+        public int tickRate = -1;
+        
+        [Header("REFERENCES")]
+        public Animator animator;
+        #endregion
+        
+        #region Internal Fields
         private float _animatorSpeed;
         private int[] _animationHash;
         private int[] _transitionHash;
@@ -25,13 +34,10 @@ namespace NetBuff.Components
         private float[] _floatParameters;
         private bool[] _boolParameters;
         
-        [Header("SETTINGS")]
-        public int tickRate = -1;
-        
-        [Header("REFERENCES")]
-        public Animator animator;
         private bool _running;
-        
+        #endregion
+
+        #region Unity Callbacks
         private void OnEnable()
         {
             if(animator == null)
@@ -57,31 +63,22 @@ namespace NetBuff.Components
                     _Begin();
             }
         }
-
-        private void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.Space))
-                MarkSerializerDirty();
-        }
-
+        
         private void OnDisable()
         {
-            CancelInvoke(nameof(Tick));
+            CancelInvoke(nameof(_Tick));
         }
-        
+        #endregion
+
+        #region Internal Methods
         private void _Begin()
         {
             if (_running) return;
             _running = true;
-            InvokeRepeating(nameof(Tick), 0, 1f / (tickRate == -1 ? NetworkManager.Instance.defaultTickRate : tickRate));
+            InvokeRepeating(nameof(_Tick), 0, 1f / (tickRate == -1 ? NetworkManager.Instance.defaultTickRate : tickRate));
         }
         
-        public override void OnSpawned(bool isRetroactive)
-        {
-            _Begin();
-        }
-        
-        private void Tick()
+        private void _Tick()
         {
             if (!HasAuthority)
                 return;
@@ -94,7 +91,7 @@ namespace NetBuff.Components
             
             for (var i = 0; i < animator.layerCount; i++)
             {
-                if (!CheckAnimStateChanged(out var stateHash, out var normalizedTime, i))
+                if (!_CheckAnimStateChanged(out var stateHash, out var normalizedTime, i))
                     continue;
                 
                 layers.Add(new AnimatorSyncPacket.LayerInfo
@@ -115,7 +112,7 @@ namespace NetBuff.Components
             }
             
             //Check parameters
-            var changedParameters = CheckParameters(out var parameterData);
+            var changedParameters = _CheckParameters(out var parameterData);
             if (changedParameters > 0)
                 changes |= AnimatorSyncPacket.Changes.Parameters;
             
@@ -135,35 +132,7 @@ namespace NetBuff.Components
             SendPacket(packet);
         }
 
-        public override void OnServerReceivePacket(IOwnedPacket packet, int clientId)
-        {
-            switch (packet)
-            {
-                case AnimatorSyncPacket animatorSyncPacket:
-                    if(clientId == OwnerId)
-                        ServerBroadcastPacketExceptFor(animatorSyncPacket, clientId);
-                    break;
-                case AnimatorTriggerPacket triggerPacket:
-                    if(clientId == OwnerId)
-                        ServerBroadcastPacketExceptFor(triggerPacket, clientId);
-                    break;
-            }
-        }
-
-        public override void OnClientReceivePacket(IOwnedPacket packet)
-        {
-            switch (packet)
-            {
-                case AnimatorSyncPacket syncPacket:
-                    ApplyAnimatorSyncPacket(syncPacket);
-                    break;
-                case AnimatorTriggerPacket triggerPacket:
-                    animator.SetTrigger(triggerPacket.TriggerHash);
-                    break;
-            }
-        }
-
-        private int CheckParameters(out byte[] bytes)
+        private int _CheckParameters(out byte[] bytes)
         {
             var parameterCount = (byte) _parameters.Length;
             var writer = new BinaryWriter(new MemoryStream());
@@ -226,7 +195,7 @@ namespace NetBuff.Components
             return changed;
         }
         
-        private bool CheckAnimStateChanged(out int stateHash, out float normalizedTime, int layerId)
+        private bool _CheckAnimStateChanged(out int stateHash, out float normalizedTime, int layerId)
         {
             var change = false;
             stateHash = 0;
@@ -275,7 +244,7 @@ namespace NetBuff.Components
             return change;
         }
 
-        private void ApplyAnimatorSyncPacket(AnimatorSyncPacket packet)
+        private void _ApplyAnimatorSyncPacket(AnimatorSyncPacket packet)
         {
             if (packet.Id != Id)
                 return;
@@ -324,7 +293,9 @@ namespace NetBuff.Components
                 }
             }
         }
+        #endregion
         
+        #region Animator Helpers
         public void SetTrigger(int triggerHash)
         {
             var packet = new AnimatorTriggerPacket
@@ -350,7 +321,6 @@ namespace NetBuff.Components
         {
             animator.SetFloat(name, value);
         }
-        
         
         public float GetFloat(int nameHash)
         {
@@ -401,7 +371,87 @@ namespace NetBuff.Components
         {
             animator.SetInteger(nameHash, value);
         }
+        #endregion
 
+        #region Network Callbacks
+        public override void OnSpawned(bool isRetroactive)
+        {
+            _Begin();
+        }
+        
+        public override void OnServerReceivePacket(IOwnedPacket packet, int clientId)
+        {
+            switch (packet)
+            {
+                case AnimatorSyncPacket animatorSyncPacket:
+                    if(clientId == OwnerId)
+                        ServerBroadcastPacketExceptFor(animatorSyncPacket, clientId);
+                    break;
+                case AnimatorTriggerPacket triggerPacket:
+                    if(clientId == OwnerId)
+                        ServerBroadcastPacketExceptFor(triggerPacket, clientId);
+                    break;
+            }
+        }
+
+        public override void OnClientReceivePacket(IOwnedPacket packet)
+        {
+            switch (packet)
+            {
+                case AnimatorSyncPacket syncPacket:
+                    _ApplyAnimatorSyncPacket(syncPacket);
+                    break;
+                case AnimatorTriggerPacket triggerPacket:
+                    animator.SetTrigger(triggerPacket.TriggerHash);
+                    break;
+            }
+        }
+        
+        public void OnSerialize(BinaryWriter writer, bool forceSendAll)
+        {
+            var layerCount = (byte)animator.layerCount;
+            writer.Write(layerCount);
+            
+            for (var i = 0; i < layerCount; i++)
+            {
+                var st = animator.IsInTransition(i)
+                    ? animator.GetNextAnimatorStateInfo(i)
+                    : animator.GetCurrentAnimatorStateInfo(i);
+                writer.Write(st.fullPathHash);
+                writer.Write(st.normalizedTime);
+                writer.Write(animator.GetLayerWeight(i));
+            }
+            
+            //Parameters
+            var parameterCount = (byte)_parameters.Length;
+            writer.Write(parameterCount);
+            for (var i = 0; i < parameterCount; i++)
+            {
+                var par = _parameters[i];
+                switch (par.type)
+                {
+                    case AnimatorControllerParameterType.Int:
+                    {
+                        var newIntValue = animator.GetInteger(par.nameHash);
+                        writer.Write(newIntValue);
+                        break;
+                    }
+                    case AnimatorControllerParameterType.Float:
+                    {
+                        var newFloatValue = animator.GetFloat(par.nameHash);
+                        writer.Write(newFloatValue);
+                        break;
+                    }
+                    case AnimatorControllerParameterType.Bool:
+                    {
+                        var newBoolValue = animator.GetBool(par.nameHash);
+                        writer.Write(newBoolValue);
+                        break;
+                    }
+                }
+            }
+        }
+        
         public void OnDeserialize(BinaryReader reader)
         {
             var layerCount = reader.ReadByte();
@@ -459,51 +509,7 @@ namespace NetBuff.Components
                 }
             }
         }
-
-        public void OnSerialize(BinaryWriter writer, bool forceSendAll)
-        {
-            var layerCount = (byte)animator.layerCount;
-            writer.Write(layerCount);
-            
-            for (var i = 0; i < layerCount; i++)
-            {
-                var st = animator.IsInTransition(i)
-                    ? animator.GetNextAnimatorStateInfo(i)
-                    : animator.GetCurrentAnimatorStateInfo(i);
-                writer.Write(st.fullPathHash);
-                writer.Write(st.normalizedTime);
-                writer.Write(animator.GetLayerWeight(i));
-            }
-            
-            //Parameters
-            var parameterCount = (byte)_parameters.Length;
-            writer.Write(parameterCount);
-            for (var i = 0; i < parameterCount; i++)
-            {
-                var par = _parameters[i];
-                switch (par.type)
-                {
-                    case AnimatorControllerParameterType.Int:
-                    {
-                        var newIntValue = animator.GetInteger(par.nameHash);
-                        writer.Write(newIntValue);
-                        break;
-                    }
-                    case AnimatorControllerParameterType.Float:
-                    {
-                        var newFloatValue = animator.GetFloat(par.nameHash);
-                        writer.Write(newFloatValue);
-                        break;
-                    }
-                    case AnimatorControllerParameterType.Bool:
-                    {
-                        var newBoolValue = animator.GetBool(par.nameHash);
-                        writer.Write(newBoolValue);
-                        break;
-                    }
-                }
-            }
-        }
+        #endregion
     }
 
     public class AnimatorSyncPacket : IOwnedPacket
