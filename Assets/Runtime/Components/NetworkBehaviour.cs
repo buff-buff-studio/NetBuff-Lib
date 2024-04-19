@@ -68,6 +68,7 @@ namespace NetBuff.Components
         public ReadOnlySpan<NetworkValue> Values => new ReadOnlySpan<NetworkValue>(_values);
         private NetworkValue[] _values;
         private Queue<byte> _dirtyValues = new Queue<byte>();
+        private bool _serializerDirty = false;
         
         /// <summary>
         /// Returns if local environment is a server
@@ -114,7 +115,23 @@ namespace NetBuff.Components
                 return;            
             NetworkManager.Instance.DirtyBehaviours.Add(this);
         }
+        
+        
+        /// <summary>
+        /// Mark this behaviour as dirty to be updated across the network
+        /// </summary
+        public void MarkSerializerDirty()
+        {
+            if(IsDirty)
+                return;
+            
+            if(this is not INetworkBehaviourSerializer)
+                throw new InvalidOperationException("The behaviour does not implement INetworkBehaviourSerializer");
 
+            _serializerDirty = true;
+            NetworkManager.Instance.DirtyBehaviours.Add(this);
+        }
+        
         /// <summary>
         /// Update all dirty values, generating a packet to sync them across the network
         /// </summary>
@@ -128,7 +145,14 @@ namespace NetBuff.Components
                 writer.Write(index);
                 _values[index].Serialize(writer);
             }
-
+            
+            if (_serializerDirty)
+            {
+                if(this is INetworkBehaviourSerializer nbs)
+                    nbs.OnSerialize(writer, false);
+                _serializerDirty = false;
+            }
+            
             var packet = new NetworkValuesPacket
             {
                 Id = Id,
@@ -173,23 +197,47 @@ namespace NetBuff.Components
                 throw new Exception("This method can only be called on the server");
             
             if(_values == null || _values.Length == 0)
+            {
+                var writer = new BinaryWriter(new MemoryStream());
+                writer.Write((byte) 0);
+                
+                if (this is INetworkBehaviourSerializer nbs)
+                {
+                    nbs.OnSerialize(writer, true);
+                    
+                    return new NetworkValuesPacket
+                    {
+                        Id = Id,
+                        BehaviourId = BehaviourId,
+                        Payload = ((MemoryStream) writer.BaseStream).ToArray()
+                    };
+                }
                 return null;
-            var writer = new BinaryWriter(new MemoryStream());
-            writer.Write((byte) _values.Length);
-
-            //Write all values
-            for(var i = 0; i < _values.Length; i++)
-            {
-                writer.Write((byte) i);
-                _values[i].Serialize(writer);
             }
-
-            return new NetworkValuesPacket
+            else
             {
-                Id = Id,
-                BehaviourId = BehaviourId,
-                Payload = ((MemoryStream) writer.BaseStream).ToArray()
-            };
+                var writer = new BinaryWriter(new MemoryStream());
+                writer.Write((byte) _values.Length);
+    
+                //Write all values
+                for(var i = 0; i < _values.Length; i++)
+                {
+                    writer.Write((byte) i);
+                    _values[i].Serialize(writer);
+                }
+                
+                if (this is INetworkBehaviourSerializer nbs)
+                {
+                    nbs.OnSerialize(writer, true);
+                }
+                
+                return new NetworkValuesPacket
+                {
+                    Id = Id,
+                    BehaviourId = BehaviourId,
+                    Payload = ((MemoryStream) writer.BaseStream).ToArray()
+                };
+            }
         }
 
         /// <summary>
@@ -204,6 +252,11 @@ namespace NetBuff.Components
             {
                 var index = reader.ReadByte();
                 _values[index].Deserialize(reader);
+            }
+            
+            if(reader.BaseStream.Position != reader.BaseStream.Length && this is INetworkBehaviourSerializer nbs )
+            {
+                nbs.OnDeserialize(reader);
             }
         }
         #endregion

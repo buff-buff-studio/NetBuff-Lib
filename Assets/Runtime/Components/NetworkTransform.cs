@@ -38,7 +38,6 @@ namespace NetBuff.Components
         private Vector3 _lastPosition;
         private Vector3 _lastRotation;
         private Vector3 _lastScale;
-
         private bool _running;
         
         protected virtual void OnEnable()
