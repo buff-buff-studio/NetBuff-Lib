@@ -10,7 +10,6 @@ using NetBuff.Packets;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.SceneManagement;
-using Random = UnityEngine.Random;
 
 namespace NetBuff
 {
@@ -383,7 +382,7 @@ namespace NetBuff
         /// <summary>
         /// Called when the server starts
         /// </summary>
-        public virtual void OnServerStart()
+        protected virtual void OnServerStart()
         {
             foreach (var identity in networkObjects.Values)
                 foreach (var behaviour in identity.Behaviours)
@@ -395,7 +394,7 @@ namespace NetBuff
         /// <summary>
         /// Called when the server stops
         /// </summary>
-        public virtual void OnServerStop()
+        protected virtual void OnServerStop()
         {
             IsServerRunning = false;
             if(transport.Type is NetworkTransport.EndType.Server)
@@ -409,7 +408,7 @@ namespace NetBuff
         /// <param name="identity"></param>
         /// <param name="retroactive"></param>
 
-        public virtual void OnNetworkObjectSpawned(NetworkIdentity identity, bool retroactive)
+        protected virtual void OnNetworkObjectSpawned(NetworkIdentity identity, bool retroactive)
         {
             foreach (var behaviour in identity.Behaviours)
                 behaviour.OnSpawned(retroactive);
@@ -422,7 +421,7 @@ namespace NetBuff
         /// Called when a network object is despawned
         /// </summary>
         /// <param name="identity"></param>
-        public virtual void OnNetworkObjectDespawned(NetworkIdentity identity)
+        protected virtual void OnNetworkObjectDespawned(NetworkIdentity identity)
         {
             foreach (var behaviour in identity.Behaviours)
                 behaviour.OnDespawned();
@@ -433,7 +432,7 @@ namespace NetBuff
         /// </summary>
         /// <param name="clientId"></param>
         [ServerOnly]
-        public virtual void OnClientConnected(int clientId)
+        protected virtual void OnClientConnected(int clientId)
         {
             //Send client id
             var idPacket = new ClientIdPacket {ClientId = clientId};
@@ -536,7 +535,7 @@ namespace NetBuff
         /// <param name="clientId"></param>
         /// <param name="reason"></param>
         [ServerOnly]
-        public virtual void OnClientDisconnected(int clientId, string reason)
+        protected virtual void OnClientDisconnected(int clientId, string reason)
         {
             //Destroy all objects owned by client
             var toDestroy = GetNetworkObjectsOwnedBy(clientId).ToList();
@@ -553,7 +552,7 @@ namespace NetBuff
         /// Called when the client connects to the server
         /// </summary>
         [ClientOnly]
-        public virtual void OnConnect()
+        protected virtual void OnConnect()
         {
             IsClientRunning = true;
         }
@@ -563,7 +562,7 @@ namespace NetBuff
         /// </summary>
         /// <param name="reason"></param>
         [ClientOnly]
-        public virtual void OnDisconnect(string reason)
+        protected virtual void OnDisconnect(string reason)
         {            
             IsClientRunning = false;
             
@@ -585,7 +584,7 @@ namespace NetBuff
         /// <param name="clientId"></param>
         /// <param name="packet"></param>
         [ServerOnly]
-        public virtual void OnServerReceivePacket(int clientId, IPacket packet)
+        protected virtual void OnServerReceivePacket(int clientId, IPacket packet)
         {
             switch (packet)
             {
@@ -661,7 +660,7 @@ namespace NetBuff
         /// Called when the client (or a server local render) receives a packet
         /// </summary>
         /// <param name="packet"></param>
-        public virtual void OnClientReceivePacket(IPacket packet)
+        protected virtual void OnClientReceivePacket(IPacket packet)
         {
             switch (packet)
             {
@@ -1087,7 +1086,7 @@ namespace NetBuff
         /// <summary>
         /// Called to reset the entire network environment
         /// </summary>
-        public virtual void OnClearEnvironment()
+        protected virtual void OnClearEnvironment()
         {
             SceneManager.LoadScene(SourceScene);
         }

@@ -180,9 +180,9 @@ namespace NetBuff.UDP
         private class UDPServer : INetEventListener
         {
             private NetManager _manager;
-            private readonly Dictionary<int, UDPClientInfo> _clients = new Dictionary<int, UDPClientInfo>();
+            private readonly Dictionary<int, UDPClientInfo> _clients = new();
             private readonly UDPNetworkTransport _transport;
-            private readonly int _maxClients = 2;
+            private readonly int _maxClients;
             private readonly string _password;
             private readonly string _name;
             public UDPServer(string address, int port, UDPNetworkTransport transport, string password, string name, int maxClients)
@@ -197,8 +197,8 @@ namespace NetBuff.UDP
                     UpdateTime = 8,
                     UnconnectedMessagesEnabled = true
                 };
-                _manager.Start(IPAddress.Parse(address), IPAddress.IPv6Any, port);
                 
+                _manager.Start(IPAddress.Parse(address), IPAddress.IPv6Any, port);
                 _name = name.Length > 32 ? name[..32] : name;
             }
             
