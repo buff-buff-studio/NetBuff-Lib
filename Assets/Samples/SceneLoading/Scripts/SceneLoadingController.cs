@@ -38,12 +38,16 @@ namespace Samples.SceneLoading
 
             if(Input.GetKeyDown(KeyCode.I))
             {
-                Spawn(prefab, Random.insideUnitSphere * 3f, Quaternion.identity, Vector3.one, true, scene: 1);
+                var sc1 = NetworkManager.Instance.GetSceneId(scene1);
+                if(sc1 != -1)
+                    Spawn(prefab, Random.insideUnitSphere * 3f, Quaternion.identity, Vector3.one, true, scene: sc1);
             }
             
             if(Input.GetKeyDown(KeyCode.O))
             {
-                Spawn(prefab, Random.insideUnitSphere * 3f, Quaternion.identity, Vector3.one, true, scene: 2);
+                var sc2 = NetworkManager.Instance.GetSceneId(scene2);
+                if(sc2 != -1)
+                    Spawn(prefab, Random.insideUnitSphere * 3f, Quaternion.identity, Vector3.one, true, scene: sc2);
             }
 
             if (Input.GetKeyDown(KeyCode.P))
