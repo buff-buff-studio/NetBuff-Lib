@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace NetBuff.Misc
+namespace NetBuff.Interface
 {
     public interface INetworkBehaviourSerializer
     {
