@@ -365,8 +365,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   id:
-    high: -1385114866
-    low: -540449267
+    high: 1100168978
+    low: 1664224653
   ownerId: -1
   prefabId:
     high: 0

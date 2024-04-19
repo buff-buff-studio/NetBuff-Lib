@@ -810,8 +810,8 @@ namespace NetBuff
         {
             if (networkObjects.ContainsKey(packet.Id))
                 return;
-            var prefab = prefabRegistry.GetPrefab(packet.PrefabId);
             
+            var prefab = prefabRegistry.GetPrefab(packet.PrefabId);
             if (!prefab.TryGetComponent<NetworkIdentity>(out _))
                 throw new Exception($"Prefab {prefab.name} ({packet.PrefabId}) does not have a NetworkIdentity component");
             
