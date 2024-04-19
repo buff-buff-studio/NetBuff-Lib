@@ -178,7 +178,7 @@ namespace NetBuff.Editor
             Debug.Log("Finished checking prefab registries");
         }
 
-        [MenuItem("NetBuff/Solve Scene Internal NetworkId Duplicates", priority = 100)]
+        [MenuItem("NetBuff/Solve Scene Internal Network Id Duplicates", priority = 100)]
         public static void SolveCurrentSceneDuplicates()
         {
             if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
@@ -190,7 +190,7 @@ namespace NetBuff.Editor
             }
         }
         
-        [MenuItem("NetBuff/Solve All Scene NetworkId Duplicates", priority = 101)]
+        [MenuItem("NetBuff/Solve All Scene Network Id Duplicates", priority = 101)]
         public static void SolveAllSceneDuplicates()
         {
             if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
@@ -209,7 +209,7 @@ namespace NetBuff.Editor
             }
         }
         
-        [MenuItem("NetBuff/Regenerate NetworkIds for all scenes", priority = 200)]
+        [MenuItem("NetBuff/Regenerate Network Ids For All Scenes", priority = 200)]
         public static void RegenerateNetworkIdForAllScenes()
         {
             if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
