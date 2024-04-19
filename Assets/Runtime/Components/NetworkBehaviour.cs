@@ -592,7 +592,7 @@ namespace NetBuff.Components
         {
             if (!NetworkManager.Instance.prefabRegistry.IsPrefabValid(prefabId))
                 throw new InvalidOperationException("The prefab is not registered");
-            
+                
             return InternalSpawn(prefabId, position, rotation, scale, active, owner, scene);
         }
         

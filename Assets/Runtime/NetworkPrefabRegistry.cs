@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using AYellowpaper.SerializedCollections;
 using NetBuff.Misc;
 using UnityEngine;
@@ -53,6 +54,15 @@ namespace NetBuff
         public GameObject GetPrefab(NetworkId id)
         {
             return prefabs.TryGetValue(id, out var prefab) ? prefab : null;
+        }
+
+        /// <summary>
+        /// Return all prefabs
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<GameObject> GetAllPrefabs()
+        {
+            return prefabs.Values;
         }
     }
 }

@@ -221,7 +221,7 @@ namespace NetBuff.UDP
 
             public void OnNetworkError(IPEndPoint endPoint, SocketError socketError)
             {
-                Debug.LogError("[SERVER] Error: " + socketError);
+                
             }
 
             public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)
@@ -239,24 +239,17 @@ namespace NetBuff.UDP
 
             public void OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType)
             {
-                try
+                if (reader.GetString(50) == "server_search")
                 {
-                    if (reader.GetString(50) == "server_search")
-                    {
-                        var hasPassword = !string.IsNullOrEmpty(_password);
-                        var writer = new NetDataWriter();
-                        writer.Put("server_answer");
-                        writer.Put(_name);
-                        writer.Put(_clients.Count); //player count
-                        writer.Put(_maxClients); //player max count
-                        writer.Put((int) PlatformExtensions.GetPlatform());
-                        writer.Put(hasPassword);
-                        _manager.SendUnconnectedMessage(writer, remoteEndPoint);
-                    }
-                }
-                catch(Exception e)
-                {
-                    Debug.LogError(e);
+                    var hasPassword = !string.IsNullOrEmpty(_password);
+                    var writer = new NetDataWriter();
+                    writer.Put("server_answer");
+                    writer.Put(_name);
+                    writer.Put(_clients.Count); //player count
+                    writer.Put(_maxClients); //player max count
+                    writer.Put((int) PlatformExtensions.GetPlatform());
+                    writer.Put(hasPassword);
+                    _manager.SendUnconnectedMessage(writer, remoteEndPoint);
                 }
             }
 
@@ -367,7 +360,6 @@ namespace NetBuff.UDP
 
             public void OnNetworkError(IPEndPoint endPoint, SocketError socketError)
             {
-                Debug.LogError("[CLIENT] Error: " + socketError);
             }
 
             public void OnNetworkReceive(NetPeer peer, NetPacketReader reader, byte channelNumber, DeliveryMethod deliveryMethod)
@@ -386,8 +378,6 @@ namespace NetBuff.UDP
 
             public void OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType)
             {
-                Debug.LogError("[CLIENT] Unconnected message received");
-                //TODO: Implement
             }
 
             public void OnNetworkLatencyUpdate(NetPeer peer, int latency)

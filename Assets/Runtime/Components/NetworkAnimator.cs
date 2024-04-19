@@ -254,7 +254,6 @@ namespace NetBuff.Components
                 {
                     var layer = packet.Layers[i];
                     var info = animator.GetCurrentAnimatorStateInfo(i);
-                    Debug.Log($"Layer {i} - {info.fullPathHash} - {info.shortNameHash} - {layer.StateHash}");
                     if (info.fullPathHash != layer.StateHash)
                         animator.Play(layer.StateHash, i, layer.NormalizedTime);
                     animator.SetLayerWeight(i, layer.LayerWeight);

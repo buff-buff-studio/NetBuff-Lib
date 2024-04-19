@@ -57,7 +57,7 @@ namespace NetBuff.Misc
 #pragma warning restore CS4014
                         {
                             waiting++;
-                            Debug.Log("Sending discovery request to " + address);
+                            
                             try
                             {
                                 //try udp the address

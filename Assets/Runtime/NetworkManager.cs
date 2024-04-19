@@ -171,6 +171,16 @@ namespace NetBuff
 
             sourceScene = gameObject.scene.name;
             loadedScenes.Add(sourceScene);
+
+            if(prefabRegistry != null)
+            {
+                //Check if all prefabs has NetworkIdentity
+                foreach (var prefab in prefabRegistry.GetAllPrefabs())
+                {
+                    if (!prefab.TryGetComponent<NetworkIdentity>(out _))
+                        throw new Exception("Prefab " + prefab.name + " does not have a NetworkIdentity component");
+                }
+            }
         }
 
         private void OnDisable()
@@ -470,7 +480,7 @@ namespace NetBuff
                     Scale = t.localScale,
                     IsActive = identity.gameObject.activeSelf,
                     IsRetroactive = true,
-                    SceneId = 0
+                    SceneId = GetSceneId(identity.gameObject.scene.name)
                 };
                 SendServerPacket(packet, clientId, true);
             }
