@@ -75,8 +75,8 @@ namespace NetBuff
         public ReadOnlySpan<int> LocalClientIds => _localClientIds;
         private int[] _localClientIds = Array.Empty<int>();
 
-        [SerializeField, HideInInspector]
-        private List<string> loadedScenes = new List<string>();
+        [SerializeField]
+        public List<string> loadedScenes = new List<string>();
 
         [SerializeField, HideInInspector]
         private string sourceScene;
@@ -171,16 +171,6 @@ namespace NetBuff
 
             sourceScene = gameObject.scene.name;
             loadedScenes.Add(sourceScene);
-
-            if(prefabRegistry != null)
-            {
-                //Check if all prefabs has NetworkIdentity
-                foreach (var prefab in prefabRegistry.GetAllPrefabs())
-                {
-                    if (!prefab.TryGetComponent<NetworkIdentity>(out _))
-                        throw new Exception("Prefab " + prefab.name + " does not have a NetworkIdentity component");
-                }
-            }
         }
 
         private void OnDisable()
@@ -440,12 +430,12 @@ namespace NetBuff
             var idPacket = new ClientIdPacket {ClientId = clientId};
             transport.SendServerPacket(idPacket, clientId, true);
         
-            var prePacket = new NetworkGetPreExistingInfoPacket
+            var prePacket = new NetworkPreExistingInfoPacket
             {
                 PreExistingObjects = networkObjects.Values.Where(identity => identity.PrefabId.IsEmpty).Select(identity =>
                 {
                     var t = identity.transform;
-                    return new NetworkGetPreExistingInfoPacket.PreExistingState
+                    return new NetworkPreExistingInfoPacket.PreExistingState
                     {
                         Id = identity.Id,
                         PrefabId = identity.PrefabId,
@@ -506,14 +496,14 @@ namespace NetBuff
                 if (spawnsPlayer)
                 {
                     Assert.IsTrue(prefabRegistry.IsPrefabValid(playerPrefab), "Player prefab is not valid");
-                    SpawnNetworkObjectForClients(prefabRegistry.GetPrefabId(playerPrefab), Vector3.zero, Quaternion.identity, Vector3.one, clientId);
+                    SpawnNetworkObjectForClients(prefabRegistry.GetPrefabId(playerPrefab), Vector3.zero, Quaternion.identity, Vector3.one, clientId, 0);
                 }
             }
             #else
             if (spawnsPlayer)
             {
                 Assert.IsTrue(prefabRegistry.IsPrefabValid(playerPrefab), "Player prefab is not valid");
-                SpawnNetworkObjectForClients(prefabRegistry.GetPrefabId(playerPrefab), Vector3.zero, Quaternion.identity, Vector3.one, clientId);
+                SpawnNetworkObjectForClients(prefabRegistry.GetPrefabId(playerPrefab), Vector3.zero, Quaternion.identity, Vector3.one, clientId, 0);
             }
         #endif
         }
@@ -545,7 +535,6 @@ namespace NetBuff
         {
             IsClientRunning = true;
         }
-        
         
         /// <summary>
         /// Called when the client disconnects from the server
@@ -694,12 +683,12 @@ namespace NetBuff
                     return;
                 }
                 
-                case NetworkGetPreExistingInfoPacket preExistingInfoPacket:
+                case NetworkPreExistingInfoPacket preExistingInfoPacket:
                     HandlePreExistingInfoPacket(preExistingInfoPacket);
                     return;
                 
                 case NetworkLoadScenePacket loadScenePacket:
-                    _ = _LoadSceneLocally(loadScenePacket.SceneName);
+                    _ = _LoadSceneLocally(loadScenePacket.SceneName, true);
                     return;
 
                 case NetworkMoveObjectScenePacket moveObjectScenePacket:
@@ -707,8 +696,12 @@ namespace NetBuff
                     if (!networkObjects.TryGetValue(moveObjectScenePacket.Id, out var identity)) return;
                     var obj = identity.gameObject;
                     var scene = GetSceneName(moveObjectScenePacket.SceneId);
+                    var realId = GetSceneId(scene);
+                    var prevId = GetSceneId(obj.scene.name);
                     if (scene != obj.scene.name && loadedScenes.Contains(scene))
                         SceneManager.MoveGameObjectToScene(obj, SceneManager.GetSceneByName(scene));
+                    foreach (var behaviour in identity.Behaviours)
+                        behaviour.OnSceneChanged(prevId, realId);
                     return;
                 }
                 
@@ -742,10 +735,10 @@ namespace NetBuff
                 behaviour.OnActiveChanged(activePacket.IsActive);
         }
 
-        private async void HandlePreExistingInfoPacket(NetworkGetPreExistingInfoPacket preExistingInfoPacket)
+        private async void HandlePreExistingInfoPacket(NetworkPreExistingInfoPacket preExistingInfoPacket)
         {
             foreach (var sceneName in preExistingInfoPacket.SceneNames)
-                await _LoadSceneLocally(sceneName);
+                await _LoadSceneLocally(sceneName, false);
         
             foreach (var preExistingObject in preExistingInfoPacket.PreExistingObjects)
             {
@@ -760,7 +753,9 @@ namespace NetBuff
                 identity.gameObject.SetActive(preExistingObject.IsActive);
                 var scene = GetSceneName(preExistingObject.SceneId);
                 if (scene != obj.scene.name && loadedScenes.Contains(scene))
+                {
                     SceneManager.MoveGameObjectToScene(obj, SceneManager.GetSceneByName(scene));
+                }
                 OnNetworkObjectSpawned(identity, true);
             }
             
@@ -781,9 +776,15 @@ namespace NetBuff
             if (networkObjects.ContainsKey(packet.Id))
                 return;
             var prefab = prefabRegistry.GetPrefab(packet.PrefabId);
+            
+            if (!prefab.TryGetComponent<NetworkIdentity>(out _))
+                throw new Exception($"Prefab {prefab.name} ({packet.PrefabId}) does not have a NetworkIdentity component");
+            
             var obj = Instantiate(prefab, packet.Position, packet.Rotation);
             obj.transform.localScale = packet.Scale;
             var identity = obj.GetComponent<NetworkIdentity>();
+            
+            Debug.Log($"Spawned {obj.name} with id {packet.Id} with {packet.SceneId}");
             
             var scene = GetSceneName(packet.SceneId);
             if (scene != obj.scene.name && loadedScenes.Contains(scene))
@@ -923,10 +924,11 @@ namespace NetBuff
         {
             if(sceneId == -1)
                 return LastLoadedScene;
+            
             return loadedScenes[sceneId];
         }
 
-        private async Awaitable _LoadSceneLocally(string sceneName)
+        private async Awaitable _LoadSceneLocally(string sceneName, bool needToCall)
         {
             if (loadedScenes.Contains(sceneName))
                 return;
@@ -942,7 +944,7 @@ namespace NetBuff
 
             await Awaitable.NextFrameAsync();
             var scene = SceneManager.GetSceneByName(sceneName);
-
+            
             foreach (var root in scene.GetRootGameObjects())
             {
                 foreach (var identity in root.GetComponentsInChildren<NetworkIdentity>())
@@ -952,9 +954,11 @@ namespace NetBuff
 
                     if(removedPreExistingObjects.Contains(identity.Id))
                         removedPreExistingObjects.Remove(identity.Id);
-
+                    
                     networkObjects.Add(identity.Id, identity);
-                    OnNetworkObjectSpawned(identity, false);
+
+                    if(needToCall)
+                        OnNetworkObjectSpawned(identity, false);
                 }
             }
         }

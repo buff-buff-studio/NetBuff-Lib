@@ -9,7 +9,7 @@ EditorBuildSettings:
     path: Assets/Samples/SceneLoading/Lobby.unity
     guid: 185fda8d84441714c9019457c58d3516
   - enabled: 1
-    path: Assets/Samples/SceneLoading/Scene1.unity
+    path: Assets/Samples/SceneLoading/Scenes/Scene1.unity
     guid: 0813000ff0d394f4fa7694db60e4cdaf
   - enabled: 1
     path: Assets/Samples/CaptureTheFlag/CaptureTheFlag.unity
@@ -17,5 +17,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Samples/PuzzleGame/PuzzleGame.unity
     guid: cea79b9c0d223c249bf9f9821bbe7d5e
+  - enabled: 1
+    path: Assets/Samples/SceneLoading/Scenes/Scene2.unity
+    guid: f89d73659343e014090e44f1194c6e29
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

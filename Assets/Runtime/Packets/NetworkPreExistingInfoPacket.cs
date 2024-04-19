@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace NetBuff.Packets
 {
-    public class NetworkGetPreExistingInfoPacket : IPacket
+    public class NetworkPreExistingInfoPacket : IPacket
     {
         public class PreExistingState
         {
@@ -42,6 +42,7 @@ namespace NetBuff.Packets
                 writer.Write(preExistingObject.Scale.y);
                 writer.Write(preExistingObject.Scale.z);
                 writer.Write(preExistingObject.IsActive);
+                writer.Write(preExistingObject.SceneId);
             }
             writer.Write(RemovedObjects.Length);
             foreach (var removedObject in RemovedObjects)
@@ -70,7 +71,8 @@ namespace NetBuff.Packets
                     Position = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()),
                     Rotation = new Quaternion(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()),
                     Scale = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()),
-                    IsActive = reader.ReadBoolean()
+                    IsActive = reader.ReadBoolean(),
+                    SceneId = reader.ReadInt32()
                 };
             }
             var removedObjectsLength = reader.ReadInt32();

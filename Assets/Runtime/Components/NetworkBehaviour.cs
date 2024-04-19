@@ -53,6 +53,11 @@ namespace NetBuff.Components
         /// Returns the prefab used to spawn this object (Will be empty for pre-spawned objects)
         /// </summary>
         public NetworkId PrefabId => Identity.PrefabId;
+        
+        /// <summary>
+        /// Returns the id of the scene the object is in
+        /// </summary>
+        public int SceneId => GetSceneId(gameObject.scene.name);
 
         /// <summary>
         /// Returns if the behaviour is dirty
@@ -365,6 +370,13 @@ namespace NetBuff.Components
         /// </summary>
         /// <param name="isRetroactive"></param>
         public virtual void OnSpawned(bool isRetroactive){}
+        
+        /// <summary>
+        /// Called when the object is moved to a different scene
+        /// </summary>
+        /// <param name="fromScene"></param>
+        /// <param name="toScene"></param>
+        public virtual void OnSceneChanged(int fromScene, int toScene) {}
         
         /// <summary>
         /// Called when a client connects to the server and the object is already spawned

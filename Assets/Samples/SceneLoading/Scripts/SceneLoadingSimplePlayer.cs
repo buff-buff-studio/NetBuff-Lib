@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Samples.SceneLoading
 {
-    public class SimplePlayer : NetworkBehaviour
+    public class SceneLoadingSimplePlayer : NetworkBehaviour
     {
         public void Update()
         {
@@ -11,11 +11,14 @@ namespace Samples.SceneLoading
                 return;
 
             var move = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-            transform.position += move * Time.deltaTime * 3;
+            transform.position += move * (Time.deltaTime * 3);
             
             if (Input.GetKeyDown(KeyCode.M))
             {
-                MoveToScene(-1);
+                var id = SceneId + 1;
+                if (id >= LoadedSceneCount)
+                    id = 0;
+                MoveToScene(id);
             }
         }
     }

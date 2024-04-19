@@ -4,14 +4,16 @@ using UnityEngine;
 
 namespace Samples.SceneLoading
 {
-    public class ObjectMovement : NetworkBehaviour
+    public class SimpleObjectMover : NetworkBehaviour
     {
+        public Vector3 multiplier = new(0, 1, 0);
+        
         private void Update()
         {
             if (!HasAuthority)
                 return;
 
-            transform.position = new Vector3(0, Time.time * 2 % 4, 0);
+            transform.position = multiplier * (Time.time * 2 % 4);
         }
     }
 }

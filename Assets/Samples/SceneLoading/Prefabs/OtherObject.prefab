@@ -13,8 +13,11 @@ GameObject:
   - component: {fileID: 512354464088369997}
   - component: {fileID: 5750163809976739851}
   - component: {fileID: 8042953597126938662}
+  - component: {fileID: 4998953481218607976}
+  - component: {fileID: 1910911300342589682}
+  - component: {fileID: 3212466787171519126}
   m_Layer: 0
-  m_Name: Capsule
+  m_Name: OtherObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -129,3 +132,47 @@ MonoBehaviour:
   prefabId:
     high: 0
     low: 0
+--- !u!114 &4998953481218607976
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4993544480538405186}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90c9415d35ba49ddae733d95d4e36454, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  destroyable: 0
+--- !u!114 &1910911300342589682
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4993544480538405186}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 221e789b43d948edb7e8d96309f23c72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  initialRotation: {x: 0, y: 0, z: 0}
+  rotDirection: {x: 0, y: 0, z: 0}
+--- !u!114 &3212466787171519126
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4993544480538405186}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6e25519dc96460b8011f9bfd913a40f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tickRate: -1
+  positionThreshold: 0.001
+  rotationThreshold: 0.001
+  scaleThreshold: 0.001
+  syncMode: 63
