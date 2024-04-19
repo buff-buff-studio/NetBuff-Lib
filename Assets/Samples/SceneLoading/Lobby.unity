@@ -185,11 +185,12 @@ MonoBehaviour:
   playerPrefab: {fileID: 8412692207167386886, guid: 4e8a65caa91e21148ae84c3c6a102ad4, type: 3}
   endTypeAfterReload: 0
   isClientReloaded: 0
+  loadedScenes: []
+  sourceScene: 
   networkObjects:
     _serializedList: []
   removedPreExistingObjects: []
   dirtyBehaviours: []
-  loadedScenes: []
 --- !u!4 &899349347
 Transform:
   m_ObjectHideFlags: 0
@@ -328,6 +329,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scene: Scene1
+  prefab: {fileID: 4993544480538405186, guid: 35a54608597011141b59598e7a5e3f33, type: 3}
 --- !u!114 &1705818153
 MonoBehaviour:
   m_ObjectHideFlags: 0

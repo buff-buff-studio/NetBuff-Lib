@@ -565,15 +565,16 @@ namespace NetBuff.Components
         /// <param name="scale"></param>
         /// <param name="active"></param>
         /// <param name="owner"></param>
+        /// <param name="scene"></param>
         /// <returns></returns>
-        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation, Vector3 scale, bool active, int owner = -1)
+        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation, Vector3 scale, bool active, int owner = -1, int scene = -1)
         {
             //var get it id
             var id = NetworkManager.Instance.prefabRegistry.GetPrefabId(prefab);
             if (id == NetworkId.Empty)
                 throw new InvalidOperationException("The prefab is not registered");
             
-            return InternalSpawn(id, position, rotation, scale, active, owner);
+            return InternalSpawn(id, position, rotation, scale, active, owner, scene);
         }
 
         /// <summary>
@@ -585,6 +586,7 @@ namespace NetBuff.Components
         /// <param name="scale"></param>
         /// <param name="active"></param>
         /// <param name="owner"></param>
+        /// <param name="scene"></param>
         /// <returns></returns>
         public static NetworkId Spawn(NetworkId prefabId, Vector3 position, Quaternion rotation, Vector3 scale, bool active, int owner = -1, int scene = -1)
         {
@@ -594,7 +596,7 @@ namespace NetBuff.Components
             return InternalSpawn(prefabId, position, rotation, scale, active, owner, scene);
         }
         
-        private static NetworkId InternalSpawn(NetworkId prefabId, Vector3 position, Quaternion rotation, Vector3 scale, bool active, int owner, int scene = -1)
+        private static NetworkId InternalSpawn(NetworkId prefabId, Vector3 position, Quaternion rotation, Vector3 scale, bool active, int owner, int scene)
         {
             var packet = new NetworkObjectSpawnPacket
             {

@@ -18,3 +18,7 @@ MonoBehaviour:
         high: 360319722
         low: -1075838458
       Value: {fileID: 8412692207167386886, guid: 4e8a65caa91e21148ae84c3c6a102ad4, type: 3}
+    - Key:
+        high: 35117581
+        low: -651887111
+      Value: {fileID: 4993544480538405186, guid: 35a54608597011141b59598e7a5e3f33, type: 3}
