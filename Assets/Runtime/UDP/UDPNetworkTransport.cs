@@ -215,7 +215,7 @@ namespace NetBuff.UDP
 
             public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
             {
-                _transport.OnClientDisconnected?.Invoke(peer.Id);
+                _transport.OnClientDisconnected?.Invoke(peer.Id, _ToSnakeCase(disconnectInfo.Reason.ToString()));
                 _clients.Remove(peer.Id);
             }
 
@@ -342,7 +342,7 @@ namespace NetBuff.UDP
                     return;
                 _manager.Stop();
                 _manager = null;
-                _transport.OnDisconnect?.Invoke();
+                _transport.OnDisconnect?.Invoke("disconnected");
             }
             
             public void OnPeerConnected(NetPeer peer)
@@ -354,7 +354,7 @@ namespace NetBuff.UDP
 
             public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
             {  
-                _transport.OnDisconnect?.Invoke();
+                _transport.OnDisconnect?.Invoke(_ToSnakeCase(disconnectInfo.Reason.ToString()));
                 _transport.ClientConnectionInfo = _clientInfo = null;
             }
 
@@ -410,6 +410,28 @@ namespace NetBuff.UDP
                 else
                     _clientInfo.queueUnreliable.Enqueue(packet);
             }
+        }
+        
+        private static string _ToSnakeCase(string text)
+        {
+            if(text == null) {
+                throw new ArgumentNullException(nameof(text));
+            }
+            if(text.Length < 2) {
+                return text.ToLowerInvariant();
+            }
+            var sb = new StringBuilder();
+            sb.Append(char.ToLowerInvariant(text[0]));
+            for(int i = 1; i < text.Length; ++i) {
+                char c = text[i];
+                if(char.IsUpper(c)) {
+                    sb.Append('_');
+                    sb.Append(char.ToLowerInvariant(c));
+                } else {
+                    sb.Append(c);
+                }
+            }
+            return sb.ToString();
         }
     }
 }

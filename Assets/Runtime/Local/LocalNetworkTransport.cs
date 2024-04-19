@@ -74,13 +74,13 @@ namespace NetBuff.Local
             {
                 case EndType.Host:
                     OnServerStop?.Invoke();
-                    OnDisconnect?.Invoke();
+                    OnDisconnect?.Invoke("disconnect");
                     break;
                 case EndType.Server:
-                    OnDisconnect?.Invoke();
+                    OnDisconnect?.Invoke("disconnect");
                     break;
                 case EndType.Client:
-                    OnDisconnect?.Invoke();
+                    OnDisconnect?.Invoke("disconnect");
                     break;
                 case EndType.None:
                     break;

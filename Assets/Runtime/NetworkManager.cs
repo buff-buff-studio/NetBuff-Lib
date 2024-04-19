@@ -531,9 +531,9 @@ namespace NetBuff
         /// Called when a client disconnects from the server
         /// </summary>
         /// <param name="clientId"></param>
-        
+        /// <param name="reason"></param>
         [ServerOnly]
-        public virtual void OnClientDisconnected(int clientId)
+        public virtual void OnClientDisconnected(int clientId, string reason)
         {
             //Destroy all objects owned by client
             var toDestroy = GetNetworkObjectsOwnedBy(clientId).ToList();
@@ -558,8 +558,9 @@ namespace NetBuff
         /// <summary>
         /// Called when the client disconnects from the server
         /// </summary>
+        /// <param name="reason"></param>
         [ClientOnly]
-        public virtual void OnDisconnect()
+        public virtual void OnDisconnect(string reason)
         {            
             IsClientRunning = false;
             

@@ -48,7 +48,9 @@ namespace NetBuff.Misc
         private int high;
         [SerializeField]
         private int low;
-
+        
+        public int High => high;
+        public int Low => low;
 
         public int CompareTo ( object obj )
         {

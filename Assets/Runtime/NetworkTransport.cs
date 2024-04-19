@@ -30,9 +30,9 @@ namespace NetBuff
         public Action<int, IPacket> OnServerPacketReceived { get; set; }
         public Action<IPacket> OnClientPacketReceived { get; set; }
         public Action<int> OnClientConnected { get; set; }
-        public Action<int> OnClientDisconnected { get; set; }
+        public Action<int, string> OnClientDisconnected { get; set; }
         public Action OnConnect { get; set; }
-        public Action OnDisconnect { get; set; }
+        public Action<string> OnDisconnect { get; set; }
         
         public Action OnServerStart { get; set; }
         
