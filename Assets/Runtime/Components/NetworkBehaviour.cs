@@ -5,8 +5,6 @@ using NetBuff.Interface;
 using NetBuff.Misc;
 using NetBuff.Packets;
 using UnityEngine;
-#if UNITY_EDITOR
-#endif
 
 namespace NetBuff.Components
 {
@@ -62,7 +60,7 @@ namespace NetBuff.Components
         /// <summary>
         /// Returns if the behaviour is dirty
         /// </summary>
-        public bool IsDirty => NetworkManager.Instance.dirtyBehaviours.Contains(this);
+        public bool IsDirty => NetworkManager.Instance.DirtyBehaviours.Contains(this);
 
         /// <summary>
         /// Returns all values being tracked by this behaviour
@@ -114,7 +112,7 @@ namespace NetBuff.Components
 
             if(IsDirty)
                 return;            
-            NetworkManager.Instance.dirtyBehaviours.Add(this);
+            NetworkManager.Instance.DirtyBehaviours.Add(this);
         }
 
         /// <summary>
@@ -156,6 +154,9 @@ namespace NetBuff.Components
         [ServerOnly]
         public void SendNetworkValuesToClient(int clientId)
         {
+            if(!IsServer)
+                throw new Exception("This method can only be called on the server");
+            
             var packet = GetPreExistingValuesPacket();
             if(packet != null)
                 ServerSendPacket(packet, clientId, true);
@@ -168,6 +169,9 @@ namespace NetBuff.Components
         [ServerOnly]
         public NetworkValuesPacket GetPreExistingValuesPacket()
         {
+            if(!IsServer)
+                throw new Exception("This method can only be called on the server");
+            
             if(_values == null || _values.Length == 0)
                 return null;
             var writer = new BinaryWriter(new MemoryStream());
@@ -464,7 +468,7 @@ namespace NetBuff.Components
             if(!HasAuthority)
                 throw new InvalidOperationException("Only the object owner can move it to a different scene");
 
-            SendPacket(new NetworkMoveObjectScenePacket{Id = Id, SceneId = sceneId}, true);
+            SendPacket(new NetworkObjectMoveScenePacket{Id = Id, SceneId = sceneId}, true);
         }
 
         /// <summary>
@@ -477,7 +481,7 @@ namespace NetBuff.Components
             if(!HasAuthority)
                 throw new InvalidOperationException("Only the object owner can move it to a different scene");
 
-            SendPacket(new NetworkMoveObjectScenePacket{Id = Id, SceneId = NetworkManager.Instance.GetSceneId(sceneName)}, true);
+            SendPacket(new NetworkObjectMoveScenePacket{Id = Id, SceneId = NetworkManager.Instance.GetSceneId(sceneName)}, true);
         }
         #endregion
 

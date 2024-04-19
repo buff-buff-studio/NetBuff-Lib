@@ -38,6 +38,8 @@ namespace NetBuff.Components
         private Vector3 _lastPosition;
         private Vector3 _lastRotation;
         private Vector3 _lastScale;
+
+        private bool _running;
         
         protected virtual void OnEnable()
         {
@@ -45,13 +47,36 @@ namespace NetBuff.Components
             _lastPosition = t.position;
             _lastRotation = t.eulerAngles;
             _lastScale = t.localScale;
-            InvokeRepeating(nameof(Tick), 0, 1f / (tickRate == -1 ? NetworkManager.Instance.defaultTickRate : tickRate));
+
+            if (NetworkManager.Instance != null)
+            {
+                var man = NetworkManager.Instance;
+                if (man.IsServerRunning || man.IsClientRunning)
+                    _Begin();
+            }
+        }
+
+        public override void OnSpawned(bool isRetroactive)
+        {
+            _Begin();
         }
         
         private void OnDisable()
         {
-            CancelInvoke(nameof(Tick));
+            if (_running)
+            {
+                CancelInvoke(nameof(Tick));
+                _running = false;
+            }
         }
+        
+        private void _Begin()
+        {
+            if (_running) return;
+            _running = true;
+            InvokeRepeating(nameof(Tick), 0, 1f / (tickRate == -1 ? NetworkManager.Instance.defaultTickRate : tickRate));
+        }
+
         
         private void Tick()
         {

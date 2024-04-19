@@ -1,10 +1,9 @@
 ﻿using System.IO;
 using NetBuff.Interface;
-using NetBuff.Misc;
 
 namespace NetBuff.Packets
 {
-    public class NetworkLoadScenePacket : IPacket
+    public class NetworkUnloadScenePacket : IPacket
     {
         public string SceneName { get; set; }
 

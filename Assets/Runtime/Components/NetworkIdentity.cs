@@ -203,19 +203,4 @@ namespace NetBuff.Components
             #endif
         }
     }
-    
-    #if UNITY_EDITOR
-    [CustomEditor(typeof(NetworkIdentity))]
-    public class NetworkIdentityEditor : Editor
-    {
-        public override void OnInspectorGUI()
-        {
-            EditorGUI.BeginDisabledGroup(true);
-            EditorGUILayout.PropertyField(serializedObject.FindProperty("id"));
-            EditorGUI.EndDisabledGroup();
-            DrawPropertiesExcluding(serializedObject, "id", "m_Script", "ownerId", "prefabId");
-            serializedObject.ApplyModifiedProperties();
-        }
-    }
-    #endif
 }
