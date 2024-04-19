@@ -121,7 +121,7 @@ namespace NetBuff.Editor
                 var npr = AssetDatabase.LoadAssetAtPath<NetworkPrefabRegistry>(AssetDatabase.GUIDToAssetPath(guid));
                 var nprDict = npr.Prefabs;
                 var field = nprDict.GetType().GetField("_serializedList", BindingFlags.NonPublic | BindingFlags.Instance);
-                var list = (List<SerializedKeyValuePair<NetworkId, GameObject>>) field.GetValue(nprDict);
+                var list = (List<SerializedKeyValuePair<NetworkId, GameObject>>) field!.GetValue(nprDict);
                 
                 var foundKeys = new List<NetworkId>();
 
@@ -344,10 +344,7 @@ namespace NetBuff.Editor
                             {
                                 if (_RegexFieldHigh.IsMatch(s[i + 1]) && _RegexFieldLow.IsMatch(s[i + 2]) && _RegexFieldOwnerId.IsMatch(s[i + 3]))
                                 {
-                                    var high = int.Parse(s[i + 1].Substring(10));
-                                    var low = int.Parse(s[i + 2].Substring(9));
-                                    
-                                    var id = new NetworkId(high, low);
+                                    NetworkId id;
                                     do
                                     {
                                         id = NetworkId.New();
