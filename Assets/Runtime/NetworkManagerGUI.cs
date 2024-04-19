@@ -23,6 +23,13 @@ namespace NetBuff
                 return;
             }
 
+            if (NetworkManager.Instance.transport == null)
+            {
+                GUILayout.Label("NetworkTransport not set");
+                GUILayout.EndArea();
+                return;
+            }
+
             switch (NetworkManager.Instance.EndType)
             {
                 case NetworkTransport.EndType.None:

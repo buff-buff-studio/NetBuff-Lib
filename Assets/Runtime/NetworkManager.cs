@@ -133,6 +133,12 @@ namespace NetBuff
             //Register all packets
             foreach (var type in types)
                 PacketRegistry.RegisterPacket(type);
+
+            if (transport == null)
+            {
+                enabled = false;
+                throw new Exception("Transport is not set");
+            }
             
             transport.OnServerPacketReceived += OnServerReceivePacket;
             transport.OnClientPacketReceived += OnClientReceivePacket;
@@ -184,6 +190,9 @@ namespace NetBuff
         
         private void OnDisable()
         {
+            if(transport == null)
+                return;
+            
             #if UNITY_EDITOR
             endTypeAfterReload = EndType switch
             {

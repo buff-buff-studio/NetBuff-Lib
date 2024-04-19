@@ -32,7 +32,6 @@ namespace NetBuff.Local
             _clients[id] = new LocalClientConnectionInfo(id);
             OnConnect.Invoke();
             OnClientConnected.Invoke(id);
-            
         }
         
         

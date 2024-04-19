@@ -387,7 +387,7 @@ GameObject:
   - component: {fileID: 899349347}
   - component: {fileID: 899349346}
   - component: {fileID: 899349345}
-  - component: {fileID: 899349344}
+  - component: {fileID: 899349348}
   m_Layer: 0
   m_Name: Network
   m_TagString: Untagged
@@ -395,23 +395,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &899349344
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 899349343}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5b23075050df442d8bd5d7cb60e79d25, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  name: server
-  address: 127.0.0.1
-  port: 7777
-  password: password
-  maxClients: 10
 --- !u!114 &899349345
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -439,7 +422,7 @@ MonoBehaviour:
   magicNumber: 4357981
   defaultTickRate: 50
   spawnsPlayer: 1
-  transport: {fileID: 899349344}
+  transport: {fileID: 899349348}
   prefabRegistry: {fileID: 11400000, guid: 1c87b8f95c13b164ca498de55aa5a703, type: 2}
   playerPrefab: {fileID: 8412692207167386886, guid: 4e8a65caa91e21148ae84c3c6a102ad4, type: 3}
   loadedScenes: []
@@ -465,6 +448,23 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &899349348
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 899349343}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b23075050df442d8bd5d7cb60e79d25, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  name: server
+  address: 127.0.0.1
+  port: 7777
+  password: 
+  maxClients: 10
 --- !u!1 &1372201338
 GameObject:
   m_ObjectHideFlags: 0
