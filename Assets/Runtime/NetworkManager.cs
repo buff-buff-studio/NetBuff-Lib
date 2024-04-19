@@ -386,8 +386,6 @@ namespace NetBuff
         /// </summary>
         public virtual void OnServerStart()
         {
-            DontDestroyOnLoad(gameObject);
-
             foreach (var identity in networkObjects.Values)
                 foreach (var behaviour in identity.Behaviours)
                     behaviour.OnSpawned(false);
@@ -402,7 +400,7 @@ namespace NetBuff
         {
             IsServerRunning = false;
             if(transport.Type is NetworkTransport.EndType.Server)
-                ResetEnvironment();
+                OnClearEnvironment();
         }
         
         
@@ -545,7 +543,6 @@ namespace NetBuff
         [ClientOnly]
         public virtual void OnConnect()
         {
-            DontDestroyOnLoad(gameObject);
             IsClientRunning = true;
         }
         
@@ -566,7 +563,7 @@ namespace NetBuff
                     foreach (var behaviour in identity.Behaviours)
                         behaviour.OnActiveChanged(false);
                 
-                ResetEnvironment();
+                OnClearEnvironment();
             }
         }
         
@@ -1054,9 +1051,8 @@ namespace NetBuff
         /// <summary>
         /// Called to reset the entire network environment
         /// </summary>
-        public virtual void ResetEnvironment()
+        public virtual void OnClearEnvironment()
         {
-            Destroy(gameObject);
             SceneManager.LoadScene(SourceScene);
         }
     }
