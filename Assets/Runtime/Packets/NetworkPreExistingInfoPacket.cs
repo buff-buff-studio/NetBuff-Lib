@@ -46,6 +46,7 @@ namespace NetBuff.Packets
                 writer.Write(preExistingObject.IsActive);
                 writer.Write(preExistingObject.SceneId);
             }
+            
             writer.Write(RemovedObjects.Length);
             foreach (var removedObject in RemovedObjects)
             {
@@ -59,7 +60,7 @@ namespace NetBuff.Packets
             }
             
             writer.Write(SpawnedObjects.Length);
-foreach (var spawnedObject in SpawnedObjects)
+            foreach (var spawnedObject in SpawnedObjects)
             {
                 spawnedObject.Id.Serialize(writer);
                 spawnedObject.PrefabId.Serialize(writer);
@@ -107,6 +108,7 @@ foreach (var spawnedObject in SpawnedObjects)
                     SceneId = reader.ReadInt32()
                 };
             }
+            
             var removedObjectsLength = reader.ReadInt32();
             RemovedObjects = new NetworkId[removedObjectsLength];
             for (var i = 0; i < removedObjectsLength; i++)

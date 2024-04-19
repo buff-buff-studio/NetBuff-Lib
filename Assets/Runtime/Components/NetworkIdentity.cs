@@ -234,11 +234,11 @@ namespace NetBuff.Components
         /// <summary>
         /// Returns a network object by its id
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="objectId"></param>
         /// <returns></returns>
-        public NetworkIdentity GetNetworkObject(NetworkId id)
+        public NetworkIdentity GetNetworkObject(NetworkId objectId)
         {
-            return NetworkManager.Instance.GetNetworkObject(id);
+            return NetworkManager.Instance.GetNetworkObject(objectId);
         }
         
         /// <summary>
@@ -287,11 +287,11 @@ namespace NetBuff.Components
         /// <summary>
         /// Returns the registered prefab by its id
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="prefab"></param>
         /// <returns></returns>
-        public GameObject GetPrefabById(NetworkId id)
+        public GameObject GetPrefabById(NetworkId prefab)
         {
-            return NetworkManager.Instance.prefabRegistry.GetPrefab(id);
+            return NetworkManager.Instance.prefabRegistry.GetPrefab(prefab);
         }
         
         /// <summary>
@@ -307,11 +307,11 @@ namespace NetBuff.Components
         /// <summary>
         /// Returns if a given prefab id is registered
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="prefab"></param>
         /// <returns></returns>
-        public bool IsPrefabValid(NetworkId id)
+        public bool IsPrefabValid(NetworkId prefab)
         {
-            return NetworkManager.Instance.prefabRegistry.IsPrefabValid(id);
+            return NetworkManager.Instance.prefabRegistry.IsPrefabValid(prefab);
         }
         #endregion
         

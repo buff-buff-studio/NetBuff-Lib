@@ -15,7 +15,8 @@ namespace NetBuff.Packets
         public Vector3 Scale { get; set; }
         public bool IsActive { get; set; }
         public bool IsRetroactive { get; set; }
-        public int SceneId { get; set; }     
+        public int SceneId { get; set; } 
+        
         public void Serialize(BinaryWriter writer)
         {
             Id.Serialize(writer);

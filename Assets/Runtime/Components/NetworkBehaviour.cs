@@ -467,10 +467,10 @@ namespace NetBuff.Components
         /// <summary>
         /// Returns a network object by its id
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="objectId"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NetworkIdentity GetNetworkObject(NetworkId id) => Identity.GetNetworkObject(id);
+        public NetworkIdentity GetNetworkObject(NetworkId objectId) => Identity.GetNetworkObject(objectId);
         
         /// <summary>
         /// Returns all network objects
@@ -510,10 +510,10 @@ namespace NetBuff.Components
         /// <summary>
         /// Returns the registered prefab by its id
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="prefab"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public GameObject GetPrefabById(NetworkId id) => Identity.GetPrefabById(id);
+        public GameObject GetPrefabById(NetworkId prefab) => Identity.GetPrefabById(prefab);
         
         /// <summary>
         /// Returns the id of a registered prefab
@@ -526,10 +526,10 @@ namespace NetBuff.Components
         /// <summary>
         /// Returns if a given prefab id is registered
         /// </summary>
-        /// <param name="id"></param>
+        /// <param name="prefab"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool IsPrefabValid(NetworkId id) => Identity.IsPrefabValid(id);
+        public bool IsPrefabValid(NetworkId prefab) => Identity.IsPrefabValid(prefab);
         #endregion
 
         #region Scene Moving
