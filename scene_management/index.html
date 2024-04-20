@@ -1,0 +1,674 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../custom_behaviours/">
+      
+      
+        <link rel="next" href="../object_spawning/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.18">
+    
+    
+      
+        <title>Managing Scenes - NetBuff</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.66ac8b77.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/style.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="green" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#managing-scenes" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="NetBuff" class="md-header__button md-logo" aria-label="NetBuff" data-md-component="logo">
+      
+  <img src="../img/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            NetBuff
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Managing Scenes
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="NetBuff" class="md-nav__button md-logo" aria-label="NetBuff" data-md-component="logo">
+      
+  <img src="../img/logo.png" alt="logo">
+
+    </a>
+    NetBuff
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting_started/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Getting Started
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../components/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Components
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom_behaviours/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Creating Custom Behaviours
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Managing Scenes
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Managing Scenes
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#scene-id-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scene Id Rules
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#loading-and-unloading-scenes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Loading and Unloading Scenes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#moving-objects-between-scenes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Moving Objects Between Scenes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#main-scene" class="md-nav__link">
+    <span class="md-ellipsis">
+      Main Scene
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../object_spawning/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Spawning Objects
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reconnection_and_hot_reload/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Reconnection and Hot-Reload
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom_network_manager/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Custom Network Manager
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../network_testing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Testing the Network
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#scene-id-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scene Id Rules
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#loading-and-unloading-scenes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Loading and Unloading Scenes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#moving-objects-between-scenes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Moving Objects Between Scenes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#main-scene" class="md-nav__link">
+    <span class="md-ellipsis">
+      Main Scene
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="managing-scenes">Managing Scenes</h1>
+<p><b class="netbuff">NetBuff</b> supports loading/unloading scenes in runtime, allowing the system to provide level loading/unloading flow control and other scene-based control flow. Every single NetworkIdentity object has the field <b>NetworkIdentity.SceneId</b> that represents in which network loaded scene the object is:</p>
+<div class="language-csharp highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-0-1"><span class="k">public</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">SceneId</span><span class="p">;</span>
+</span></code></pre></div></td></tr></table></div>
+<h2 id="scene-id-rules">Scene Id Rules</h2>
+<p>The scene where your NetworkManager is located is considered the main scene, as the networking process will always start from there. The main scene will always have the id of 0.</p>
+<p>Everyother scene will have the id linked to its position if the <b>NetworkManager.LoadedScenes</b> list</p>
+<ol>
+<li>You start the network</li>
+<li>You load the scene "Test1.unity". It'll have the id 1</li>
+<li>You load the scene "Test2.unity". It'll have the id 2</li>
+<li>You unload the scene "Test1.unity"</li>
+<li>Now the scene Test2 becomes the scene 1, cause it's linked to loaded scenes list</li>
+</ol>
+<p>You can always use the scene id -1 to spawn or move objects around. This id represents the <b>NetworkManager.LastLoadedScene</b> (the scene in the last position of the loaded scenes list). If no additional scene is loaded it will point to the main scene.</p>
+<h2 id="loading-and-unloading-scenes">Loading and Unloading Scenes</h2>
+<p>Only the server can load and unload scenes, but anyone can check if a scene is loaded and which scenes are loaded right now. The <b>NetworkIdentity.SceneId</b> will be synced between every network end and every other scene-related method/property will work in any end as well.</p>
+<p>You can load / unload scenes using the <b>NetworkManager.LoadScene</b> and <b>NetworkManager.UnloadScene</b> methods:</p>
+<div class="language-csharp highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-1-1"><span class="k">public</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">SceneLoadingController</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">NetworkBehaviour</span>
+</span><span id="__span-1-2"><span class="p">{</span>
+</span><span id="__span-1-3"><span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="kt">string</span><span class="w"> </span><span class="n">scene1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Scene1&quot;</span><span class="p">;</span>
+</span><span id="__span-1-4">
+</span><span id="__span-1-5"><span class="w">    </span><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Update</span><span class="p">()</span>
+</span><span id="__span-1-6"><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-1-7"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">IsServer</span><span class="p">)</span>
+</span><span id="__span-1-8"><span class="w">        </span><span class="p">{</span>
+</span><span id="__span-1-9"><span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Input</span><span class="p">.</span><span class="n">GetKeyDown</span><span class="p">(</span><span class="n">KeyCode</span><span class="p">.</span><span class="n">Alpha1</span><span class="p">))</span>
+</span><span id="__span-1-10"><span class="w">            </span><span class="p">{</span>
+</span><span id="__span-1-11"><span class="w">                </span><span class="c1">//Checks if the scene is already loaded</span>
+</span><span id="__span-1-12"><span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">NetworkManager</span><span class="p">.</span><span class="n">Instance</span><span class="p">.</span><span class="n">IsSceneLoaded</span><span class="p">(</span><span class="n">scene1</span><span class="p">))</span>
+</span><span id="__span-1-13"><span class="w">                    </span><span class="c1">//Unloads the scene</span>
+</span><span id="__span-1-14"><span class="w">                    </span><span class="n">NetworkManager</span><span class="p">.</span><span class="n">Instance</span><span class="p">.</span><span class="n">UnloadScene</span><span class="p">(</span><span class="n">scene1</span><span class="p">);</span>
+</span><span id="__span-1-15"><span class="w">                </span><span class="k">else</span>
+</span><span id="__span-1-16"><span class="w">                    </span><span class="c1">//Loads the scene</span>
+</span><span id="__span-1-17"><span class="w">                    </span><span class="n">NetworkManager</span><span class="p">.</span><span class="n">Instance</span><span class="p">.</span><span class="n">LoadScene</span><span class="p">(</span><span class="n">scene1</span><span class="p">);</span>
+</span><span id="__span-1-18"><span class="w">            </span><span class="p">}</span>
+</span><span id="__span-1-19"><span class="w">        </span><span class="p">}</span>
+</span><span id="__span-1-20"><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-1-21"><span class="p">}</span>
+</span></code></pre></div></td></tr></table></div>
+<p>When you unload a scene all the NetworkIdentity objects in it will be despawned with no issues. If a late-joiner enters the game, every single object in every single scene will be synced with no problems as well. </p>
+<h2 id="moving-objects-between-scenes">Moving Objects Between Scenes</h2>
+<p>If you have the ownership over a NetworkIdentity object, you can move it between scenes easily, using the <b>NetworkIdentity.MoveToScene</b> method:</p>
+<div class="language-csharp highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span></pre></div></td><td class="code"><div><pre><span></span><code><span id="__span-2-1"><span class="k">public</span><span class="w"> </span><span class="k">void</span><span class="w"> </span><span class="nf">Update</span><span class="p">()</span>
+</span><span id="__span-2-2"><span class="p">{</span>
+</span><span id="__span-2-3"><span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">HasAuthority</span><span class="p">)</span>
+</span><span id="__span-2-4"><span class="w">        </span><span class="k">return</span><span class="p">;</span>
+</span><span id="__span-2-5">
+</span><span id="__span-2-6"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Input</span><span class="p">.</span><span class="n">GetKeyDown</span><span class="p">(</span><span class="n">KeyCode</span><span class="p">.</span><span class="n">M</span><span class="p">))</span>
+</span><span id="__span-2-7"><span class="w">    </span><span class="p">{</span>
+</span><span id="__span-2-8"><span class="w">        </span><span class="kt">var</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SceneId</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">1</span><span class="p">;</span>
+</span><span id="__span-2-9"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">id</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">LoadedSceneCount</span><span class="p">)</span>
+</span><span id="__span-2-10"><span class="w">            </span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="p">;</span>
+</span><span id="__span-2-11"><span class="w">        </span><span class="c1">//Moves the object to the next loaded scene</span>
+</span><span id="__span-2-12"><span class="w">        </span><span class="n">MoveToScene</span><span class="p">(</span><span class="n">id</span><span class="p">);</span>
+</span><span id="__span-2-13"><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-2-14"><span class="p">}</span>
+</span></code></pre></div></td></tr></table></div>
+<h2 id="main-scene">Main Scene</h2>
+<p>The main scene is the scene where your NetworkManager is. It can't be unloaded and is the scene where player prefabs spawns by default. We heavily recommend that you leave the players and anything scene-persistent on the main scene, like singletons, controllers, etc...</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["content.code.select", "content.code.copy"], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.3220b9d7.min.js"></script>
+      
+    
+  </body>
+</html>

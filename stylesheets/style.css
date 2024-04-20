@@ -1,0 +1,20 @@
+.logo
+{
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 250px;
+}
+
+.netbuff
+{
+    color: #17DF16;
+}
+
+.image
+{
+    border-radius: 5px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
