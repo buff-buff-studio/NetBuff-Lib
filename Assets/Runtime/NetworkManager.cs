@@ -1123,7 +1123,11 @@ namespace NetBuff
 
             loadedScenes.Add(sceneName);
 
-            var async = SceneManager.LoadScene(sceneName, new LoadSceneParameters(LoadSceneMode.Additive));
+            var async = SceneManager.LoadSceneAsync(sceneName, new LoadSceneParameters(LoadSceneMode.Additive));
+            while (!async.isDone)
+            {
+                await Awaitable.NextFrameAsync();
+            }
             await Awaitable.NextFrameAsync();
 
             var scene = SceneManager.GetSceneByName(sceneName);
