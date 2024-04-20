@@ -4,25 +4,14 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using LiteNetLib.Utils;
+using NetBuff.Misc;
+using UnityEngine;
 
-namespace NetBuff.Misc
+namespace NetBuff.Discover
 {
-    public static class UDPServerDiscoverer
+    public class UDPServerDiscoverer : ServerDiscover<UDPServerDiscoverer.UDPGameInfo>
     {
-        public class GameInfo
-        {
-            public string Name { get; set; }
-            public int Players { get; set; }
-            public int MaxPlayers { get; set; }
-            public Platform Platform { get; set; }
-            public bool HasPassword { get; set; }
-
-            public override string ToString()
-            {
-                return $"{Name}'s game - Players: {Players}/{MaxPlayers}, Platform: {Platform}, HasPassword: {HasPassword}";
-            }
-        }
-        public class EthernetGameInfo : GameInfo
+        public class UDPGameInfo : GameInfo
         {
             public IPAddress Address { get; set; }
 
@@ -32,8 +21,19 @@ namespace NetBuff.Misc
             }
         }
         
-        public static async void FindServers(int magicNumber, int port, Action<GameInfo> foundServer, Action finalized)
+        private readonly int _magicNumber;
+        private readonly int _port;
+        private int _searchId;
+       
+        public UDPServerDiscoverer(int magicNumber, int port)
         {
+            _magicNumber = magicNumber;
+            _port = port;
+        }
+
+        public override async void Search(Action<UDPGameInfo> onFindServer, Action onFinish)
+        {
+            var id = ++_searchId;
             var waiting = 0;
 
             var interfaces = NetworkInterface.GetAllNetworkInterfaces();
@@ -46,6 +46,9 @@ namespace NetBuff.Misc
 
                 foreach (var uip in properties.UnicastAddresses)
                 {
+                    if (id != _searchId)
+                        return;
+                    
                     if (uip.Address.AddressFamily == AddressFamily.InterNetwork)
                     {
                         var address = uip.Address;
@@ -69,11 +72,11 @@ namespace NetBuff.Misc
                                 var writer = new NetDataWriter();
                                 writer.Put((byte)8);
                                 writer.Put("server_search");
-                                writer.Put(magicNumber);
+                                writer.Put(_magicNumber);
                                 var data = writer.CopyData();
-                                await udpClient.SendAsync(data, data.Length, new IPEndPoint(IPAddress.Broadcast, port));
+                                await udpClient.SendAsync(data, data.Length, new IPEndPoint(IPAddress.Broadcast, _port));
 
-                                var address2 = new IPEndPoint(IPAddress.Any, port);
+                                var address2 = new IPEndPoint(IPAddress.Any, _port);
                                 var response = udpClient.Receive(ref address2);
                                 udpClient.Close();
                                 var reader = new NetDataReader(response);
@@ -86,20 +89,24 @@ namespace NetBuff.Misc
                                     var maxPlayers = reader.GetInt();
                                     var platform = (Platform)reader.GetInt();
                                     var hasPassword = reader.GetBool();
-
-                                    foundServer(new EthernetGameInfo
+                                    
+                                    if (id != _searchId)
+                                        return;
+                                    onFindServer(new UDPGameInfo
                                     {
                                         Name = name,
                                         Address = address2.Address,
                                         Players = players,
                                         MaxPlayers = maxPlayers,
                                         Platform = platform,
-                                        HasPassword = hasPassword
+                                        HasPassword = hasPassword,
+                                        Method = "UDP"
                                     });
                                 }
                             }
-                            catch
+                            catch(Exception e)
                             {
+                                Debug.Log(e);
                                 // ignored
                             }
 
@@ -111,6 +118,14 @@ namespace NetBuff.Misc
 
             while (waiting > 0)
                 await Task.Delay(100);
+        
+            if (id == _searchId)
+                onFinish?.Invoke();
+        }
+
+        public override void Cancel()
+        {
+            _searchId++;
         }
     }
 }
