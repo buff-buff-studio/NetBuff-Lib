@@ -91,7 +91,7 @@ namespace CTF
             //Apply velocity and equilibrium
             _rigidbody.velocity = velocity;
             
-            //Shot
+            //ShotD
             if(Input.GetMouseButtonDown(0) && shotTimeout <= 0)
             {
                 shotTimeout = 0.5f;

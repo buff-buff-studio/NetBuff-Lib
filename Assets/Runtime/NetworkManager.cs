@@ -556,19 +556,7 @@ namespace NetBuff
 
             SendServerPacket(prePacket, clientId, true);
         }
-
-        /// <summary>
-        /// Spawns a player in the game world.
-        /// </summary>
-        /// <param name="clientId">The ID of the client for whom the player is being spawned.</param>
-        protected virtual void OnSpawnPlayer(int clientId)
-        {
-            if (!prefabRegistry.IsPrefabValid(playerPrefab))
-                throw new Exception("Player prefab is not valid");
-            SpawnNetworkObjectForClients(prefabRegistry.GetPrefabId(playerPrefab), Vector3.zero, Quaternion.identity,
-                Vector3.one, clientId, 0);
-        }
-
+        
         /// <summary>
         /// Called when a client disconnects from the server
         /// </summary>
@@ -587,6 +575,20 @@ namespace NetBuff
                 foreach (var behaviour in identity.Behaviours)
                     behaviour.OnClientDisconnected(clientId);
         }
+        
+        /// <summary>
+        /// Spawns a player in the game world.
+        /// </summary>
+        /// <param name="clientId">The ID of the client for whom the player is being spawned.</param>
+        [ServerOnly]
+        protected virtual void OnSpawnPlayer(int clientId)
+        {
+            if (!prefabRegistry.IsPrefabValid(playerPrefab))
+                throw new Exception("Player prefab is not valid");
+            SpawnNetworkObjectForClients(prefabRegistry.GetPrefabId(playerPrefab), Vector3.zero, Quaternion.identity,
+                Vector3.one, clientId, 0);
+        }
+
 
         /// <summary>
         /// Called when the client connects to the server
