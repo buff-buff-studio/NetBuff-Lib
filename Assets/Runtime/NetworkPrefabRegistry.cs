@@ -15,6 +15,10 @@ namespace NetBuff
     {
         [SerializeField]
         private SerializedDictionary<NetworkId, GameObject> prefabs = new SerializedDictionary<NetworkId, GameObject>();
+        
+        /// <summary>
+        /// Returns all registered prefabs
+        /// </summary>
         public SerializedDictionary<NetworkId, GameObject> Prefabs => prefabs;
 
         /// <summary>

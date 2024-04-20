@@ -16,8 +16,15 @@ namespace NetBuff.Misc
         Unknown
     }
     
+    /// <summary>
+    /// Used to determine the current platform
+    /// </summary>
     public static class PlatformExtensions
     {
+        /// <summary>
+        /// Returns the current platform
+        /// </summary>
+        /// <returns></returns>
         public static Platform GetPlatform()
         {
             switch (Application.platform)

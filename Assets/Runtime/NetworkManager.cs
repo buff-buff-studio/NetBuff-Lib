@@ -29,18 +29,21 @@ namespace NetBuff
             typeof(NetworkIdentity).GetField("prefabId", BindingFlags.NonPublic | BindingFlags.Instance);
 
         #region Public Fields
-
-        [Header("SETTINGS")]
         //Used to check if the communication is being done on the same system
+        [Header("SETTINGS")]
         public int versionMagicNumber;
-
+        //How often the network manager should tick per second
         public int defaultTickRate = 50;
+        //Whether the network manager should spawn a player for the client
         public bool spawnsPlayer = true;
-
-        [Header("REFERENCES")] public NetworkTransport transport;
+        
+        //The network transport to use
+        [Header("REFERENCES")]
+        public NetworkTransport transport;
+        //Holds all the registered network prefabs
         public NetworkPrefabRegistry prefabRegistry;
+        //The player prefab to spawn (Only used if spawnsPlayer is true)
         public GameObject playerPrefab;
-
         #endregion
 
         #region Internal Fields
