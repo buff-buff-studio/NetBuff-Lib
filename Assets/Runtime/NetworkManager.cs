@@ -1082,15 +1082,10 @@ namespace NetBuff
                 return;
             
             loadedScenes.Add(sceneName);
-        
-            //Load the scene itself
-            var async = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
-            while (!async.isDone)
-            {
-                await Awaitable.NextFrameAsync();
-            }
-
+            
+            var async = SceneManager.LoadScene(sceneName, new LoadSceneParameters(LoadSceneMode.Additive));
             await Awaitable.NextFrameAsync();
+            
             var scene = SceneManager.GetSceneByName(sceneName);
             
             foreach (var root in scene.GetRootGameObjects())
