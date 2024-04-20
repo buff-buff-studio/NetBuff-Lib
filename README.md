@@ -1,4 +1,4 @@
-# **NetBuff - A Buff Buff Multiplayer System** <sup>1.4.2<sup> 
+# **NetBuff - A Buff Buff Multiplayer System** <sup>2.0<sup> 
 
 <p align="center">
   <a href="https://buff-buff-studios.itch.io">
@@ -12,22 +12,21 @@
   </p>
 </p>
 
-### **Oficial Documentation**
-[NetBuff Documentation](https://buff-buff-studio.github.io/NetBuff-Lib-Docs/)
-
 ### About
-We chose to implement our own multiplayer system that fits better our project, without the giant overhead that NGO (Netcode for GameObjects) and third-party solutions (like mirror) commonly have, while still providing all the tools needed to create a very-performatic and reliable network platform.
+NetBuff is a Unity Game Engine based multiplayer engine created as lightweight alternative without the giant overhead of other libraries such as NGO (Netcode for GameObjects) and third-party solutions (like Mirror). This project as first created focusing on our own organization college projects but after a short time this system shown its value and so we put effort on polising and ironing the code to launch it as a an library itself, and here it is!
 
-This document was created with the purpose of being an implementation guide as also a “reliability assurance procedure”. Everyone who's trying to implement any new system into a project using this library shall follow the instructions found along the guide (ignoring some special exceptions)
+> [!IMPORTANT]
+> [**Official NetBuf Documentation**](https://buff-buff-studio.github.io/NetBuff-Lib-Docs/)
 
 The system provides many features (which some are very worthy to note, so they’re listed below):
 
-- **Reload-proof** (you can make non-aggressive code changes runtime and the server state will be kept. Clients will need rejoin with no issues)
-- **Reliable and Fast** (you can choose when the reliability is really needed)
-- **Small Overhead** (what you want/do is what you get)
-- **Packet Based (Status & Actions)** (no Rpc commands or calls, you can use the packets directly, offering more control and performance/configuration)
-- **Reconnect Friendly** (can sync retroactive states easily with no problem)
-- **Data Lightweight** (tries to save data for mobile devices)
+- **Editor/Debugging heavy support**
+- **Hot-Reload** (You can recompile the game without losing the game state)
+- **Server Password Protection**
+- **Server Discovery System**
+- **Reliable and Unrealiable packets**
+- **Custom Packet Support**
+- **Scene Loading / Unloading**
 
 ### **Instalation Guide**
 1. Go to Unity Package Manager ```Window -> Package Manager```
@@ -45,6 +44,11 @@ https://github.com/buff-buff-studio/NetBuff-Lib.git#package
 - **[Serialized Dictionary](https://assetstore.unity.com/packages/tools/utilities/serialized-dictionary-243052)** by [ayellowpaper](https://yellowpaperwastaken.wordpress.com)
 
 # **Documentation**
+> [!CAUTION]
+> This documentation is outdated and is valid up to version 1.5 of the package.
+> 
+> Documentation from version 2.0 onwards can be found on the [Official NetBuff Documentation Site](https://buff-buff-studio.github.io/NetBuff-Lib-Docs/)
+
 
 ## **Main Components**
 
