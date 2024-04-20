@@ -247,7 +247,7 @@ namespace NetBuff.UDP
                 {
                     //Check magic number
                     var magicNumber = reader.GetInt();
-                    if(NetworkManager.Instance.magicNumber != magicNumber)
+                    if(NetworkManager.Instance.versionMagicNumber != magicNumber)
                         return;
                     
                     var hasPassword = !string.IsNullOrEmpty(_password);
@@ -273,7 +273,7 @@ namespace NetBuff.UDP
                 var writer = new NetDataWriter();
                 
                 var magicNumber = data.GetInt();
-                if(NetworkManager.Instance.magicNumber != magicNumber)
+                if(NetworkManager.Instance.versionMagicNumber != magicNumber)
                 {
                     writer.Put("wrong_magic_number");
                     request.Reject(writer);

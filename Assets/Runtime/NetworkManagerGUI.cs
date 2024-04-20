@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using NetBuff.Discover;
 using NetBuff.Misc;
 using NetBuff.UDP;
 using UnityEngine;
@@ -118,22 +119,26 @@ namespace NetBuff
         }
 
         
-        private UDPServerDiscoverer.GameInfo[] _serverList;
+        private UDPServerDiscoverer.UDPGameInfo[] _serverList;
 
         private void DrawServerList()
         {
             if (_serverList == null)
             {
-                _serverList = Array.Empty<UDPServerDiscoverer.GameInfo>();
-                var list = new List<UDPServerDiscoverer.GameInfo>();
+                _serverList = Array.Empty<UDPServerDiscoverer.UDPGameInfo>();
+                var list = new List<UDPServerDiscoverer.UDPGameInfo>();
                 
                 if (NetworkManager.Instance.transport is UDPNetworkTransport udp)
                 {
-                    UDPServerDiscoverer.FindServers(NetworkManager.Instance.magicNumber, udp.port, (info) =>
+                    var discoverer = new UDPServerDiscoverer(NetworkManager.Instance.versionMagicNumber, udp.port);
+                    discoverer.Search((info) =>
                     {
                         list.Add(info);
                         _serverList = list.ToArray();
-                    }, () => {});
+                    }, () =>
+                    {
+                        Debug.Log("Search finished");
+                    });
                 }
             }
 
@@ -141,13 +146,10 @@ namespace NetBuff
             {
                 foreach (var info in _serverList)
                 {
-                    if (info is UDPServerDiscoverer.EthernetGameInfo egi)
+                    if (GUILayout.Button($"{info.Address} - {info.Players}/{info.MaxPlayers} - {info.Platform} [{info.HasPassword}]"))
                     {
-                        if (GUILayout.Button($"{egi.Address} - {egi.Players}/{egi.MaxPlayers} - {egi.Platform} [{egi.HasPassword}]"))
-                        {
-                            transport.address = egi.Address.ToString();
-                            NetworkManager.Instance.StartClient();
-                        }
+                        transport.address = info.Address.ToString();
+                        NetworkManager.Instance.StartClient();
                     }
                 }
             }

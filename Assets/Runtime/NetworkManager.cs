@@ -32,7 +32,7 @@ namespace NetBuff
 
         [Header("SETTINGS")]
         //Used to check if the communication is being done on the same system
-        public int magicNumber = _GenerateMagicNumber();
+        public int versionMagicNumber;
 
         public int defaultTickRate = 50;
         public bool spawnsPlayer = true;
@@ -243,7 +243,7 @@ namespace NetBuff
         /// </summary>
         public void StartClient()
         {
-            transport.StartClient(magicNumber);
+            transport.StartClient(versionMagicNumber);
         }
 
         /// <summary>
@@ -259,7 +259,7 @@ namespace NetBuff
         /// </summary>
         public void StartHost()
         {
-            transport.StartHost(magicNumber);
+            transport.StartHost(versionMagicNumber);
         }
 
         /// <summary>
@@ -1180,11 +1180,5 @@ namespace NetBuff
         }
 
         #endregion
-
-        private static int _GenerateMagicNumber()
-        {
-            var rnd = new System.Random();
-            return rnd.Next(1_000_000, 9_999_999);
-        }
     }
 }
