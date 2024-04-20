@@ -16,6 +16,7 @@ namespace NetBuff
     /// Main network system class. Holds the network state and manages the network objects.
     /// </summary>
     [Icon("Assets/Editor/Icons/NetworkManager.png")]
+    [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-manager")]
     public class NetworkManager : MonoBehaviour
     {
         private static readonly FieldInfo _IDField =
@@ -130,9 +131,14 @@ namespace NetBuff
         #endregion
 
         #region Unity Callbacks
-
         private void OnEnable()
         {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            
             Instance = this;
             PacketRegistry.Clear();
 
@@ -216,6 +222,7 @@ namespace NetBuff
             };
 #endif
             transport.Close();
+            Instance = null;
         }
 
         private void Update()

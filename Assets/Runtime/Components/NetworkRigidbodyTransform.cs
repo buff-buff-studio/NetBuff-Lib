@@ -9,6 +9,7 @@ namespace NetBuff.Components
     /// </summary>
     [RequireComponent(typeof(Rigidbody))]
     [Icon("Assets/Editor/Icons/NetworkRigidbodyTransform.png")]
+    [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-rigidbody-transform")]
     public class NetworkRigidbodyTransform : NetworkTransform
     {
         #region Public Fields

@@ -15,6 +15,7 @@ namespace NetBuff.Components
     /// Main class for networked objects. Used to identify and manage networked objects.
     /// </summary>
     [Icon("Assets/Editor/Icons/NetworkIdentity.png")]
+    [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-identity")]
     public sealed class NetworkIdentity : MonoBehaviour
     {
         #region Internal Fields

@@ -15,6 +15,7 @@ using UnityEngine.Assertions;
 namespace NetBuff.UDP
 {
     [Icon("Assets/Editor/Icons/UDPNetworkTransport.png")]
+    [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/transports/#udp")]
     public class UDPNetworkTransport : NetworkTransport
     {
         private const int _BUFFER_SIZE = 65535;

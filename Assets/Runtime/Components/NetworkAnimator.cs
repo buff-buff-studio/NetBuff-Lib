@@ -14,6 +14,7 @@ namespace NetBuff.Components
     /// </summary>
     [SuppressMessage("ReSharper", "ParameterHidesMember")]
     [Icon("Assets/Editor/Icons/NetworkAnimator.png")]
+    [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-animator")]
     public class NetworkAnimator : NetworkBehaviour, INetworkBehaviourSerializer
     {
         #region Public Fields

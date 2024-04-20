@@ -8,6 +8,7 @@ namespace NetBuff
     /// <summary>
     /// Base class for network transport
     /// </summary>
+    [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/transports")]
     public abstract class NetworkTransport : MonoBehaviour
     {
         public enum ConnectionResponseStatus

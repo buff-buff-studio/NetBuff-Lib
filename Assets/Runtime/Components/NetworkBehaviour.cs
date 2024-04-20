@@ -14,6 +14,7 @@ namespace NetBuff.Components
     /// </summary>
     [RequireComponent(typeof(NetworkIdentity))]
     [Icon("Assets/Editor/Icons/NetworkBehaviour.png")]
+    [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-behaviour")]
     public abstract class NetworkBehaviour : MonoBehaviour
     {
         #region Internal Fields

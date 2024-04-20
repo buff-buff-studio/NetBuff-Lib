@@ -11,6 +11,7 @@ namespace NetBuff
     /// </summary>
     [RequireComponent(typeof(NetworkManager))]
     [Icon("Assets/Editor/Icons/NetworkManagerGUI.png")]
+    [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-manager-gui")]
     public class NetworkManagerGUI : MonoBehaviour
     {
         private void OnGUI()

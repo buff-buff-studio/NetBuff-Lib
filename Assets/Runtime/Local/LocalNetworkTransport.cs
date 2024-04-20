@@ -7,6 +7,7 @@ using UnityEngine;
 namespace NetBuff.Local
 {
     [Icon("Assets/Editor/Icons/LocalNetworkTransport.png")]
+    [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/transports/#local")]
     public class LocalNetworkTransport : NetworkTransport
     {
         private Queue<Action> _dispatcher = new Queue<Action>();
