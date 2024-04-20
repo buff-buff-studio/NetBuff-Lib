@@ -7,7 +7,7 @@ using LiteNetLib.Utils;
 
 namespace NetBuff.Misc
 {
-    public static class ServerDiscoverer
+    public static class UDPServerDiscoverer
     {
         public class GameInfo
         {
