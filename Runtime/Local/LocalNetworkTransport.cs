@@ -6,6 +6,8 @@ using UnityEngine;
 
 namespace NetBuff.Local
 {
+    [Icon("Assets/Editor/Icons/LocalNetworkTransport.png")]
+    [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/transports/#local")]
     public class LocalNetworkTransport : NetworkTransport
     {
         private Queue<Action> _dispatcher = new Queue<Action>();
@@ -24,7 +26,7 @@ namespace NetBuff.Local
             }
         }
         
-        private int _nextClientId = 0;
+        private int _nextClientId;
         private readonly Dictionary<int, LocalClientConnectionInfo> _clients = new Dictionary<int, LocalClientConnectionInfo>();
         
         private void CreatePlayer()
@@ -33,11 +35,9 @@ namespace NetBuff.Local
             _clients[id] = new LocalClientConnectionInfo(id);
             OnConnect.Invoke();
             OnClientConnected.Invoke(id);
-            
         }
         
-        
-        public override void StartHost()
+        public override void StartHost(int magicNumber)
         {
             Type = EndType.Host;
             OnServerStart?.Invoke();
@@ -58,14 +58,14 @@ namespace NetBuff.Local
             OnServerStart?.Invoke();
         }
 
-        public override void StartClient()
+        public override void StartClient(int magicNumber)
         {
             if (Type == EndType.None)
                 throw new Exception("Cannot start client without a host or server");
             
             Type = EndType.Host;
             CreatePlayer();
-            CreateOtherPlayer();;
+            CreateOtherPlayer();
         }
 
         public override void Close()
@@ -74,13 +74,13 @@ namespace NetBuff.Local
             {
                 case EndType.Host:
                     OnServerStop?.Invoke();
-                    OnDisconnect?.Invoke();
+                    OnDisconnect?.Invoke("disconnect");
                     break;
                 case EndType.Server:
-                    OnDisconnect?.Invoke();
+                    OnDisconnect?.Invoke("disconnect");
                     break;
                 case EndType.Client:
-                    OnDisconnect?.Invoke();
+                    OnDisconnect?.Invoke("disconnect");
                     break;
                 case EndType.None:
                     break;
@@ -106,12 +106,12 @@ namespace NetBuff.Local
 
         public override void ClientDisconnect(string reason)
         {
-            throw new System.NotImplementedException();
+            
         }
 
         public override void ServerDisconnect(int id, string reason)
         {
-            throw new System.NotImplementedException();   
+            
         }
 
         public override void SendClientPacket(IPacket packet, bool reliable = false)

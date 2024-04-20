@@ -18,10 +18,17 @@ namespace NetBuff.Misc
             low = 0
         };
         
+        
         private NetworkId()
         {
             low = _random.Next(-2147483648, 2147483647);
             high = _random.Next(-2147483648, 2147483647);
+        }
+        
+        public NetworkId(int high, int low)
+        {
+            this.high = high;
+            this.low = low;
         }
         
         public static NetworkId New()
@@ -48,7 +55,9 @@ namespace NetBuff.Misc
         private int high;
         [SerializeField]
         private int low;
-
+        
+        public int High => high;
+        public int Low => low;
 
         public int CompareTo ( object obj )
         {

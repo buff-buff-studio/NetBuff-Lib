@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using NetBuff.Discover;
 using NetBuff.Misc;
 using NetBuff.UDP;
 using UnityEngine;
@@ -9,6 +10,9 @@ namespace NetBuff
     /// <summary>
     /// Debug GUI for NetworkManager
     /// </summary>
+    [RequireComponent(typeof(NetworkManager))]
+    [Icon("Assets/Editor/Icons/NetworkManagerGUI.png")]
+    [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-manager-gui")]
     public class NetworkManagerGUI : MonoBehaviour
     {
         private void OnGUI()
@@ -18,6 +22,13 @@ namespace NetBuff
             if (NetworkManager.Instance == null)
             {
                 GUILayout.Label("NetworkManager not found");
+                GUILayout.EndArea();
+                return;
+            }
+
+            if (NetworkManager.Instance.transport == null)
+            {
+                GUILayout.Label("NetworkTransport not set");
                 GUILayout.EndArea();
                 return;
             }
@@ -75,7 +86,7 @@ namespace NetBuff
             
             if (NetworkManager.Instance.EndType == NetworkTransport.EndType.None)
             {
-                GUILayout.BeginArea(new Rect(220, 10, 300, 400));
+                GUILayout.BeginArea(new Rect(220, 10, 350, 400));
                 DrawServerList();
                 GUILayout.EndArea();
             }
@@ -108,22 +119,23 @@ namespace NetBuff
         }
 
         
-        private ServerDiscoverer.GameInfo[] _serverList;
+        private UDPServerDiscoverer.UDPGameInfo[] _serverList;
 
         private void DrawServerList()
         {
             if (_serverList == null)
             {
-                _serverList = Array.Empty<ServerDiscoverer.GameInfo>();
-                var list = new List<ServerDiscoverer.GameInfo>();
+                _serverList = Array.Empty<UDPServerDiscoverer.UDPGameInfo>();
+                var list = new List<UDPServerDiscoverer.UDPGameInfo>();
                 
                 if (NetworkManager.Instance.transport is UDPNetworkTransport udp)
                 {
-                    ServerDiscoverer.FindServers(udp.port, (info) =>
+                    var discoverer = new UDPServerDiscoverer(NetworkManager.Instance.versionMagicNumber, udp.port);
+                    discoverer.Search((info) =>
                     {
                         list.Add(info);
                         _serverList = list.ToArray();
-                    }, () => {});
+                    }, () => { });
                 }
             }
 
@@ -131,13 +143,10 @@ namespace NetBuff
             {
                 foreach (var info in _serverList)
                 {
-                    if (info is ServerDiscoverer.EthernetGameInfo egi)
+                    if (GUILayout.Button($"{info.Address} - {info.Players}/{info.MaxPlayers} - {info.Platform} [{info.HasPassword}]"))
                     {
-                        if (GUILayout.Button($"{egi.Address} - {egi.Players}/{egi.MaxPlayers} - {egi.Platform}"))
-                        {
-                            transport.address = egi.Address.ToString();
-                            NetworkManager.Instance.StartClient();
-                        }
+                        transport.address = info.Address.ToString();
+                        NetworkManager.Instance.StartClient();
                     }
                 }
             }

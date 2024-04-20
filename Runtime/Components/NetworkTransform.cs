@@ -10,14 +10,11 @@ namespace NetBuff.Components
     /// <summary>
     /// Component that syncs the transform of a game object over the network.
     /// </summary>
+    [Icon("Assets/Editor/Icons/NetworkTransform.png")]
+    [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-transform")]
     public class NetworkTransform : NetworkBehaviour
     {
-        [Header("SETTINGS")]
-        public int tickRate = -1;
-        public float positionThreshold = 0.001f;
-        public float rotationThreshold = 0.001f;
-        public float scaleThreshold = 0.001f;
-        
+        #region Enum
         [Flags]
         public enum SyncMode
         {
@@ -32,26 +29,60 @@ namespace NetBuff.Components
             ScaleY = 128,
             ScaleZ = 256,
         }
+        #endregion
         
-        public SyncMode syncMode = SyncMode.PositionX | SyncMode.PositionY | SyncMode.PositionZ | SyncMode.RotationX | SyncMode.RotationY | SyncMode.RotationZ;
+        #region Public Fields
+        [Header("SETTINGS")]
+        public int tickRate = -1;
+        public float positionThreshold = 0.001f;
+        public float rotationThreshold = 0.001f;
+        public float scaleThreshold = 0.001f;
         
+        [SerializeField]
+        protected SyncMode syncMode = SyncMode.PositionX | SyncMode.PositionY | SyncMode.PositionZ | SyncMode.RotationX | SyncMode.RotationY | SyncMode.RotationZ;
+        public SyncMode SyncModeMask => syncMode;
+        #endregion
+
+        #region Internal Fields
         private Vector3 _lastPosition;
         private Vector3 _lastRotation;
         private Vector3 _lastScale;
-        
+        private bool _running;
+        #endregion
+
+        #region Unity Callbacks
         protected virtual void OnEnable()
         {
             var t = transform;
             _lastPosition = t.position;
             _lastRotation = t.eulerAngles;
             _lastScale = t.localScale;
-            InvokeRepeating(nameof(Tick), 0, 1f / (tickRate == -1 ? NetworkManager.Instance.defaultTickRate : tickRate));
+
+            if (NetworkManager.Instance != null)
+            {
+                var man = NetworkManager.Instance;
+                if (man.IsServerRunning || man.IsClientRunning)
+                    _Begin();
+            }
         }
         
         private void OnDisable()
         {
-            CancelInvoke(nameof(Tick));
+            if (_running)
+            {
+                CancelInvoke(nameof(Tick));
+                _running = false;
+            }
         }
+        #endregion
+        
+        private void _Begin()
+        {
+            if (_running) return;
+            _running = true;
+            InvokeRepeating(nameof(Tick), 0, 1f / (tickRate == -1 ? NetworkManager.Instance.defaultTickRate : tickRate));
+        }
+
         
         private void Tick()
         {
@@ -61,6 +92,12 @@ namespace NetBuff.Components
             SendPacket(CreateTransformPacket());
         }
 
+        #region Network Callbacks
+        public override void OnSpawned(bool isRetroactive)
+        {
+            _Begin();
+        }
+        
         public override void OnServerReceivePacket(IOwnedPacket packet, int clientId)
         {
             if (packet is TransformPacket transformPacket)
@@ -80,8 +117,10 @@ namespace NetBuff.Components
                 }
             }
         }
+        #endregion
 
-        public virtual bool ShouldResend()
+        #region Virtual Methods
+        protected virtual bool ShouldResend()
         {
             var t = transform;
             return Vector3.Distance(t.position, _lastPosition) > positionThreshold ||
@@ -132,6 +171,7 @@ namespace NetBuff.Components
             t.eulerAngles = rot;
             t.localScale = scale;
         }
+        #endregion
     }
 
     public class TransformPacket : IOwnedPacket

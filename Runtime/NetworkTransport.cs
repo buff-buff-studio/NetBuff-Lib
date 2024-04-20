@@ -8,8 +8,15 @@ namespace NetBuff
     /// <summary>
     /// Base class for network transport
     /// </summary>
+    [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/transports")]
     public abstract class NetworkTransport : MonoBehaviour
     {
+        public enum ConnectionResponseStatus
+        {
+            Ok,
+            Error
+        }
+        
         public enum EndType
         {
             None,
@@ -30,9 +37,9 @@ namespace NetBuff
         public Action<int, IPacket> OnServerPacketReceived { get; set; }
         public Action<IPacket> OnClientPacketReceived { get; set; }
         public Action<int> OnClientConnected { get; set; }
-        public Action<int> OnClientDisconnected { get; set; }
+        public Action<int, string> OnClientDisconnected { get; set; }
         public Action OnConnect { get; set; }
-        public Action OnDisconnect { get; set; }
+        public Action<string> OnDisconnect { get; set; }
         
         public Action OnServerStart { get; set; }
         
@@ -40,9 +47,9 @@ namespace NetBuff
         #endregion
 
         #region ManagementMethods
-        public abstract void StartHost();
+        public abstract void StartHost(int magicNumber);
         public abstract void StartServer();
-        public abstract void StartClient();
+        public abstract void StartClient(int magicNumber);
         public abstract void Close();
         #endregion
 

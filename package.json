@@ -1,15 +1,16 @@
 {
     "name": "com.buffbuffstudios.netbuff",
-    "version": "1.4.4",
+    "version": "2.0",
     "displayName": "NetBuff",
-    "description": "A Buff Buff Multiplayer System",
+    "description": "NetBuff is a Unity Game Engine based multiplayer engine created as lightweight alternative without the giant overhead of other libraries such as NGO (Netcode for GameObjects) and third-party solutions (like Mirror).",
     "unity": "2022.3",
-    "documentationUrl": "https://github.com/buff-buff-studio/NetBuff-Lib/blob/main/README.md",
-    "changelogUrl": "https://github.com/buff-buff-studio/NetBuff-Lib/compare/1.4..1.4.4",
+    "documentationUrl": "https://buff-buff-studio.github.io/NetBuff-Lib-Docs/",
+    "changelogUrl": "https://github.com/buff-buff-studio/NetBuff-Lib/compare/1.0..2.0",
     "license": "CC-BY-NC-SA-4.0",
     "licensesUrl": "https://github.com/buff-buff-studio/NetBuff-Lib/blob/main/LICENSE-CC%20BY-NC-SA",
     "dependencies": {
-      "com.unity.textmeshpro": "3.0.0"
+      "com.unity.textmeshpro": "3.0.0",
+      "com.unity.editorcoroutines": "1.0.0"
    },
    "keywords": [
       "network",
@@ -33,6 +34,16 @@
             "displayName": "Capture the Flag",
             "description": "Contains a exemple of a multiplayer CTF using the NetBuff",
             "path": "Samples~/CaptureTheFlag"
+        },
+        {
+            "displayName": "Animation Exemple",
+            "description": "Contains a exemple of a NetworkAnimator",
+            "path": "Samples~/AnimationTest"
+        },
+        {
+            "displayName": "Network Load Scene",
+            "description": "Contains a exemple of the function LoadScene in NetworkManager",
+            "path": "Samples~/SceneLoading"
         }
     ]
   }

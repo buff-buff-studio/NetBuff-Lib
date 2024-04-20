@@ -8,36 +8,41 @@ namespace NetBuff.Components
     /// Component that syncs the transform and rigidbody of a game object over the network.
     /// </summary>
     [RequireComponent(typeof(Rigidbody))]
+    [Icon("Assets/Editor/Icons/NetworkRigidbodyTransform.png")]
+    [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-rigidbody-transform")]
     public class NetworkRigidbodyTransform : NetworkTransform
     {
-        private Rigidbody _rigidbody;
-
-        public Rigidbody Rigidbody
-        {
-            get
-            {
-                if (_rigidbody == null)
-                    _rigidbody = GetComponent<Rigidbody>();
-                
-                return _rigidbody;
-            }
-        }
+        #region Public Fields
+        public new Rigidbody rigidbody;
+        #endregion
         
+        #region Internal Fields
         private Vector3 _lastVelocity;
         private Vector3 _lastAngularVelocity;
+        #endregion
         
         protected override void OnEnable()
         {
             base.OnEnable();
-            var rb = Rigidbody;
-            _lastVelocity = rb.velocity;
-            _lastAngularVelocity = rb.angularVelocity;
+            if(rigidbody == null)
+                if (TryGetComponent(out Rigidbody rb))
+                    rigidbody = rb;
+                else
+                {
+                    Debug.LogError("No Rigidbody component found on " + name);
+                    enabled = false;
+                    return;
+                }
+                
+            _lastVelocity = rigidbody.velocity;
+            _lastAngularVelocity = rigidbody.angularVelocity;
         }
-        
+
+        #region Virtual Methods
         protected override TransformPacket CreateTransformPacket()
         {
-            _lastVelocity = Rigidbody.velocity;
-            _lastAngularVelocity = Rigidbody.angularVelocity;
+            _lastVelocity = rigidbody.velocity;
+            _lastAngularVelocity = rigidbody.angularVelocity;
             
             var components = new List<float>();
             if ((syncMode & SyncMode.PositionX) != 0) components.Add(transform.position.x);
@@ -49,11 +54,10 @@ namespace NetBuff.Components
             if ((syncMode & SyncMode.ScaleX) != 0) components.Add(transform.localScale.x);
             if ((syncMode & SyncMode.ScaleY) != 0) components.Add(transform.localScale.y);
             if ((syncMode & SyncMode.ScaleZ) != 0) components.Add(transform.localScale.z);
-
-            var rb = Rigidbody;
-            var v = rb.velocity;
-            var av = rb.angularVelocity;
-            var cs = _rigidbody.constraints;
+            
+            var v = rigidbody.velocity;
+            var av = rigidbody.angularVelocity;
+            var cs = rigidbody.constraints;
             if((cs & RigidbodyConstraints.FreezePositionX) == 0) components.Add(v.x);
             if((cs & RigidbodyConstraints.FreezePositionY) == 0) components.Add(v.y);
             if((cs & RigidbodyConstraints.FreezePositionZ) == 0) components.Add(v.z);
@@ -84,10 +88,9 @@ namespace NetBuff.Components
             if ((syncMode & SyncMode.ScaleY) != 0) scale.y = components[index++];
             if ((syncMode & SyncMode.ScaleZ) != 0) scale.z = components[index++];
             
-            var rb = Rigidbody;
-            var v = rb.velocity;
-            var av = rb.angularVelocity;
-            var cs = _rigidbody.constraints;
+            var v = rigidbody.velocity;
+            var av = rigidbody.angularVelocity;
+            var cs = rigidbody.constraints;
             if((cs & RigidbodyConstraints.FreezePositionX) == 0) v.x = components[index++];
             if((cs & RigidbodyConstraints.FreezePositionY) == 0) v.y = components[index++];
             if((cs & RigidbodyConstraints.FreezePositionZ) == 0) v.z = components[index++];
@@ -98,14 +101,16 @@ namespace NetBuff.Components
             t.position = pos;
             t.eulerAngles = rot;
             t.localScale = scale;
-            _rigidbody.velocity = v;
-            _rigidbody.angularVelocity = av;
+            rigidbody.velocity = v;
+            rigidbody.angularVelocity = av;
         }
 
-        public override bool ShouldResend()
+        protected override bool ShouldResend()
         {
-            return base.ShouldResend() || Vector3.Distance(Rigidbody.velocity, _lastVelocity) > positionThreshold ||
-                   Vector3.Distance(Rigidbody.angularVelocity, _lastAngularVelocity) > rotationThreshold;
+            return base.ShouldResend() || Vector3.Distance(rigidbody.velocity, _lastVelocity) > positionThreshold ||
+                   Vector3.Distance(rigidbody.angularVelocity, _lastAngularVelocity) > rotationThreshold;
         }
+
+        #endregion
     }
 }

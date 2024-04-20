@@ -30,7 +30,7 @@ namespace CTF
         public IntNetworkValue team = new(-1);
         public BoolNetworkValue hasFlag = new(false, NetworkValue.ModifierType.Server);
 
-        public float cameraRot = 0;
+        public float cameraRot;
         
         public float shotTimeout = 0.5f;
 
@@ -131,8 +131,9 @@ namespace CTF
             camTransform.SetParent(transform);
             camTransform.localPosition = new Vector3(0, 0.9f, 0);
             
-            transform.position = GameManager.Instance.GetSpawnPoint(team.Value);
-            transform.forward = new Vector3(-transform.position.x, 0, 0);
+            var t = transform;
+            t.position = GameManager.Instance.GetSpawnPoint(team.Value);
+            t.forward = new Vector3(-t.position.x, 0, 0);
                 
             var teamDisplay = GameManager.Instance.labelTeamDisplay;
             teamDisplay.text = team.Value == 0 ? "Your team: Red" : "Your team: Blue";
@@ -158,11 +159,12 @@ namespace CTF
             if (!HasAuthority)
                 return;
             
-            if (packet is PacketPlayerRespawn packetPlayerRespawn)
+            if (packet is PacketPlayerRespawn _)
             {
+                var t = transform;
                 transform.position = GameManager.Instance.GetSpawnPoint(team.Value);
                 _rigidbody.velocity = Vector3.zero;
-                transform.forward = new Vector3(-transform.position.x, 0, 0);
+                t.forward = new Vector3(-t.position.x, 0, 0);
             }
         }
     }

@@ -1,5 +1,4 @@
-﻿using System;
-using NetBuff.Components;
+﻿using NetBuff.Components;
 using UnityEngine;
 
 namespace CTF

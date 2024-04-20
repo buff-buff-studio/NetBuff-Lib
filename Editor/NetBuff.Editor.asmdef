@@ -1,0 +1,19 @@
+{
+    "name": "NetBuff.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:b6ce6c5336d25914ca0f685ac576ed6b",
+        "GUID:d525ad6bd40672747bde77962f1c401e",
+        "GUID:77f3f8d9b62b2584f9a0cb95bf3c4494",
+        "GUID:478a2357cc57436488a56e564b08d223"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -12,26 +13,38 @@ namespace NetBuff.Components
     /// Component that syncs a animator state and parameters over the network
     /// </summary>
     [SuppressMessage("ReSharper", "ParameterHidesMember")]
-    public class NetworkAnimator : NetworkBehaviour
+    [Icon("Assets/Editor/Icons/NetworkAnimator.png")]
+    [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-animator")]
+    public class NetworkAnimator : NetworkBehaviour, INetworkBehaviourSerializer
     {
-        private float _animatorSpeed;
-        private int[] _animationHash;
-        private int[] _transitionHash;
-        private float[] _layerWeight;
-        
-        private AnimatorControllerParameter[] _parameters;
-        private int[] _intParameters;
-        private float[] _floatParameters;
-        private bool[] _boolParameters;
-        
+        #region Public Fields
         [Header("SETTINGS")]
         public int tickRate = -1;
         
         [Header("REFERENCES")]
         public Animator animator;
+        #endregion
         
+        #region Internal Fields
+        private float _animatorSpeed;
+        private int[] _animationHash;
+        private int[] _transitionHash;
+        private float[] _layerWeight;
+
+        private AnimatorControllerParameter[] _parameters;
+        private int[] _intParameters;
+        private float[] _floatParameters;
+        private bool[] _boolParameters;
+        
+        private bool _running;
+        #endregion
+
+        #region Unity Callbacks
         private void OnEnable()
         {
+            if(animator == null)
+                animator = GetComponent<Animator>();
+            
             _parameters = animator.parameters
                 .Where(par => !animator.IsParameterControlledByCurve(par.nameHash))
                 .ToArray();
@@ -39,21 +52,35 @@ namespace NetBuff.Components
             _intParameters = new int[_parameters.Length];
             _floatParameters = new float[_parameters.Length];
             _boolParameters = new bool[_parameters.Length];
-
+            
             var layerCount = animator.layerCount;
             _animationHash = new int[layerCount];
             _transitionHash = new int[layerCount];
             _layerWeight = new float[layerCount];
-            
-            InvokeRepeating(nameof(Tick), 0, 1f / (tickRate == -1 ? NetworkManager.Instance.defaultTickRate : tickRate));
+    
+            if (NetworkManager.Instance != null)
+            {
+                var man = NetworkManager.Instance;
+                if (man.IsServerRunning || man.IsClientRunning)
+                    _Begin();
+            }
         }
         
         private void OnDisable()
         {
-            CancelInvoke(nameof(Tick));
+            CancelInvoke(nameof(_Tick));
+        }
+        #endregion
+
+        #region Internal Methods
+        private void _Begin()
+        {
+            if (_running) return;
+            _running = true;
+            InvokeRepeating(nameof(_Tick), 0, 1f / (tickRate == -1 ? NetworkManager.Instance.defaultTickRate : tickRate));
         }
         
-        private void Tick()
+        private void _Tick()
         {
             if (!HasAuthority)
                 return;
@@ -61,17 +88,17 @@ namespace NetBuff.Components
             if (!animator.enabled)
                 return;
 
-            //var layers = new List<AnimatorSyncPacket.LayerInfo>();
+            var layers = new List<AnimatorSyncPacket.LayerInfo>();
             var changes = AnimatorSyncPacket.Changes.None;
             
-            /*
             for (var i = 0; i < animator.layerCount; i++)
             {
-                if (!CheckAnimStateChanged(out var stateHash, out var normalizedTime, i))
+                if (!_CheckAnimStateChanged(out var stateHash, out var normalizedTime, i))
                     continue;
                 
                 layers.Add(new AnimatorSyncPacket.LayerInfo
                 {
+                    LayerIndex = (byte) i,
                     StateHash = stateHash,
                     NormalizedTime = normalizedTime,
                     LayerWeight = animator.GetLayerWeight(i)
@@ -79,7 +106,6 @@ namespace NetBuff.Components
                 
                 changes |= AnimatorSyncPacket.Changes.Layers;
             }
-            */
 
             if (Math.Abs(_animatorSpeed - animator.speed) > 0.01f)
             {
@@ -88,11 +114,10 @@ namespace NetBuff.Components
             }
             
             //Check parameters
-            var changedParameters = CheckParameters(out var parameterData);
+            var changedParameters = _CheckParameters(out var parameterData);
             if (changedParameters > 0)
                 changes |= AnimatorSyncPacket.Changes.Parameters;
-
-
+            
             if (changes == AnimatorSyncPacket.Changes.None) 
                 return;
             
@@ -100,7 +125,7 @@ namespace NetBuff.Components
             {
                 Id = Id,
                 Change = changes,
-                Layers = Array.Empty<AnimatorSyncPacket.LayerInfo>(), //layers.ToArray(),
+                Layers = layers.ToArray(),
                 Speed = _animatorSpeed,
                 ChangedParameters = (byte) changedParameters,
                 ParameterData = parameterData
@@ -109,35 +134,7 @@ namespace NetBuff.Components
             SendPacket(packet);
         }
 
-        public override void OnServerReceivePacket(IOwnedPacket packet, int clientId)
-        {
-            switch (packet)
-            {
-                case AnimatorSyncPacket animatorSyncPacket:
-                    if(clientId == OwnerId)
-                        ServerBroadcastPacketExceptFor(animatorSyncPacket, clientId);
-                    break;
-                case AnimatorTriggerPacket triggerPacket:
-                    if(clientId == OwnerId)
-                        ServerBroadcastPacketExceptFor(triggerPacket, clientId);
-                    break;
-            }
-        }
-
-        public override void OnClientReceivePacket(IOwnedPacket packet)
-        {
-            switch (packet)
-            {
-                case AnimatorSyncPacket syncPacket:
-                    ApplyAnimatorSyncPacket(syncPacket);
-                    break;
-                case AnimatorTriggerPacket triggerPacket:
-                    animator.SetTrigger(triggerPacket.TriggerHash);
-                    break;
-            }
-        }
-
-        private int CheckParameters(out byte[] bytes)
+        private int _CheckParameters(out byte[] bytes)
         {
             var parameterCount = (byte) _parameters.Length;
             var writer = new BinaryWriter(new MemoryStream());
@@ -200,19 +197,25 @@ namespace NetBuff.Components
             return changed;
         }
         
-        private bool CheckAnimStateChanged(out int stateHash, out float normalizedTime, int layerId)
+        private bool _CheckAnimStateChanged(out int stateHash, out float normalizedTime, int layerId)
         {
             var change = false;
             stateHash = 0;
             normalizedTime = 0;
-
+            var info = animator.GetCurrentAnimatorStateInfo(layerId);
+            
             var lw = animator.GetLayerWeight(layerId);
             if (Mathf.Abs(lw - _layerWeight[layerId]) > 0.001f)
             {
                 _layerWeight[layerId] = lw;
+                if (Math.Abs(lw - 0) < 0.001f || Math.Abs(lw - 1) < 0.001f)
+                {
+                    stateHash = info.fullPathHash;
+                    normalizedTime = info.normalizedTime;  
+                }
                 change = true;
             }
-
+            
             if (animator.IsInTransition(layerId))
             {
                 var tt = animator.GetAnimatorTransitionInfo(layerId);
@@ -225,7 +228,7 @@ namespace NetBuff.Components
                 }
                 return change;
             }
-
+            
             var st = animator.GetCurrentAnimatorStateInfo(layerId);
             if (st.fullPathHash != _animationHash[layerId])
             {
@@ -242,8 +245,8 @@ namespace NetBuff.Components
             }
             return change;
         }
-        
-        private void ApplyAnimatorSyncPacket(AnimatorSyncPacket packet)
+
+        private void _ApplyAnimatorSyncPacket(AnimatorSyncPacket packet)
         {
             if (packet.Id != Id)
                 return;
@@ -253,11 +256,13 @@ namespace NetBuff.Components
                 for (var i = 0; i < packet.Layers.Length; i++)
                 {
                     var layer = packet.Layers[i];
-                    var info = animator.GetCurrentAnimatorStateInfo(i);
-                    Debug.Log($"Layer {i} - {info.fullPathHash} - {info.shortNameHash} - {layer.StateHash}");
-                    if (info.fullPathHash != layer.StateHash)
-                        animator.Play(layer.StateHash, i, layer.NormalizedTime);
-                    animator.SetLayerWeight(i, layer.LayerWeight);
+                    var index = layer.LayerIndex;
+   
+                    animator.SetLayerWeight(index, layer.LayerWeight);
+                    if (layer.StateHash != 0 && animator.enabled)
+                    {
+                        animator.Play(layer.StateHash, index, layer.NormalizedTime);
+                    }
                 }
             }
 
@@ -290,7 +295,9 @@ namespace NetBuff.Components
                 }
             }
         }
+        #endregion
         
+        #region Animator Helpers
         public void SetTrigger(int triggerHash)
         {
             var packet = new AnimatorTriggerPacket
@@ -316,7 +323,6 @@ namespace NetBuff.Components
         {
             animator.SetFloat(name, value);
         }
-        
         
         public float GetFloat(int nameHash)
         {
@@ -367,6 +373,145 @@ namespace NetBuff.Components
         {
             animator.SetInteger(nameHash, value);
         }
+        #endregion
+
+        #region Network Callbacks
+        public override void OnSpawned(bool isRetroactive)
+        {
+            _Begin();
+        }
+        
+        public override void OnServerReceivePacket(IOwnedPacket packet, int clientId)
+        {
+            switch (packet)
+            {
+                case AnimatorSyncPacket animatorSyncPacket:
+                    if(clientId == OwnerId)
+                        ServerBroadcastPacketExceptFor(animatorSyncPacket, clientId);
+                    break;
+                case AnimatorTriggerPacket triggerPacket:
+                    if(clientId == OwnerId)
+                        ServerBroadcastPacketExceptFor(triggerPacket, clientId);
+                    break;
+            }
+        }
+
+        public override void OnClientReceivePacket(IOwnedPacket packet)
+        {
+            switch (packet)
+            {
+                case AnimatorSyncPacket syncPacket:
+                    _ApplyAnimatorSyncPacket(syncPacket);
+                    break;
+                case AnimatorTriggerPacket triggerPacket:
+                    animator.SetTrigger(triggerPacket.TriggerHash);
+                    break;
+            }
+        }
+        
+        public void OnSerialize(BinaryWriter writer, bool forceSendAll)
+        {
+            var layerCount = (byte)animator.layerCount;
+            writer.Write(layerCount);
+            
+            for (var i = 0; i < layerCount; i++)
+            {
+                var st = animator.IsInTransition(i)
+                    ? animator.GetNextAnimatorStateInfo(i)
+                    : animator.GetCurrentAnimatorStateInfo(i);
+                writer.Write(st.fullPathHash);
+                writer.Write(st.normalizedTime);
+                writer.Write(animator.GetLayerWeight(i));
+            }
+            
+            //Parameters
+            var parameterCount = (byte)_parameters.Length;
+            writer.Write(parameterCount);
+            for (var i = 0; i < parameterCount; i++)
+            {
+                var par = _parameters[i];
+                switch (par.type)
+                {
+                    case AnimatorControllerParameterType.Int:
+                    {
+                        var newIntValue = animator.GetInteger(par.nameHash);
+                        writer.Write(newIntValue);
+                        break;
+                    }
+                    case AnimatorControllerParameterType.Float:
+                    {
+                        var newFloatValue = animator.GetFloat(par.nameHash);
+                        writer.Write(newFloatValue);
+                        break;
+                    }
+                    case AnimatorControllerParameterType.Bool:
+                    {
+                        var newBoolValue = animator.GetBool(par.nameHash);
+                        writer.Write(newBoolValue);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        public void OnDeserialize(BinaryReader reader)
+        {
+            var layerCount = reader.ReadByte();
+            if (layerCount != animator.layerCount)
+            {
+                Debug.LogError("Layer count mismatch");
+                return;
+            }
+
+            for (var i = 0; i < layerCount; i++)
+            {
+                var stateHash = reader.ReadInt32();
+                var normalizedTime = reader.ReadSingle();
+                var weight = reader.ReadSingle();
+
+                animator.SetLayerWeight(i, weight);
+                animator.Play(stateHash, i, normalizedTime);
+            }
+
+            var parameterCount = reader.ReadByte();
+            if (parameterCount != _parameters.Length)
+            {
+                Debug.LogError("Parameter count mismatch");
+                return;
+            }
+
+            var animatorEnabled = animator.enabled;
+           
+            for (var i = 0; i < parameterCount; i++)
+            {
+                var par = _parameters[i];
+                switch (par.type)
+                {
+                    case AnimatorControllerParameterType.Int:
+                    {
+                        var newIntValue = reader.ReadInt32();
+                        if (animatorEnabled)
+                            animator.SetInteger(par.nameHash, newIntValue);
+                        break;
+                    }
+                    case AnimatorControllerParameterType.Float:
+                    {
+                        var newFloatValue = reader.ReadSingle();
+                        if (animatorEnabled)
+                            animator.SetFloat(par.nameHash, newFloatValue);
+                        break;
+                    }
+                    case AnimatorControllerParameterType.Bool:
+                    {
+                        var newBoolValue = reader.ReadBoolean();
+                        if (animatorEnabled)
+                            animator.SetBool(par.nameHash, newBoolValue);
+                        break;
+                    }
+                }
+            }
+        }
+        #endregion
     }
 
     public class AnimatorSyncPacket : IOwnedPacket
@@ -382,6 +527,7 @@ namespace NetBuff.Components
         
         public class LayerInfo
         {
+            public byte LayerIndex { get; set; }
             public int StateHash { get; set; }
             public float NormalizedTime { get; set; }
             public float LayerWeight { get; set; }
@@ -405,6 +551,7 @@ namespace NetBuff.Components
                 writer.Write((byte) Layers.Length);
                 foreach (var layer in Layers)
                 {
+                    writer.Write(layer.LayerIndex);
                     writer.Write(layer.StateHash);
                     writer.Write(layer.NormalizedTime);
                     writer.Write(layer.LayerWeight);
@@ -434,6 +581,7 @@ namespace NetBuff.Components
                 {
                     Layers[i] = new LayerInfo
                     {
+                        LayerIndex = reader.ReadByte(),
                         StateHash = reader.ReadInt32(),
                         NormalizedTime = reader.ReadSingle(),
                         LayerWeight = reader.ReadSingle()
