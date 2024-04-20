@@ -18,52 +18,58 @@ namespace NetBuff
     [Icon("Assets/Editor/Icons/NetworkManager.png")]
     public class NetworkManager : MonoBehaviour
     {
-        private static readonly FieldInfo _IDField = typeof(NetworkIdentity).GetField("id", BindingFlags.NonPublic | BindingFlags.Instance);
-        private static readonly FieldInfo _OwnerIdField = typeof(NetworkIdentity).GetField("ownerId", BindingFlags.NonPublic | BindingFlags.Instance);
-        private static readonly FieldInfo _PrefabIdField = typeof(NetworkIdentity).GetField("prefabId", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly FieldInfo _IDField =
+            typeof(NetworkIdentity).GetField("id", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        private static readonly FieldInfo _OwnerIdField =
+            typeof(NetworkIdentity).GetField("ownerId", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        private static readonly FieldInfo _PrefabIdField =
+            typeof(NetworkIdentity).GetField("prefabId", BindingFlags.NonPublic | BindingFlags.Instance);
 
         #region Public Fields
-        [Header("SETTINGS")] 
+
+        [Header("SETTINGS")]
         //Used to check if the communication is being done on the same system
         public int magicNumber = _GenerateMagicNumber();
+
         public int defaultTickRate = 50;
         public bool spawnsPlayer = true;
- 
-        [Header("REFERENCES")]
-        public NetworkTransport transport;
+
+        [Header("REFERENCES")] public NetworkTransport transport;
         public NetworkPrefabRegistry prefabRegistry;
         public GameObject playerPrefab;
+
         #endregion
-        
+
         #region Internal Fields
+
         private int[] _localClientIds = Array.Empty<int>();
-        
-        [SerializeField, HideInInspector]
-        private List<string> loadedScenes = new();
-        
-        [SerializeField, HideInInspector]
-        private string sourceScene;
-        
+
+        [SerializeField, HideInInspector] private List<string> loadedScenes = new();
+
+        [SerializeField, HideInInspector] private string sourceScene;
+
         private readonly Dictionary<Type, PacketListener> _packetListeners = new();
-        
+
         [SerializeField, HideInInspector]
         private SerializedDictionary<NetworkId, NetworkIdentity> networkObjects = new();
-       
-        [SerializeField, HideInInspector]
-        private List<NetworkId> removedPreExistingObjects = new();
-       
-        [SerializeField, HideInInspector]
-        private List<NetworkBehaviour> dirtyBehaviours = new();
 
-        #if UNITY_EDITOR
+        [SerializeField, HideInInspector] private List<NetworkId> removedPreExistingObjects = new();
+
+        [SerializeField, HideInInspector] private List<NetworkBehaviour> dirtyBehaviours = new();
+
+#if UNITY_EDITOR
         [SerializeField, HideInInspector]
         private NetworkTransport.EndType endTypeAfterReload = NetworkTransport.EndType.None;
         [SerializeField, HideInInspector]  
         protected bool isClientReloaded;
-        #endif
+#endif
+
         #endregion
 
         #region Helper Properties
+
         /// <summary>
         /// Current instance of the NetworkManager
         /// </summary>
@@ -73,12 +79,12 @@ namespace NetBuff
         /// Returns if the network is running (Client or Server)
         /// </summary>
         public bool IsClientRunning { get; private set; }
-        
+
         /// <summary>
         /// Returns if the network is running (Server or Host)
         /// </summary>
         public bool IsServerRunning { get; private set; }
-        
+
         /// <summary>
         /// Returns current dirty behaviours list
         /// </summary>
@@ -88,19 +94,19 @@ namespace NetBuff
         /// Returns current networking end type
         /// </summary>
         public NetworkTransport.EndType EndType => transport.Type;
-        
+
         /// <summary>
         /// Returns the connection info of local client connection
         /// </summary>
         [ClientOnly]
         public IConnectionInfo ClientConnectionInfo => transport.ClientConnectionInfo;
-        
+
         /// <summary>
         /// Returns all local client ids
         /// </summary>
         [ClientOnly]
         public ReadOnlySpan<int> LocalClientIds => _localClientIds;
-        
+
         /// <summary>
         /// Returns the current session entrypoint scene
         /// </summary>R
@@ -120,15 +126,20 @@ namespace NetBuff
         /// Returns the last loaded scene
         /// </summary>
         public string LastLoadedScene => loadedScenes.Count == 0 ? SourceScene : loadedScenes.LastOrDefault();
+
         #endregion
-        
+
         #region Unity Callbacks
+
         private void OnEnable()
         {
             Instance = this;
             PacketRegistry.Clear();
-            
-            var types = (from assembly in AppDomain.CurrentDomain.GetAssemblies() from type in assembly.GetTypes() where type.IsClass && !type.IsAbstract && typeof(IPacket).IsAssignableFrom(type) select type).ToList();
+
+            var types = (from assembly in AppDomain.CurrentDomain.GetAssemblies()
+                from type in assembly.GetTypes()
+                where type.IsClass && !type.IsAbstract && typeof(IPacket).IsAssignableFrom(type)
+                select type).ToList();
             types.Sort((a, b) => string.Compare(a.FullName, b.FullName, StringComparison.Ordinal));
 
             //Register all packets
@@ -140,7 +151,7 @@ namespace NetBuff
                 enabled = false;
                 throw new Exception("Transport is not set");
             }
-            
+
             transport.OnServerPacketReceived += OnServerReceivePacket;
             transport.OnClientPacketReceived += OnClientReceivePacket;
             transport.OnClientConnected += OnClientConnected;
@@ -149,8 +160,8 @@ namespace NetBuff
             transport.OnDisconnect += OnDisconnect;
             transport.OnServerStart += OnServerStart;
             transport.OnServerStop += OnServerStop;
-            
-            #if UNITY_EDITOR
+
+#if UNITY_EDITOR
             switch (endTypeAfterReload)
             {
                 case NetworkTransport.EndType.Host:
@@ -175,36 +186,38 @@ namespace NetBuff
             }
             
             endTypeAfterReload = NetworkTransport.EndType.None;
-            #else
+#else
             networkObjects.Clear();
-            foreach (var identity in FindObjectsByType<NetworkIdentity>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var identity in FindObjectsByType<NetworkIdentity>(FindObjectsInactive.Include,
+                         FindObjectsSortMode.None))
             {
                 if (networkObjects.TryGetValue(identity.Id, out var i))
-                    throw new Exception("Duplicate NetworkObject found: " + identity.gameObject.name + " " + i.gameObject.name);
+                    throw new Exception("Duplicate NetworkObject found: " + identity.gameObject.name + " " +
+                                        i.gameObject.name);
                 networkObjects.Add(identity.Id, identity);
             }
-            #endif
+#endif
 
             sourceScene = gameObject.scene.name;
             loadedScenes.Add(sourceScene);
         }
-        
+
         private void OnDisable()
         {
-            if(transport == null)
+            if (transport == null)
                 return;
-            
-            #if UNITY_EDITOR
+
+#if UNITY_EDITOR
             endTypeAfterReload = EndType switch
             {
                 NetworkTransport.EndType.Host => NetworkTransport.EndType.Host,
                 NetworkTransport.EndType.Server => NetworkTransport.EndType.Server,
                 _ => NetworkTransport.EndType.None
             };
-            #endif
+#endif
             transport.Close();
         }
-        
+
         private void Update()
         {
             //Update dirty behaviours
@@ -213,9 +226,11 @@ namespace NetBuff
 
             dirtyBehaviours.Clear();
         }
+
         #endregion
 
         #region Helper Methods
+
         /// <summary>
         /// Starts the network client
         /// </summary>
@@ -223,7 +238,7 @@ namespace NetBuff
         {
             transport.StartClient(magicNumber);
         }
-        
+
         /// <summary>
         /// Starts the network server
         /// </summary>
@@ -231,7 +246,7 @@ namespace NetBuff
         {
             transport.StartServer();
         }
-        
+
         /// <summary>
         /// Starts the network host (Server and Client)
         /// </summary>
@@ -239,7 +254,7 @@ namespace NetBuff
         {
             transport.StartHost(magicNumber);
         }
-        
+
         /// <summary>
         /// Close the running client or/and server
         /// </summary>
@@ -247,9 +262,11 @@ namespace NetBuff
         {
             transport.Close();
         }
+
         #endregion
 
         #region Listeners
+
         /// <summary>
         /// Returns the packet listener for the specified packet type
         /// </summary>
@@ -257,15 +274,15 @@ namespace NetBuff
         /// <returns></returns>
         public PacketListener<T> GetPacketListener<T>() where T : IPacket
         {
-            if (_packetListeners.TryGetValue(typeof(T), out var listener)) 
+            if (_packetListeners.TryGetValue(typeof(T), out var listener))
                 return (PacketListener<T>)listener;
-            
+
             listener = new PacketListener<T>();
             _packetListeners.Add(typeof(T), listener);
 
-            return (PacketListener<T>) listener;
+            return (PacketListener<T>)listener;
         }
-        
+
         /// <summary>
         /// Returns the packet listener for the specified packet type
         /// </summary>
@@ -273,17 +290,19 @@ namespace NetBuff
         /// <returns></returns>
         public PacketListener GetPacketListener(Type type)
         {
-            if (_packetListeners.TryGetValue(type, out var listener)) 
+            if (_packetListeners.TryGetValue(type, out var listener))
                 return listener;
-            
-            listener = (PacketListener) Activator.CreateInstance(typeof(PacketListener<>).MakeGenericType(type));
+
+            listener = (PacketListener)Activator.CreateInstance(typeof(PacketListener<>).MakeGenericType(type));
             _packetListeners.Add(type, listener);
 
             return listener;
         }
+
         #endregion
-        
+
         #region Network Object Methods
+
         /// <summary>
         /// Get a network object by its id
         /// </summary>
@@ -293,7 +312,7 @@ namespace NetBuff
         {
             return networkObjects.GetValueOrDefault(id);
         }
-        
+
         /// <summary>
         /// Get all network objects
         /// </summary>
@@ -302,7 +321,7 @@ namespace NetBuff
         {
             return networkObjects.Values;
         }
-        
+
         /// <summary>
         /// Get the count of network objects
         /// </summary>
@@ -311,7 +330,7 @@ namespace NetBuff
         {
             return networkObjects.Count;
         }
-        
+
         /// <summary>
         /// Get all objects owned by a specific client (Use -1 to get unowned objects)
         /// </summary>
@@ -321,7 +340,7 @@ namespace NetBuff
         {
             return networkObjects.Values.Where(identity => identity.OwnerId == owner);
         }
-        
+
         /// <summary>
         /// Spawn a network object for all clients
         /// </summary>
@@ -332,11 +351,12 @@ namespace NetBuff
         /// <param name="owner"></param>
         /// <param name="scene"></param>
         [ServerOnly]
-        public void SpawnNetworkObjectForClients(NetworkId prefabId, Vector3 position, Quaternion rotation, Vector3 scale,int owner = -1, int scene = -1)
+        public void SpawnNetworkObjectForClients(NetworkId prefabId, Vector3 position, Quaternion rotation,
+            Vector3 scale, int owner = -1, int scene = -1)
         {
-            if(!IsServerRunning)
+            if (!IsServerRunning)
                 throw new Exception("This method can only be called on the server");
-            
+
             var packet = new NetworkObjectSpawnPacket
             {
                 Id = NetworkId.New(),
@@ -349,10 +369,10 @@ namespace NetBuff
                 IsActive = prefabRegistry.GetPrefab(prefabId).activeSelf,
                 SceneId = scene
             };
-            
+
             BroadcastServerPacket(packet, true);
         }
-        
+
         /// <summary>
         /// Set the owner of a network object for all clients
         /// </summary>
@@ -361,18 +381,18 @@ namespace NetBuff
         [ServerOnly]
         public void SetNetworkObjectOwnerForClients(NetworkId id, int owner)
         {
-            if(!IsServerRunning)
+            if (!IsServerRunning)
                 throw new Exception("This method can only be called on the server");
-            
+
             var packet = new NetworkObjectOwnerPacket
             {
                 Id = id,
                 OwnerId = owner
             };
-            
+
             BroadcastServerPacket(packet, true);
         }
-        
+
         /// <summary>
         /// Set the active state of a network object for all clients
         /// </summary>
@@ -381,18 +401,18 @@ namespace NetBuff
         [ServerOnly]
         public void SetNetworkObjectActiveForClients(NetworkId id, bool active)
         {
-            if(!IsServerRunning)
+            if (!IsServerRunning)
                 throw new Exception("This method can only be called on the server");
-            
+
             var packet = new NetworkObjectActivePacket
             {
                 Id = id,
                 IsActive = active
             };
-            
+
             BroadcastServerPacket(packet, true);
         }
-        
+
         /// <summary>
         /// Despawn a network object for all clients
         /// </summary>
@@ -400,28 +420,30 @@ namespace NetBuff
         [ServerOnly]
         public void DespawnNetworkObjectForClients(NetworkId id)
         {
-            if(!IsServerRunning)
+            if (!IsServerRunning)
                 throw new Exception("This method can only be called on the server");
-            
+
             var packet = new NetworkObjectDespawnPacket
             {
                 Id = id
             };
-            
+
             BroadcastServerPacket(packet, true);
         }
+
         #endregion
-        
+
         #region Virtual Methods
+
         /// <summary>
         /// Called when the server starts
         /// </summary>
         protected virtual void OnServerStart()
         {
             foreach (var identity in networkObjects.Values)
-                foreach (var behaviour in identity.Behaviours)
-                    behaviour.OnSpawned(false);
-            
+            foreach (var behaviour in identity.Behaviours)
+                behaviour.OnSpawned(false);
+
             IsServerRunning = true;
         }
 
@@ -431,26 +453,25 @@ namespace NetBuff
         protected virtual void OnServerStop()
         {
             IsServerRunning = false;
-            if(transport.Type is NetworkTransport.EndType.Server)
+            if (transport.Type is NetworkTransport.EndType.Server)
                 OnClearEnvironment();
         }
-        
-        
+
+
         /// <summary>
         /// Called when a network object is spawned
         /// </summary>
         /// <param name="identity"></param>
         /// <param name="retroactive"></param>
-
         protected virtual void OnNetworkObjectSpawned(NetworkIdentity identity, bool retroactive)
         {
             foreach (var behaviour in identity.Behaviours)
                 behaviour.OnSpawned(retroactive);
-            
+
             foreach (var behaviour in identity.Behaviours)
                 behaviour.OnActiveChanged(identity.gameObject.activeInHierarchy);
         }
-        
+
         /// <summary>
         /// Called when a network object is despawned
         /// </summary>
@@ -469,37 +490,38 @@ namespace NetBuff
         protected virtual void OnClientConnected(int clientId)
         {
             //Send client id
-            var idPacket = new ClientIdPacket {ClientId = clientId};
+            var idPacket = new ClientIdPacket { ClientId = clientId };
             transport.SendServerPacket(idPacket, clientId, true);
-        
+
             var prePacket = new NetworkPreExistingInfoPacket
             {
-                PreExistingObjects = networkObjects.Values.Where(identity => identity.PrefabId.IsEmpty).Select(identity =>
-                {
-                    var t = identity.transform;
-                    var o = identity.gameObject;
-                    return new NetworkPreExistingInfoPacket.PreExistingState
+                PreExistingObjects = networkObjects.Values.Where(identity => identity.PrefabId.IsEmpty).Select(
+                    identity =>
                     {
-                        Id = identity.Id,
-                        PrefabId = identity.PrefabId,
-                        OwnerId = identity.OwnerId,
-                        Position = t.position,
-                        Rotation = t.rotation,
-                        Scale = t.localScale,
-                        IsActive = o.activeSelf,
-                        SceneId = GetSceneId(o.scene.name)
-                    };
-                }).ToArray(),
+                        var t = identity.transform;
+                        var o = identity.gameObject;
+                        return new NetworkPreExistingInfoPacket.PreExistingState
+                        {
+                            Id = identity.Id,
+                            PrefabId = identity.PrefabId,
+                            OwnerId = identity.OwnerId,
+                            Position = t.position,
+                            Rotation = t.rotation,
+                            Scale = t.localScale,
+                            IsActive = o.activeSelf,
+                            SceneId = GetSceneId(o.scene.name)
+                        };
+                    }).ToArray(),
                 RemovedObjects = removedPreExistingObjects.ToArray(),
                 SceneNames = loadedScenes.ToArray()
             };
-            
+
             var spawns = new List<NetworkObjectSpawnPacket>();
 
             foreach (var identity in networkObjects.Values)
             {
-                if(identity.PrefabId.IsEmpty) continue;
-                
+                if (identity.PrefabId.IsEmpty) continue;
+
                 var t = identity.transform;
                 var o = identity.gameObject;
                 spawns.Add(new NetworkObjectSpawnPacket
@@ -515,19 +537,20 @@ namespace NetBuff
                     SceneId = GetSceneId(o.scene.name)
                 });
             }
+
             prePacket.SpawnedObjects = spawns.ToArray();
-            
+
             var values = new List<NetworkValuesPacket>();
-            
+
             //Network variables
             foreach (var identity in networkObjects.Values)
-                foreach (var behaviour in identity.Behaviours)
-                {
-                    var packet = behaviour.GetPreExistingValuesPacket();
-                    if(packet == null)
-                        continue;
-                    values.Add(packet);
-                }
+            foreach (var behaviour in identity.Behaviours)
+            {
+                var packet = behaviour.GetPreExistingValuesPacket();
+                if (packet == null)
+                    continue;
+                values.Add(packet);
+            }
 
             prePacket.NetworkValues = values.ToArray();
 
@@ -542,7 +565,8 @@ namespace NetBuff
         {
             if (!prefabRegistry.IsPrefabValid(playerPrefab))
                 throw new Exception("Player prefab is not valid");
-            SpawnNetworkObjectForClients(prefabRegistry.GetPrefabId(playerPrefab), Vector3.zero, Quaternion.identity, Vector3.one, clientId, 0);
+            SpawnNetworkObjectForClients(prefabRegistry.GetPrefabId(playerPrefab), Vector3.zero, Quaternion.identity,
+                Vector3.one, clientId, 0);
         }
 
         /// <summary>
@@ -558,7 +582,7 @@ namespace NetBuff
 
             foreach (var id in toDestroy)
                 DespawnNetworkObjectForClients(id.Id);
-            
+
             foreach (var identity in networkObjects.Values)
                 foreach (var behaviour in identity.Behaviours)
                     behaviour.OnClientDisconnected(clientId);
@@ -572,28 +596,28 @@ namespace NetBuff
         {
             IsClientRunning = true;
         }
-        
+
         /// <summary>
         /// Called when the client disconnects from the server
         /// </summary>
         /// <param name="reason"></param>
         [ClientOnly]
         protected virtual void OnDisconnect(string reason)
-        {            
+        {
             IsClientRunning = false;
-            
-            #if UNITY_EDITOR
+
+#if UNITY_EDITOR
             if(endTypeAfterReload == NetworkTransport.EndType.None)
-            #endif
+#endif
             {
                 foreach (var identity in networkObjects.Values)
-                    foreach (var behaviour in identity.Behaviours)
-                        behaviour.OnActiveChanged(false);
-                
+                foreach (var behaviour in identity.Behaviours)
+                    behaviour.OnActiveChanged(false);
+
                 OnClearEnvironment();
             }
         }
-        
+
         /// <summary>
         /// Called when the server receives a packet
         /// </summary>
@@ -606,7 +630,7 @@ namespace NetBuff
             {
                 case NetworkPreExistingResponsePacket _:
                 {
-                    #if UNITY_EDITOR
+#if UNITY_EDITOR
                     if (!isClientReloaded)
                     {
                         if (spawnsPlayer)
@@ -614,19 +638,19 @@ namespace NetBuff
                             OnSpawnPlayer(clientId);
                         }
                     }
-                    #else
+#else
                     if (spawnsPlayer)
                     {
                         OnSpawnPlayer(clientId);
                     }
-                    #endif
+#endif
 
                     foreach (var identity in networkObjects.Values)
-                        foreach (var behaviour in identity.Behaviours)
-                            behaviour.OnClientConnected(clientId);
+                    foreach (var behaviour in identity.Behaviours)
+                        behaviour.OnClientConnected(clientId);
                     return;
                 }
-                
+
                 case NetworkValuesPacket valuesPacket:
                 {
                     if (!networkObjects.TryGetValue(valuesPacket.Id, out _)) return;
@@ -646,7 +670,7 @@ namespace NetBuff
                 {
                     if (!networkObjects.TryGetValue(destroyPacket.Id, out var identity)) return;
                     if (identity.OwnerId != clientId) return;
-                    
+
                     //Apply the despawn
                     DespawnNetworkObjectForClients(destroyPacket.Id);
                     return;
@@ -656,27 +680,27 @@ namespace NetBuff
                 {
                     if (!networkObjects.TryGetValue(activePacket.Id, out var identity)) return;
                     if (identity.OwnerId != clientId) return;
-                    
+
                     //Apply the active state
                     SetNetworkObjectActiveForClients(activePacket.Id, activePacket.IsActive);
                     return;
                 }
-                
+
                 case NetworkObjectOwnerPacket authorityPacket:
                 {
                     if (!networkObjects.TryGetValue(authorityPacket.Id, out var identity)) return;
                     if (identity.OwnerId != clientId) return;
-                    
+
                     //Apply the authority
                     SetNetworkObjectOwnerForClients(authorityPacket.Id, authorityPacket.OwnerId);
                     return;
                 }
-                
+
                 case NetworkObjectMoveScenePacket moveObjectScenePacket:
                 {
                     if (!networkObjects.TryGetValue(moveObjectScenePacket.Id, out var identity)) return;
                     if (identity.OwnerId != clientId) return;
-                    
+
                     //Apply the scene move
                     MoveObjectToScene(moveObjectScenePacket.Id, moveObjectScenePacket.SceneId);
                     return;
@@ -685,16 +709,16 @@ namespace NetBuff
                 case IOwnedPacket ownedPacket:
                 {
                     if (!networkObjects.TryGetValue(ownedPacket.Id, out var identity)) return;
-                    
+
                     foreach (var behaviour in identity.Behaviours)
                         behaviour.OnServerReceivePacket(ownedPacket, clientId);
                     return;
                 }
             }
-            
+
             GetPacketListener(packet.GetType()).CallOnServerReceive(packet, clientId);
         }
-        
+
         /// <summary>
         /// Called when the client (or a server local render) receives a packet
         /// </summary>
@@ -706,7 +730,7 @@ namespace NetBuff
                 case ClientIdPacket clientPacket:
                     _HandleClientIdPacket(clientPacket);
                     return;
-            
+
                 case NetworkValuesPacket valuesPacket:
                     _HandleNetworkValuesPacket(valuesPacket);
                     return;
@@ -722,7 +746,7 @@ namespace NetBuff
                 case NetworkObjectActivePacket activePacket:
                     _HandleActivePacket(activePacket);
                     return;
-                
+
                 case NetworkObjectOwnerPacket authorityPacket:
                     _HandleOwnerPacket(authorityPacket);
                     return;
@@ -730,7 +754,7 @@ namespace NetBuff
                 case NetworkPreExistingInfoPacket preExistingInfoPacket:
                     _HandlePreExistingInfoPacket(preExistingInfoPacket);
                     return;
-                
+
                 case NetworkLoadScenePacket loadScenePacket:
                     _HandleLoadScenePacket(loadScenePacket);
                     return;
@@ -738,25 +762,25 @@ namespace NetBuff
                 case NetworkObjectMoveScenePacket moveObjectScenePacket:
                     _HandleObjectMoveScenePacket(moveObjectScenePacket);
                     return;
-                
+
                 case NetworkUnloadScenePacket unloadScenePacket:
                     _HandleUnloadScenePacket(unloadScenePacket);
                     return;
 
                 case IOwnedPacket ownedPacket:
                 {
-                    if (!networkObjects.TryGetValue(ownedPacket.Id, out var identity)) 
+                    if (!networkObjects.TryGetValue(ownedPacket.Id, out var identity))
                         return;
-                    
+
                     foreach (var behaviour in identity.Behaviours)
                         behaviour.OnClientReceivePacket(ownedPacket);
                     return;
                 }
             }
-            
+
             GetPacketListener(packet.GetType()).CallOnClientReceive(packet);
         }
-        
+
         /// <summary>
         /// Called to reset the entire network environment
         /// </summary>
@@ -764,9 +788,11 @@ namespace NetBuff
         {
             SceneManager.LoadScene(SourceScene);
         }
+
         #endregion
 
         #region Packet Handling
+
         private void _HandleNetworkValuesPacket(NetworkValuesPacket packet)
         {
             if (!networkObjects.TryGetValue(packet.Id, out var identity)) return;
@@ -780,12 +806,12 @@ namespace NetBuff
         private void _HandleActivePacket(NetworkObjectActivePacket activePacket)
         {
             if (!networkObjects.TryGetValue(activePacket.Id, out var identity)) return;
-            
-            if(identity.gameObject.activeSelf == activePacket.IsActive)
+
+            if (identity.gameObject.activeSelf == activePacket.IsActive)
                 return;
-            
+
             identity.gameObject.SetActive(activePacket.IsActive);
-            
+
             foreach (var behaviour in identity.Behaviours)
                 behaviour.OnActiveChanged(activePacket.IsActive);
         }
@@ -794,12 +820,12 @@ namespace NetBuff
         {
             foreach (var sceneName in preExistingInfoPacket.SceneNames)
                 await _LoadSceneLocally(sceneName, false);
-        
+
             foreach (var preExistingObject in preExistingInfoPacket.PreExistingObjects)
             {
                 if (!networkObjects.ContainsKey(preExistingObject.Id))
                     continue;
-                
+
                 var obj = networkObjects[preExistingObject.Id].gameObject;
                 obj.transform.localScale = preExistingObject.Scale;
                 var identity = obj.GetComponent<NetworkIdentity>();
@@ -811,9 +837,10 @@ namespace NetBuff
                 {
                     SceneManager.MoveGameObjectToScene(obj, SceneManager.GetSceneByName(scene));
                 }
+
                 OnNetworkObjectSpawned(identity, true);
             }
-            
+
             foreach (var removedObject in preExistingInfoPacket.RemovedObjects)
             {
                 if (networkObjects.TryGetValue(removedObject, out var identity))
@@ -823,31 +850,32 @@ namespace NetBuff
                     Destroy(identity.gameObject);
                 }
             }
-            
+
             foreach (var spawnedObject in preExistingInfoPacket.SpawnedObjects)
                 _HandleSpawnPacket(spawnedObject);
-            
+
             foreach (var valuesPacket in preExistingInfoPacket.NetworkValues)
                 _HandleNetworkValuesPacket(valuesPacket);
-            
+
             SendClientPacket(new NetworkPreExistingResponsePacket(), true);
         }
-        
+
         private void _HandleClientIdPacket(ClientIdPacket packet)
         {
             var list = new List<int>(_localClientIds) { packet.ClientId };
-            _localClientIds = list.ToArray();    
+            _localClientIds = list.ToArray();
         }
-        
+
         private void _HandleSpawnPacket(NetworkObjectSpawnPacket packet)
         {
             if (networkObjects.ContainsKey(packet.Id))
                 return;
-            
+
             var prefab = prefabRegistry.GetPrefab(packet.PrefabId);
             if (!prefab.TryGetComponent<NetworkIdentity>(out _))
-                throw new Exception($"Prefab {prefab.name} ({packet.PrefabId}) does not have a NetworkIdentity component");
-            
+                throw new Exception(
+                    $"Prefab {prefab.name} ({packet.PrefabId}) does not have a NetworkIdentity component");
+
             var obj = Instantiate(prefab, packet.Position, packet.Rotation);
             obj.transform.localScale = packet.Scale;
             var identity = obj.GetComponent<NetworkIdentity>();
@@ -867,20 +895,25 @@ namespace NetBuff
             else
                 obj.SetActive(packet.IsActive);
         }
-        
+
         private void _HandleOwnerPacket(NetworkObjectOwnerPacket packet)
         {
-            if (!networkObjects.TryGetValue(packet.Id, out var identity)) return;
+            if (!networkObjects.TryGetValue(packet.Id, out var identity))
+                return;
+
+            var oldOwner = identity.OwnerId;
             _OwnerIdField.SetValue(identity, packet.OwnerId);
-            
+
             foreach (var behaviour in identity.Behaviours)
-                behaviour.OnOwnerChanged(packet.OwnerId);
+                behaviour.OnOwnershipChanged(oldOwner, packet.OwnerId);
         }
-        
+
         private void _HandleDespawnPacket(NetworkObjectDespawnPacket packet)
         {
-            if (!networkObjects.TryGetValue(packet.Id, out var identity)) return;
-            if(identity.PrefabId.IsEmpty)
+            if (!networkObjects.TryGetValue(packet.Id, out var identity))
+                return;
+
+            if (identity.PrefabId.IsEmpty)
                 removedPreExistingObjects.Add(packet.Id);
             networkObjects.Remove(packet.Id);
             OnNetworkObjectDespawned(identity);
@@ -888,7 +921,7 @@ namespace NetBuff
         }
 
         private void _HandleLoadScenePacket(NetworkLoadScenePacket packet)
-        { 
+        {
             _ = _LoadSceneLocally(packet.SceneName, true);
         }
 
@@ -909,9 +942,11 @@ namespace NetBuff
             foreach (var behaviour in identity.Behaviours)
                 behaviour.OnSceneChanged(prevId, realId);
         }
+
         #endregion
 
         #region Send Utils
+
         /// <summary>
         /// Send a packet to the server
         /// </summary>
@@ -920,12 +955,12 @@ namespace NetBuff
         [ClientOnly]
         public void SendClientPacket(IPacket packet, bool reliable = false)
         {
-            if(!IsClientRunning)
+            if (!IsClientRunning)
                 throw new Exception("This method can only be called on the client");
-            
+
             transport.SendClientPacket(packet, reliable);
         }
-        
+
         /// <summary>
         /// Send a packet to a specific client (Use -1 to broadcast to all clients)
         /// </summary>
@@ -935,15 +970,15 @@ namespace NetBuff
         [ServerOnly]
         public void SendServerPacket(IPacket packet, int target = -1, bool reliable = false)
         {
-            if(!IsServerRunning)
+            if (!IsServerRunning)
                 throw new Exception("This method can only be called on the server");
-            
+
             transport.SendServerPacket(packet, target, reliable);
-            
-            if(EndType == NetworkTransport.EndType.Server)
+
+            if (EndType == NetworkTransport.EndType.Server)
                 OnClientReceivePacket(packet);
         }
-    
+
         /// <summary>
         /// Send a packet to all clients
         /// </summary>
@@ -952,15 +987,15 @@ namespace NetBuff
         [ServerOnly]
         public void BroadcastServerPacket(IPacket packet, bool reliable = false)
         {
-            if(!IsServerRunning)
+            if (!IsServerRunning)
                 throw new Exception("This method can only be called on the server");
-            
+
             transport.BroadcastServerPacket(packet, reliable);
-            
-            if(EndType == NetworkTransport.EndType.Server)
+
+            if (EndType == NetworkTransport.EndType.Server)
                 OnClientReceivePacket(packet);
         }
-            
+
         /// <summary>
         /// Send a packet to all clients except for a specific one
         /// </summary>
@@ -970,20 +1005,23 @@ namespace NetBuff
         [ServerOnly]
         public void BroadcastServerPacketExceptFor(IPacket packet, int except, bool reliable = false)
         {
-            if(!IsServerRunning)
+            if (!IsServerRunning)
                 throw new Exception("This method can only be called on the server");
-            
+
             foreach (var client in transport.GetClients())
             {
                 if (client.Id != except)
                     SendServerPacket(packet, client.Id, reliable);
             }
-            
-            if(EndType == NetworkTransport.EndType.Server)
+
+            if (EndType == NetworkTransport.EndType.Server)
                 OnClientReceivePacket(packet);
         }
+
         #endregion
+
         #region Scene Management
+
         /// <summary>
         /// Returns the network id of a scene
         /// </summary>
@@ -1001,15 +1039,15 @@ namespace NetBuff
         /// <returns></returns>
         public string GetSceneName(int sceneId)
         {
-            if(sceneId == -1)
+            if (sceneId == -1)
                 return LastLoadedScene;
-            
-            if(sceneId < 0 || sceneId >= loadedScenes.Count)
+
+            if (sceneId < 0 || sceneId >= loadedScenes.Count)
                 throw new Exception("Invalid scene id");
-            
+
             return loadedScenes[sceneId];
         }
-        
+
         /// <summary>
         /// Load a scene for all clients
         /// </summary>
@@ -1017,16 +1055,16 @@ namespace NetBuff
         [ServerOnly]
         public void LoadScene(string sceneName)
         {
-            if(!IsServerRunning)
+            if (!IsServerRunning)
                 throw new Exception("This method can only be called on the server");
-            
+
             var packet = new NetworkLoadScenePacket
             {
                 SceneName = sceneName
             };
             BroadcastServerPacket(packet, true);
         }
-        
+
         /// <summary>
         /// Unload a scene for all clients
         /// </summary>
@@ -1034,10 +1072,10 @@ namespace NetBuff
         [ServerOnly]
         public void UnloadScene(string sceneName)
         {
-            if(!IsServerRunning)
+            if (!IsServerRunning)
                 throw new Exception("This method can only be called on the server");
-            
-            if(sceneName == sourceScene)
+
+            if (sceneName == sourceScene)
                 throw new Exception("Cannot unload the source scene");
 
             var packet = new NetworkUnloadScenePacket
@@ -1047,7 +1085,7 @@ namespace NetBuff
 
             BroadcastServerPacket(packet, true);
         }
-        
+
         /// <summary>
         /// Returns if a scene is loaded
         /// </summary>
@@ -1065,7 +1103,7 @@ namespace NetBuff
         /// <param name="sceneId"></param>
         public void MoveObjectToScene(NetworkId id, int sceneId)
         {
-            if(!IsServerRunning)
+            if (!IsServerRunning)
                 throw new Exception("This method can only be called on the server");
 
             var packet = new NetworkObjectMoveScenePacket
@@ -1075,19 +1113,19 @@ namespace NetBuff
             };
             BroadcastServerPacket(packet, true);
         }
-        
+
         private async Awaitable _LoadSceneLocally(string sceneName, bool needToCall)
         {
             if (loadedScenes.Contains(sceneName))
                 return;
-            
+
             loadedScenes.Add(sceneName);
-            
+
             var async = SceneManager.LoadScene(sceneName, new LoadSceneParameters(LoadSceneMode.Additive));
             await Awaitable.NextFrameAsync();
-            
+
             var scene = SceneManager.GetSceneByName(sceneName);
-            
+
             foreach (var root in scene.GetRootGameObjects())
             {
                 foreach (var identity in root.GetComponentsInChildren<NetworkIdentity>())
@@ -1095,24 +1133,24 @@ namespace NetBuff
                     if (networkObjects.ContainsKey(identity.Id))
                         continue;
 
-                    if(removedPreExistingObjects.Contains(identity.Id))
+                    if (removedPreExistingObjects.Contains(identity.Id))
                         removedPreExistingObjects.Remove(identity.Id);
-                    
+
                     networkObjects.Add(identity.Id, identity);
 
-                    if(needToCall)
+                    if (needToCall)
                         OnNetworkObjectSpawned(identity, false);
                 }
             }
         }
-        
+
         private void _UnloadSceneLocally(string sceneName)
         {
             if (!loadedScenes.Contains(sceneName))
                 return;
-            
+
             loadedScenes.Remove(sceneName);
-            
+
             var scene = SceneManager.GetSceneByName(sceneName);
             foreach (var root in scene.GetRootGameObjects())
             {
@@ -1124,8 +1162,10 @@ namespace NetBuff
                     OnNetworkObjectDespawned(identity);
                 }
             }
+
             SceneManager.UnloadSceneAsync(scene);
         }
+
         #endregion
 
         private static int _GenerateMagicNumber()

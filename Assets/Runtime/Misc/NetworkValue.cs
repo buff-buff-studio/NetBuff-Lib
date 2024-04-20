@@ -38,6 +38,13 @@ namespace NetBuff.Misc
             {
                 if (value.Equals(this.value))
                     return;
+
+                var man = NetworkManager.Instance;
+                if (man == null || man.EndType == NetworkTransport.EndType.None)
+                {
+                    SetValueCalling(value);
+                    return;
+                }
                 
                 if(AttachedTo == null)
                     throw new InvalidOperationException("This value is not attached to any NetworkBehaviour");

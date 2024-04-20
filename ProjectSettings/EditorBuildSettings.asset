@@ -9,6 +9,9 @@ EditorBuildSettings:
     path: Assets/Samples/SceneLoading/Lobby.unity
     guid: 185fda8d84441714c9019457c58d3516
   - enabled: 1
+    path: Assets/Samples/Docs/Scene.unity
+    guid: 131048b5ce004c44b8546a5a412badf9
+  - enabled: 1
     path: Assets/Samples/AnimationTest/Main.unity
     guid: c9dfe70974770d247999aadd3a8ade4d
   - enabled: 1

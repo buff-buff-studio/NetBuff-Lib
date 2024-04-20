@@ -198,8 +198,9 @@ namespace NetBuff.Components
         /// <summary>
         /// Called when the object's owner is changed
         /// </summary>
+        /// <param name="oldOwner"></param>
         /// <param name="newOwner"></param>
-        public virtual void OnOwnerChanged(int newOwner){}
+        public virtual void OnOwnershipChanged(int oldOwner, int newOwner){}
         #endregion
         
         #region Value Methods
