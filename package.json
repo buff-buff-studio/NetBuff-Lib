@@ -1,6 +1,6 @@
 {
     "name": "com.buffbuffstudios.netbuff",
-    "version": "2.0",
+    "version": "2.0.0",
     "displayName": "NetBuff",
     "description": "NetBuff is a Unity Game Engine based multiplayer engine created as lightweight alternative without the giant overhead of other libraries such as NGO (Netcode for GameObjects) and third-party solutions (like Mirror).",
     "unity": "2022.3",
