@@ -110,7 +110,7 @@ namespace NetBuff
 
         /// <summary>
         /// Returns the current session entrypoint scene
-        /// </summary>R
+        /// </summary>
         public string SourceScene => sourceScene;
 
         /// <summary>
