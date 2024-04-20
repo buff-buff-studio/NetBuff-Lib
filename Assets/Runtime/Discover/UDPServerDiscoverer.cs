@@ -104,9 +104,8 @@ namespace NetBuff.Discover
                                     });
                                 }
                             }
-                            catch(Exception e)
+                            catch
                             {
-                                Debug.Log(e);
                                 // ignored
                             }
 

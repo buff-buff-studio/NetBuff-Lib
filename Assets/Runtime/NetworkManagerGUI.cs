@@ -135,10 +135,7 @@ namespace NetBuff
                     {
                         list.Add(info);
                         _serverList = list.ToArray();
-                    }, () =>
-                    {
-                        Debug.Log("Search finished");
-                    });
+                    }, () => { });
                 }
             }
 
