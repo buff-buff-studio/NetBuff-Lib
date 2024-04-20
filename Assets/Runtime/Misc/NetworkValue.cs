@@ -38,8 +38,10 @@ namespace NetBuff.Misc
             {
                 if (value.Equals(this.value))
                     return;
+                
                 if(AttachedTo == null)
                     throw new InvalidOperationException("This value is not attached to any NetworkBehaviour");
+                
                 if(!CheckPermission())
                     throw new InvalidOperationException("You don't have permission to modify this value");
                 
@@ -205,6 +207,23 @@ namespace NetBuff.Misc
         public override void Deserialize(BinaryReader reader)
         {
             var v = reader.ReadInt64();
+            SetValueCalling(v);
+        }
+    }
+    
+    [Serializable]
+    public class ShortNetworkValue : NetworkValue<short>
+    {
+        public ShortNetworkValue(short defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue, type) {}
+
+        public override void Serialize(BinaryWriter writer)
+        {
+            writer.Write(value);
+        }
+
+        public override void Deserialize(BinaryReader reader)
+        {
+            var v = reader.ReadInt16();
             SetValueCalling(v);
         }
     }

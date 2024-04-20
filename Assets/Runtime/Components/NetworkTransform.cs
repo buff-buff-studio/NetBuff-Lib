@@ -37,7 +37,9 @@ namespace NetBuff.Components
         public float rotationThreshold = 0.001f;
         public float scaleThreshold = 0.001f;
         
-        public SyncMode syncMode = SyncMode.PositionX | SyncMode.PositionY | SyncMode.PositionZ | SyncMode.RotationX | SyncMode.RotationY | SyncMode.RotationZ;
+        [SerializeField]
+        protected SyncMode syncMode = SyncMode.PositionX | SyncMode.PositionY | SyncMode.PositionZ | SyncMode.RotationX | SyncMode.RotationY | SyncMode.RotationZ;
+        public SyncMode SyncModeMask => syncMode;
         #endregion
 
         #region Internal Fields

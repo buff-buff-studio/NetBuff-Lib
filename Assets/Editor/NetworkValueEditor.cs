@@ -29,7 +29,10 @@ namespace NetBuff.Editor
             EditorGUI.PropertyField(valueRect, value, label);
             EditorStyles.label.normal.textColor = Color.white;
             
+            EditorGUI.BeginDisabledGroup(Application.isPlaying);
             EditorGUI.PropertyField(typeRect, type, GUIContent.none);
+            EditorGUI.EndDisabledGroup();
+            
             if (EditorGUI.EndChangeCheck())
             {
                 property.serializedObject.ApplyModifiedProperties();

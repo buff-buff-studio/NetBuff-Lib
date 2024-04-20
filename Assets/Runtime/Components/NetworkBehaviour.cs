@@ -473,21 +473,21 @@ namespace NetBuff.Components
         /// <param name="objectId"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NetworkIdentity GetNetworkObject(NetworkId objectId) => Identity.GetNetworkObject(objectId);
+        public static NetworkIdentity GetNetworkObject(NetworkId objectId) => NetworkIdentity.GetNetworkObject(objectId);
         
         /// <summary>
         /// Returns all network objects
         /// </summary>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerable<NetworkIdentity> GetNetworkObjects() => Identity.GetNetworkObjects();
+        public static IEnumerable<NetworkIdentity> GetNetworkObjects() => NetworkIdentity.GetNetworkObjects();
         
         /// <summary>
         /// Returns the count of network objects
         /// </summary>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int GetNetworkObjectCount() => Identity.GetNetworkObjectCount();
+        public static int GetNetworkObjectCount() => NetworkIdentity.GetNetworkObjectCount();
         
         /// <summary>
         /// Returns all network objects owned by a specific client (Use -1 to get all objects owned by the server)
@@ -495,7 +495,7 @@ namespace NetBuff.Components
         /// <param name="clientId"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerable<NetworkIdentity> GetNetworkObjectsOwnedBy(int clientId) => Identity.GetNetworkObjectsOwnedBy(clientId);
+        public static IEnumerable<NetworkIdentity> GetNetworkObjectsOwnedBy(int clientId) => NetworkIdentity.GetNetworkObjectsOwnedBy(clientId);
         #endregion
 
         #region Client Methods

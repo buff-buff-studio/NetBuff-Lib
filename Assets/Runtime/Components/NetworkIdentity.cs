@@ -99,7 +99,6 @@ namespace NetBuff.Components
         /// Returns the name of the last loaded scene
         /// </summary>
         public string LastLoadedScene => NetworkManager.Instance.LastLoadedScene;
-
         
         /// <summary>
         /// Returns all NetworkBehaviours attached to this object
@@ -237,7 +236,7 @@ namespace NetBuff.Components
         /// </summary>
         /// <param name="objectId"></param>
         /// <returns></returns>
-        public NetworkIdentity GetNetworkObject(NetworkId objectId)
+        public static NetworkIdentity GetNetworkObject(NetworkId objectId)
         {
             return NetworkManager.Instance.GetNetworkObject(objectId);
         }
@@ -246,7 +245,7 @@ namespace NetBuff.Components
         /// Returns all network objects
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<NetworkIdentity> GetNetworkObjects()
+        public static IEnumerable<NetworkIdentity> GetNetworkObjects()
         {
             return NetworkManager.Instance.GetNetworkObjects();
         }
@@ -255,7 +254,7 @@ namespace NetBuff.Components
         /// Returns the count of network objects
         /// </summary>
         /// <returns></returns>
-        public int GetNetworkObjectCount()
+        public static int GetNetworkObjectCount()
         {
             return NetworkManager.Instance.GetNetworkObjectCount();
         }
@@ -265,7 +264,7 @@ namespace NetBuff.Components
         /// </summary>
         /// <param name="clientId"></param>
         /// <returns></returns>
-        public IEnumerable<NetworkIdentity> GetNetworkObjectsOwnedBy(int clientId)
+        public static IEnumerable<NetworkIdentity> GetNetworkObjectsOwnedBy(int clientId)
         {
             return NetworkManager.Instance.GetNetworkObjectsOwnedBy(clientId);
         }
