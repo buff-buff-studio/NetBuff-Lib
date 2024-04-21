@@ -10,8 +10,9 @@ namespace NetBuff.Components
     public class NetworkRigidbodyTransform : NetworkTransform
     {
         #region Inspector Fields
+        #pragma warning disable 0109
         [SerializeField]
-        private new Rigidbody rigidbody;
+        protected new Rigidbody rigidbody;
         
         [SerializeField]
         protected bool syncVelocity = true;

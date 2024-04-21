@@ -22,15 +22,19 @@ namespace NetBuff
             Host,
             Client
         }
+
+        #region Inspector Fields
+        [SerializeField]
+        protected new string name = "server";
+        #endregion
         
+        #region Helper Properties
         public EndType Type { get; protected set; } = EndType.None;
         
         public IConnectionInfo ClientConnectionInfo { get; protected set; }
         
         public string Name { get => name; set => name = value; }
-
-        [SerializeField]
-        private new string name = "server";
+        #endregion
 
         #region Callbacks
         public Action<int, IPacket> OnServerPacketReceived { get; set; }
