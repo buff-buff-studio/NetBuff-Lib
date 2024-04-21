@@ -202,6 +202,12 @@ namespace NetBuff.Components
         /// <param name="oldOwner"></param>
         /// <param name="newOwner"></param>
         public virtual void OnOwnershipChanged(int oldOwner, int newOwner){}
+        
+        public virtual void OnSceneLoaded(int sceneId){}
+        
+        public virtual void OnSceneUnloaded(int sceneId){}
+        
+        public virtual void OnAnyObjectSpawned(NetworkIdentity identity, bool isRetroactive){}
         #endregion
         
         #region Value Methods

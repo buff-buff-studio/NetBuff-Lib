@@ -451,8 +451,8 @@ namespace NetBuff
         protected virtual void OnServerStart()
         {
             foreach (var identity in networkObjects.Values)
-            foreach (var behaviour in identity.Behaviours)
-                behaviour.OnSpawned(false);
+                foreach (var behaviour in identity.Behaviours)
+                    behaviour.OnSpawned(false);
 
             IsServerRunning = true;
         }
@@ -480,6 +480,10 @@ namespace NetBuff
 
             foreach (var behaviour in identity.Behaviours)
                 behaviour.OnActiveChanged(identity.gameObject.activeInHierarchy);
+            
+            foreach (var obj in networkObjects.Values)
+                foreach (var behaviour in obj.Behaviours)
+                    behaviour.OnAnyObjectSpawned(identity, retroactive);
         }
 
         /// <summary>
@@ -575,15 +579,13 @@ namespace NetBuff
         [ServerOnly]
         protected virtual void OnClientDisconnected(int clientId, string reason)
         {
-            //Destroy all objects owned by client
-            var toDestroy = GetNetworkObjectsOwnedBy(clientId).ToList();
-
-            foreach (var id in toDestroy)
-                DespawnNetworkObjectForClients(id.Id);
-
             foreach (var identity in networkObjects.Values)
                 foreach (var behaviour in identity.Behaviours)
                     behaviour.OnClientDisconnected(clientId);
+            
+            var toDestroy = GetNetworkObjectsOwnedBy(clientId).ToList();
+            foreach (var id in toDestroy)
+                DespawnNetworkObjectForClients(id.Id);
         }
         
         /// <summary>
@@ -801,6 +803,17 @@ namespace NetBuff
             SceneManager.LoadScene(SourceScene);
         }
 
+        protected virtual GameObject OnSpawnObject(NetworkId id, GameObject prefab, Vector3 position, Quaternion rotation, Vector3 scale, ref bool active, ref int owner, ref int sceneId)
+        {
+            var obj = Instantiate(prefab, position, rotation);
+            obj.transform.localScale = scale;
+            return obj;
+        }
+
+        protected virtual void OnDespawnObject(GameObject o)
+        {
+            Destroy(o);
+        }
         #endregion
 
         #region Packet Handling
@@ -887,25 +900,32 @@ namespace NetBuff
             if (!prefab.TryGetComponent<NetworkIdentity>(out _))
                 throw new Exception(
                     $"Prefab {prefab.name} ({packet.PrefabId}) does not have a NetworkIdentity component");
-
-            var obj = Instantiate(prefab, packet.Position, packet.Rotation);
-            obj.transform.localScale = packet.Scale;
+            
+            var ownerId = packet.OwnerId;
+            var sceneId = packet.SceneId;
+            var active = packet.IsActive;
+            
+            var obj = OnSpawnObject(packet.Id, prefab, packet.Position, packet.Rotation, packet.Scale, ref active, ref ownerId, ref sceneId);
+            if (obj == null)
+                return;
+            
             var identity = obj.GetComponent<NetworkIdentity>();
-            var scene = GetSceneName(packet.SceneId);
+            var scene = GetSceneName(sceneId);
+            
             if (scene != obj.scene.name && loadedScenes.Contains(scene))
                 SceneManager.MoveGameObjectToScene(obj, SceneManager.GetSceneByName(scene));
-
+            
             if (identity != null)
             {
                 _IDField.SetValue(identity, packet.Id);
-                _OwnerIdField.SetValue(identity, packet.OwnerId);
+                _OwnerIdField.SetValue(identity, ownerId);
                 _PrefabIdField.SetValue(identity, packet.PrefabId);
                 networkObjects.Add(identity.Id, identity);
-                identity.gameObject.SetActive(packet.IsActive);
+                identity.gameObject.SetActive(active);
                 OnNetworkObjectSpawned(identity, packet.IsRetroactive);
             }
             else
-                obj.SetActive(packet.IsActive);
+                obj.SetActive(active);
         }
 
         private void _HandleOwnerPacket(NetworkObjectOwnerPacket packet)
@@ -929,7 +949,7 @@ namespace NetBuff
                 removedPreExistingObjects.Add(packet.Id);
             networkObjects.Remove(packet.Id);
             OnNetworkObjectDespawned(identity);
-            Destroy(identity.gameObject);
+            OnDespawnObject(identity.gameObject);
         }
 
         private void _HandleLoadScenePacket(NetworkLoadScenePacket packet)
@@ -1158,9 +1178,14 @@ namespace NetBuff
                         OnNetworkObjectSpawned(identity, false);
                 }
             }
+            
+            var sceneId = GetSceneId(sceneName);
+            foreach (var identity in networkObjects.Values)
+                foreach (var behaviour in identity.Behaviours)
+                    behaviour.OnSceneLoaded(sceneId);
         }
 
-        private void _UnloadSceneLocally(string sceneName)
+        private async void _UnloadSceneLocally(string sceneName)
         {
             if (!loadedScenes.Contains(sceneName))
                 return;
@@ -1178,8 +1203,15 @@ namespace NetBuff
                     OnNetworkObjectDespawned(identity);
                 }
             }
+            
+            var sceneId = GetSceneId(sceneName);
 
-            SceneManager.UnloadSceneAsync(scene);
+            await SceneManager.UnloadSceneAsync(scene);
+            await Awaitable.NextFrameAsync();
+            
+            foreach (var identity in networkObjects.Values)
+                foreach (var behaviour in identity.Behaviours)
+                    behaviour.OnSceneUnloaded(sceneId);
         }
 
         #endregion
