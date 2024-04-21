@@ -111,22 +111,20 @@ namespace NetBuff.Components
         
         public override void OnServerReceivePacket(IOwnedPacket packet, int clientId)
         {
+            if (clientId != OwnerId)
+                return;
+            
             if (packet is TransformPacket transformPacket)
-            {
-                if(clientId == OwnerId)
-                    ServerBroadcastPacketExceptFor(transformPacket, clientId);
-            }
+                ServerBroadcastPacketExceptFor(transformPacket, clientId);
         }
 
         public override void OnClientReceivePacket(IOwnedPacket packet)
         {
+            if (HasAuthority)
+                return;
+            
             if (packet is TransformPacket transformPacket)
-            {
-                if (!HasAuthority)
-                {
-                    ApplyTransformPacket(transformPacket);
-                }
-            }
+                ApplyTransformPacket(transformPacket);
         }
         #endregion
 

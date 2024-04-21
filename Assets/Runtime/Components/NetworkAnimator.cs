@@ -9,20 +9,15 @@ using UnityEngine;
 
 namespace NetBuff.Components
 {
-    /// <summary>
-    /// Component that syncs a animator state and parameters over the network
-    /// </summary>
     [SuppressMessage("ReSharper", "ParameterHidesMember")]
     [Icon("Assets/Editor/Icons/NetworkAnimator.png")]
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-animator")]
     public class NetworkAnimator : NetworkBehaviour, INetworkBehaviourSerializer
     {
         #region Public Fields
-        //Determines how often the transform should be synced. When set to -1, the default tick rate of the network manager will be used
         [Header("SETTINGS")]
         public int tickRate = -1;
         
-        // Current synced component
         [Header("REFERENCES")]
         public Animator animator;
         #endregion
@@ -140,7 +135,6 @@ namespace NetBuff.Components
         {
             var parameterCount = (byte) _parameters.Length;
             var writer = new BinaryWriter(new MemoryStream());
-            //writer.Write(parameterCount);
             var changed = 0;
             
             for (byte i = 0; i < parameterCount; i++)
@@ -250,9 +244,6 @@ namespace NetBuff.Components
 
         private void _ApplyAnimatorSyncPacket(AnimatorSyncPacket packet)
         {
-            if (packet.Id != Id)
-                return;
-
             if ((packet.Change & AnimatorSyncPacket.Changes.Layers) != 0)
             {
                 for (var i = 0; i < packet.Layers.Length; i++)
@@ -453,21 +444,25 @@ namespace NetBuff.Components
         
         public override void OnServerReceivePacket(IOwnedPacket packet, int clientId)
         {
+            if (clientId != OwnerId)
+                return;
+            
             switch (packet)
             {
                 case AnimatorSyncPacket animatorSyncPacket:
-                    if(clientId == OwnerId)
-                        ServerBroadcastPacketExceptFor(animatorSyncPacket, clientId);
+                    ServerBroadcastPacketExceptFor(animatorSyncPacket, clientId);
                     break;
                 case AnimatorTriggerPacket triggerPacket:
-                    if(clientId == OwnerId)
-                        ServerBroadcastPacketExceptFor(triggerPacket, clientId);
+                    ServerBroadcastPacketExceptFor(triggerPacket, clientId);
                     break;
             }
         }
 
         public override void OnClientReceivePacket(IOwnedPacket packet)
         {
+            if (HasAuthority)
+                return;
+            
             switch (packet)
             {
                 case AnimatorSyncPacket syncPacket:
