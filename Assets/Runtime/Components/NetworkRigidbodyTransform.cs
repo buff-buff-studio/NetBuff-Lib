@@ -4,24 +4,70 @@ using UnityEngine;
 // ReSharper disable BitwiseOperatorOnEnumWithoutFlags
 namespace NetBuff.Components
 {
-    /// <summary>
-    /// Component that syncs the transform and rigidbody of a game object over the network.
-    /// </summary>
     [RequireComponent(typeof(Rigidbody))]
     [Icon("Assets/Editor/Icons/NetworkRigidbodyTransform.png")]
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-rigidbody-transform")]
     public class NetworkRigidbodyTransform : NetworkTransform
     {
-        #region Public Fields
-        /// <summary>
-        /// Current synced component
-        /// </summary>
-        public new Rigidbody rigidbody;
+        #region Inspector Fields
+        [SerializeField]
+        private new Rigidbody rigidbody;
+        
+        [SerializeField]
+        protected bool syncVelocity = true;
+        
+        [SerializeField]
+        protected float velocityThreshold = 0.001f;
+        
+        [SerializeField] 
+        protected bool syncAngularVelocity = true;
+        
+        [SerializeField]
+        protected float angularVelocityThreshold = 0.001f;
+        
+        [SerializeField]
+        protected bool syncIsKinematic;
         #endregion
         
         #region Internal Fields
         private Vector3 _lastVelocity;
         private Vector3 _lastAngularVelocity;
+        private bool _lastIsKinematic;
+        #endregion
+
+        #region Helper Properties
+        public Rigidbody Rigidbody => rigidbody;
+
+        public bool SyncVelocity
+        {
+            get => syncVelocity;
+            set => syncVelocity = value;
+        }
+
+        public float VelocityThreshold
+        {
+            get => velocityThreshold;
+            set => velocityThreshold = value;
+        }
+        
+        public bool SyncAngularVelocity
+        {
+            get => syncAngularVelocity;
+            set => syncAngularVelocity = value;
+        }
+        
+        public float AngularVelocityThreshold
+        {
+            get => angularVelocityThreshold;
+            set => angularVelocityThreshold = value;
+        }
+        
+        public bool SyncIsKinematic
+        {
+            get => syncIsKinematic;
+            set => syncIsKinematic = value;
+        }
+        
         #endregion
         
         protected override void OnEnable()
@@ -39,93 +85,151 @@ namespace NetBuff.Components
                 
             _lastVelocity = rigidbody.velocity;
             _lastAngularVelocity = rigidbody.angularVelocity;
+            _lastIsKinematic = rigidbody.isKinematic;
         }
 
         #region Virtual Methods
-        /// <summary>
-        /// Creates a transform packet from the transform state
-        /// </summary>
-        /// <returns></returns>
-        protected override TransformPacket CreateTransformPacket()
+        protected override bool ShouldResend(out TransformPacket packet)
         {
-            _lastVelocity = rigidbody.velocity;
-            _lastAngularVelocity = rigidbody.angularVelocity;
+            var positionChanged = Vector3.Distance(transform.position, lastPosition) > positionThreshold;
+            var rotationChanged = Vector3.Distance(transform.eulerAngles, lastRotation) > rotationThreshold;
+            var scaleChanged = Vector3.Distance(transform.localScale, lastScale) > scaleThreshold;
+            var velocityChanged = syncVelocity && Vector3.Distance(rigidbody.velocity, _lastVelocity) > velocityThreshold;
+            var angularVelocityChanged = syncAngularVelocity && Vector3.Distance(rigidbody.angularVelocity, _lastAngularVelocity) > angularVelocityThreshold;
+            var isKinematicChanged = syncIsKinematic && rigidbody.isKinematic != _lastIsKinematic;
             
-            var components = new List<float>();
-            if ((syncMode & SyncMode.PositionX) != 0) components.Add(transform.position.x);
-            if ((syncMode & SyncMode.PositionY) != 0) components.Add(transform.position.y);
-            if ((syncMode & SyncMode.PositionZ) != 0) components.Add(transform.position.z);
-            if ((syncMode & SyncMode.RotationX) != 0) components.Add(transform.eulerAngles.x);
-            if ((syncMode & SyncMode.RotationY) != 0) components.Add(transform.eulerAngles.y);
-            if ((syncMode & SyncMode.RotationZ) != 0) components.Add(transform.eulerAngles.z);
-            if ((syncMode & SyncMode.ScaleX) != 0) components.Add(transform.localScale.x);
-            if ((syncMode & SyncMode.ScaleY) != 0) components.Add(transform.localScale.y);
-            if ((syncMode & SyncMode.ScaleZ) != 0) components.Add(transform.localScale.z);
+            if(positionChanged || rotationChanged || scaleChanged || velocityChanged || angularVelocityChanged || isKinematicChanged)
+            {
+                components.Clear();
+                
+                var t = transform;
+                lastPosition = t.position;
+                lastRotation = t.eulerAngles;
+                lastScale = t.localScale;
+                _lastVelocity = rigidbody.velocity;
+                _lastAngularVelocity = rigidbody.angularVelocity;
+                _lastIsKinematic = rigidbody.isKinematic;
+                
+                //FLAG POS ROT SCALE
+                var flag = (short) 0;
+                if (positionChanged)
+                {
+                    flag |= 1;
+                    if ((syncMode & SyncMode.PositionX) != 0) components.Add(lastPosition.x);
+                    if ((syncMode & SyncMode.PositionY) != 0) components.Add(lastPosition.y);
+                    if ((syncMode & SyncMode.PositionZ) != 0) components.Add(lastPosition.z);
+                }
+                
+                if (rotationChanged)
+                {
+                    flag |= 2;
+                    if ((syncMode & SyncMode.RotationX) != 0) components.Add(lastRotation.x);
+                    if ((syncMode & SyncMode.RotationY) != 0) components.Add(lastRotation.y);
+                    if ((syncMode & SyncMode.RotationZ) != 0) components.Add(lastRotation.z);
+                }
+                
+                if (scaleChanged)
+                {
+                    flag |= 4;
+                    if ((syncMode & SyncMode.ScaleX) != 0) components.Add(lastScale.x);
+                    if ((syncMode & SyncMode.ScaleY) != 0) components.Add(lastScale.y);
+                    if ((syncMode & SyncMode.ScaleZ) != 0) components.Add(lastScale.z);
+                }
+                
+                if (velocityChanged)
+                {
+                    flag |= 8;
+                    components.Add(_lastVelocity.x);
+                    components.Add(_lastVelocity.y);
+                    components.Add(_lastVelocity.z);
+                }
+                
+                if (angularVelocityChanged)
+                {
+                    flag |= 16;
+                    components.Add(_lastAngularVelocity.x);
+                    components.Add(_lastAngularVelocity.y);
+                    components.Add(_lastAngularVelocity.z);
+                }
+                
+                if (isKinematicChanged)
+                {
+                    flag |= 32;
+                    components.Add(_lastIsKinematic ? 1 : 0);
+                }
+                
+                packet = new TransformPacket
+                {
+                    Id = Id,
+                    Components = components.ToArray(),
+                    Flag = flag
+                };
+                return true;
+            }
             
-            var v = rigidbody.velocity;
-            var av = rigidbody.angularVelocity;
-            var cs = rigidbody.constraints;
-            if((cs & RigidbodyConstraints.FreezePositionX) == 0) components.Add(v.x);
-            if((cs & RigidbodyConstraints.FreezePositionY) == 0) components.Add(v.y);
-            if((cs & RigidbodyConstraints.FreezePositionZ) == 0) components.Add(v.z);
-            if((cs & RigidbodyConstraints.FreezeRotationX) == 0) components.Add(av.x);
-            if((cs & RigidbodyConstraints.FreezeRotationY) == 0) components.Add(av.y);
-            if((cs & RigidbodyConstraints.FreezeRotationZ) == 0) components.Add(av.z);
-            
-            return new TransformPacket(Id, components.ToArray());
-        }
-        
-        /// <summary>
-        /// Applies the transform packet to the game object.
-        /// </summary>
-        /// <param name="packet"></param>
-        protected override void ApplyTransformPacket(TransformPacket packet)
-        {
-            var components = packet.Components;
-            var t = transform;
-            var pos = t.position;
-            var rot = t.eulerAngles;
-            var scale = t.localScale;
-            
-            
-            var index = 0;
-            if ((syncMode & SyncMode.PositionX) != 0) pos.x = components[index++];
-            if ((syncMode & SyncMode.PositionY) != 0) pos.y = components[index++];
-            if ((syncMode & SyncMode.PositionZ) != 0) pos.z = components[index++];
-            if ((syncMode & SyncMode.RotationX) != 0) rot.x = components[index++];
-            if ((syncMode & SyncMode.RotationY) != 0) rot.y = components[index++];
-            if ((syncMode & SyncMode.RotationZ) != 0) rot.z = components[index++];  
-            if ((syncMode & SyncMode.ScaleX) != 0) scale.x = components[index++];
-            if ((syncMode & SyncMode.ScaleY) != 0) scale.y = components[index++];
-            if ((syncMode & SyncMode.ScaleZ) != 0) scale.z = components[index++];
-            
-            var v = rigidbody.velocity;
-            var av = rigidbody.angularVelocity;
-            var cs = rigidbody.constraints;
-            if((cs & RigidbodyConstraints.FreezePositionX) == 0) v.x = components[index++];
-            if((cs & RigidbodyConstraints.FreezePositionY) == 0) v.y = components[index++];
-            if((cs & RigidbodyConstraints.FreezePositionZ) == 0) v.z = components[index++];
-            if((cs & RigidbodyConstraints.FreezeRotationX) == 0) av.x = components[index++];
-            if((cs & RigidbodyConstraints.FreezeRotationY) == 0) av.y = components[index++];
-            if((cs & RigidbodyConstraints.FreezeRotationZ) == 0) av.z = components[index];
-            
-            t.position = pos;
-            t.eulerAngles = rot;
-            t.localScale = scale;
-            rigidbody.velocity = v;
-            rigidbody.angularVelocity = av;
-        }
-        
-        /// <summary>
-        /// Checks if the transform should be resynced
-        /// </summary>
-        /// <returns></returns>
-        protected override bool ShouldResend()
-        {
-            return base.ShouldResend() || Vector3.Distance(rigidbody.velocity, _lastVelocity) > positionThreshold ||
-                   Vector3.Distance(rigidbody.angularVelocity, _lastAngularVelocity) > rotationThreshold;
+            packet = null;
+            return false;
         }
 
+        protected override void ApplyTransformPacket(TransformPacket packet)
+        {
+            var cmp = packet.Components;
+            var flag = packet.Flag;
+            var t = transform;
+            
+            var index = 0;
+            if ((flag & 1) != 0)
+            {
+                var pos = t.position;
+                if ((syncMode & SyncMode.PositionX) != 0) pos.x = cmp[index++];
+                if ((syncMode & SyncMode.PositionY) != 0) pos.y = cmp[index++];
+                if ((syncMode & SyncMode.PositionZ) != 0) pos.z = cmp[index++];
+                t.position = pos;
+            }
+            
+            if ((flag & 2) != 0)
+            {
+                var rot = t.eulerAngles;
+                if ((syncMode & SyncMode.RotationX) != 0) rot.x = cmp[index++];
+                if ((syncMode & SyncMode.RotationY) != 0) rot.y = cmp[index++];
+                if ((syncMode & SyncMode.RotationZ) != 0) rot.z = cmp[index++];
+                t.eulerAngles = rot;
+            }
+            
+            if ((flag & 4) != 0)
+            {
+                var scale = t.localScale;
+                if ((syncMode & SyncMode.ScaleX) != 0) scale.x = cmp[index++];
+                if ((syncMode & SyncMode.ScaleY) != 0) scale.y = cmp[index++];
+                if ((syncMode & SyncMode.ScaleZ) != 0) scale.z = cmp[index++];
+                t.localScale = scale;
+            }
+            
+            if ((flag & 8) != 0)
+            {
+                var velocity = rigidbody.velocity;
+                velocity.x = cmp[index++];
+                velocity.y = cmp[index++];
+                velocity.z = cmp[index++];
+                
+                if(!rigidbody.isKinematic)
+                    rigidbody.velocity = velocity;
+            }
+            
+            if ((flag & 16) != 0)
+            {
+                var angularVelocity = rigidbody.angularVelocity;
+                angularVelocity.x = cmp[index++];
+                angularVelocity.y = cmp[index++];
+                angularVelocity.z = cmp[index++];
+                rigidbody.angularVelocity = angularVelocity;
+            }
+            
+            if ((flag & 32) != 0)
+            {
+                rigidbody.isKinematic = cmp[index] > 0;
+            }
+        }
         #endregion
     }
 }
