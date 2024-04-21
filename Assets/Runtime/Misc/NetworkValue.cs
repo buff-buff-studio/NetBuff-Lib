@@ -37,6 +37,8 @@ namespace NetBuff.Misc
         public T Value 
         {
             get => value;
+            
+            [RequiresAuthority]
             set
             {
                 if (value.Equals(this.value))

@@ -303,12 +303,15 @@ namespace NetBuff.Components
 
         #region Object Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [RequiresAuthority]
         public void Despawn() => Identity.Despawn();
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [RequiresAuthority]
         public void SetActive(bool active) => Identity.SetActive(active);
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [RequiresAuthority]
         public void SetOwner(int clientId) => Identity.SetOwner(clientId);
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -343,9 +346,11 @@ namespace NetBuff.Components
 
         #region Scene Moving
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [RequiresAuthority]
         public void MoveToScene(int sceneId) => Identity.MoveToScene(sceneId);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [RequiresAuthority]
         public void MoveToScene(string sceneName) => Identity.MoveToScene(sceneName);
         #endregion
 

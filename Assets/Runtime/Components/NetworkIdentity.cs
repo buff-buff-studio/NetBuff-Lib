@@ -117,6 +117,7 @@ namespace NetBuff.Components
         #endregion
 
         #region Object Methods
+        [RequiresAuthority]
         public void Despawn()
         {
             if (!HasAuthority)
@@ -128,6 +129,7 @@ namespace NetBuff.Components
                 ClientSendPacket(new NetworkObjectDespawnPacket{Id = Id});
         }
         
+        [RequiresAuthority]
         public void SetActive(bool active)
         {
             if (!HasAuthority)
@@ -139,6 +141,7 @@ namespace NetBuff.Components
                 ClientSendPacket(new NetworkObjectActivePacket{Id = Id, IsActive = active});
         }
         
+        [RequiresAuthority]
         public void SetOwner(int clientId)
         {
             if (!HasAuthority)
@@ -197,6 +200,7 @@ namespace NetBuff.Components
         #endregion
         
         #region Scene Moving
+        [RequiresAuthority]
         public void MoveToScene(int sceneId)
         {
             if(!HasAuthority)
@@ -205,6 +209,7 @@ namespace NetBuff.Components
             SendPacket(new NetworkObjectMoveScenePacket{Id = Id, SceneId = sceneId}, true);
         }
 
+        [RequiresAuthority]
         public void MoveToScene(string sceneName)
         {
             if(!HasAuthority)
