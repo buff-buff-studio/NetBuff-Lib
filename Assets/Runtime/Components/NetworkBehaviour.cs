@@ -238,7 +238,6 @@ namespace NetBuff.Components
                 var writer = new BinaryWriter(new MemoryStream());
                 writer.Write((byte) _values.Length);
     
-                //Write all values
                 for(var i = 0; i < _values.Length; i++)
                 {
                     writer.Write((byte) i);

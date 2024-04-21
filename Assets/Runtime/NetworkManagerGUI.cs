@@ -7,9 +7,6 @@ using UnityEngine;
 
 namespace NetBuff
 {
-    /// <summary>
-    /// Debug GUI for NetworkManager
-    /// </summary>
     [RequireComponent(typeof(NetworkManager))]
     [Icon("Assets/Editor/Icons/NetworkManagerGUI.png")]
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-manager-gui")]
@@ -26,7 +23,7 @@ namespace NetBuff
                 return;
             }
 
-            if (NetworkManager.Instance.transport == null)
+            if (NetworkManager.Instance.Transport == null)
             {
                 GUILayout.Label("NetworkTransport not set");
                 GUILayout.EndArea();
@@ -94,13 +91,13 @@ namespace NetBuff
 
         private void DrawAddressAndPort()
         {
-            if (NetworkManager.Instance.transport is UDPNetworkTransport udp)
+            if (NetworkManager.Instance.Transport is UDPNetworkTransport udp)
             {
-                udp.address = GUILayout.TextField(udp.address);
-                var s = GUILayout.TextField(udp.port.ToString());
+                udp.Address = GUILayout.TextField(udp.Address);
+                var s = GUILayout.TextField(udp.Port.ToString());
                 if (int.TryParse(s, out var port))
                 {
-                    udp.port = port;
+                    udp.Port = port;
                 }
             }
         }
@@ -115,7 +112,7 @@ namespace NetBuff
         
         private void DrawServerStatus()
         {
-            GUILayout.Label($"Clients: {NetworkManager.Instance.transport.GetClientCount()}");
+            GUILayout.Label($"Clients: {NetworkManager.Instance.Transport.GetClientCount()}");
         }
 
         
@@ -128,9 +125,9 @@ namespace NetBuff
                 _serverList = Array.Empty<UDPServerDiscoverer.UDPGameInfo>();
                 var list = new List<UDPServerDiscoverer.UDPGameInfo>();
                 
-                if (NetworkManager.Instance.transport is UDPNetworkTransport udp)
+                if (NetworkManager.Instance.Transport is UDPNetworkTransport udp)
                 {
-                    var discoverer = new UDPServerDiscoverer(NetworkManager.Instance.versionMagicNumber, udp.port);
+                    var discoverer = new UDPServerDiscoverer(NetworkManager.Instance.VersionMagicNumber, udp.Port);
                     discoverer.Search((info) =>
                     {
                         list.Add(info);
@@ -139,19 +136,18 @@ namespace NetBuff
                 }
             }
 
-            if (NetworkManager.Instance.transport is UDPNetworkTransport transport)
+            if (NetworkManager.Instance.Transport is UDPNetworkTransport transport)
             {
                 foreach (var info in _serverList)
                 {
                     if (GUILayout.Button($"{info.Address} - {info.Players}/{info.MaxPlayers} - {info.Platform} [{info.HasPassword}]"))
                     {
-                        transport.address = info.Address.ToString();
+                        transport.Address = info.Address.ToString();
                         NetworkManager.Instance.StartClient();
                     }
                 }
             }
-            //GameServerLocator
-            
+
             if (GUILayout.Button("Refresh Server List"))
             {
                 _serverList = null;

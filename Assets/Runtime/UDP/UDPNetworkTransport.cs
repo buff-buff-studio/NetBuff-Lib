@@ -14,9 +14,6 @@ using UnityEngine.Assertions;
 
 namespace NetBuff.UDP
 {
-    /// <summary>
-    /// Creates a interface using UDP to send and receive packets over the network
-    /// </summary>
     [Icon("Assets/Editor/Icons/UDPNetworkTransport.png")]
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/transports/#udp")]
     public class UDPNetworkTransport : NetworkTransport
@@ -47,15 +44,39 @@ namespace NetBuff.UDP
             public readonly Queue<IPacket> queueUnreliable = new Queue<IPacket>();
         }
         
-        //Represents the address to connect to or host
         [Header("SETTINGS")]
-        public string address = "127.0.0.1";
-        //Represents the port to connect to or host
-        public int port = 7777;
-        //Represents the connection password
-        public string password = "";
-        //Represents the limit of clients that can connect to the server at the same time
-        public int maxClients = 10;
+        [SerializeField]
+        protected string address = "127.0.0.1";
+        [SerializeField]
+        protected int port = 7777;
+        [SerializeField] 
+        protected string password = "";
+        [SerializeField]
+        protected int maxClients = 10;
+        
+        public string Address
+        {
+            get => address;
+            set => address = value;
+        }
+        
+        public int Port
+        {
+            get => port;
+            set => port = value;
+        }
+        
+        public string Password
+        {
+            get => password;
+            set => password = value;
+        }
+        
+        public int MaxClients
+        {
+            get => maxClients;
+            set => maxClients = value;
+        }
         
         private UDPClient _client;
         private UDPServer _server;
@@ -145,7 +166,6 @@ namespace NetBuff.UDP
             if (queue.Count == 0)
                 yield break;
             
-            // If maxSize is -1, we don't need to worry about packet size
             if (maxSize == -1)
             {
                 _Writer0.BaseStream.Position = 0;
@@ -254,15 +274,15 @@ namespace NetBuff.UDP
                 {
                     //Check magic number
                     var magicNumber = reader.GetInt();
-                    if(NetworkManager.Instance.versionMagicNumber != magicNumber)
+                    if(NetworkManager.Instance.VersionMagicNumber != magicNumber)
                         return;
                     
                     var hasPassword = !string.IsNullOrEmpty(_password);
                     var writer = new NetDataWriter();
                     writer.Put("server_answer");
                     writer.Put(_name);
-                    writer.Put(_clients.Count); //player count
-                    writer.Put(_maxClients); //player max count
+                    writer.Put(_clients.Count);
+                    writer.Put(_maxClients);
                     writer.Put((int) PlatformExtensions.GetPlatform());
                     writer.Put(hasPassword);
                     _manager.SendUnconnectedMessage(writer, remoteEndPoint);
@@ -280,7 +300,7 @@ namespace NetBuff.UDP
                 var writer = new NetDataWriter();
                 
                 var magicNumber = data.GetInt();
-                if(NetworkManager.Instance.versionMagicNumber != magicNumber)
+                if(NetworkManager.Instance.VersionMagicNumber != magicNumber)
                 {
                     writer.Put("wrong_magic_number");
                     request.Reject(writer);

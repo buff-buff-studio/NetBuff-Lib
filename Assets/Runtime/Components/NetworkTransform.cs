@@ -107,7 +107,7 @@ namespace NetBuff.Components
             if (!HasAuthority) return;
             
             _running = true;
-            InvokeRepeating(nameof(Tick), 0, 1f / (tickRate == -1 ? NetworkManager.Instance.defaultTickRate : tickRate));
+            InvokeRepeating(nameof(Tick), 0, 1f / (tickRate == -1 ? NetworkManager.Instance.DefaultTickRate : tickRate));
         }
 
         private void _Stop()
@@ -176,7 +176,6 @@ namespace NetBuff.Components
                 lastRotation = t.eulerAngles;
                 lastScale = t.localScale;
                 
-                //FLAG POS ROT SCALE
                 var flag = (short) 0;
                 if (positionChanged)
                 {

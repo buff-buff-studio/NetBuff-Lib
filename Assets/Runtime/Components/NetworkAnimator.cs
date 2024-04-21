@@ -86,7 +86,7 @@ namespace NetBuff.Components
         {
             if (_running) return;
             _running = true;
-            InvokeRepeating(nameof(_Tick), 0, 1f / (tickRate == -1 ? NetworkManager.Instance.defaultTickRate : tickRate));
+            InvokeRepeating(nameof(_Tick), 0, 1f / (tickRate == -1 ? NetworkManager.Instance.DefaultTickRate : tickRate));
         }
         
         private void _Tick()
@@ -122,7 +122,6 @@ namespace NetBuff.Components
                 changes |= AnimatorSyncPacket.Changes.Speed;
             }
             
-            //Check parameters
             var changedParameters = _CheckParameters(out var parameterData);
             if (changedParameters > 0)
                 changes |= AnimatorSyncPacket.Changes.Parameters;
@@ -229,7 +228,6 @@ namespace NetBuff.Components
                 var tt = animator.GetAnimatorTransitionInfo(layerId);
                 if (tt.fullPathHash != _transitionHash[layerId])
                 {
-                    // first time in this transition
                     _transitionHash[layerId] = tt.fullPathHash;
                     _animationHash[layerId] = 0;
                     return true;
@@ -240,10 +238,8 @@ namespace NetBuff.Components
             var st = animator.GetCurrentAnimatorStateInfo(layerId);
             if (st.fullPathHash != _animationHash[layerId])
             {
-                // first time in this animation state
                 if (_animationHash[layerId] != 0)
                 {
-                    // came from another animation directly - from Play()
                     stateHash = st.fullPathHash;
                     normalizedTime = st.normalizedTime;
                 }
@@ -433,7 +429,6 @@ namespace NetBuff.Components
                 writer.Write(animator.GetLayerWeight(i));
             }
             
-            //Parameters
             var parameterCount = (byte)_parameters.Length;
             writer.Write(parameterCount);
             for (var i = 0; i < parameterCount; i++)

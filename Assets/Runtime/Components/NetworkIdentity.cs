@@ -182,17 +182,17 @@ namespace NetBuff.Components
         #region Prefabs
         public GameObject GetPrefabById(NetworkId prefab)
         {
-            return NetworkManager.Instance.prefabRegistry.GetPrefab(prefab);
+            return NetworkManager.Instance.PrefabRegistry.GetPrefab(prefab);
         }
         
         public NetworkId GetIdForPrefab(GameObject prefab)
         {
-            return NetworkManager.Instance.prefabRegistry.GetPrefabId(prefab);
+            return NetworkManager.Instance.PrefabRegistry.GetPrefabId(prefab);
         }
         
         public bool IsPrefabValid(NetworkId prefab)
         {
-            return NetworkManager.Instance.prefabRegistry.IsPrefabValid(prefab);
+            return NetworkManager.Instance.PrefabRegistry.IsPrefabValid(prefab);
         }
         #endregion
         
@@ -254,8 +254,7 @@ namespace NetBuff.Components
 
         public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation, Vector3 scale, bool active, int owner = -1, int scene = -1)
         {
-            //var get it id
-            var id = NetworkManager.Instance.prefabRegistry.GetPrefabId(prefab);
+            var id = NetworkManager.Instance.PrefabRegistry.GetPrefabId(prefab);
             if (id == NetworkId.Empty)
                 throw new InvalidOperationException("The prefab is not registered");
             
@@ -264,7 +263,7 @@ namespace NetBuff.Components
 
         public static NetworkId Spawn(NetworkId prefabId, Vector3 position, Quaternion rotation, Vector3 scale, bool active, int owner = -1, int scene = -1)
         {
-            if (!NetworkManager.Instance.prefabRegistry.IsPrefabValid(prefabId))
+            if (!NetworkManager.Instance.PrefabRegistry.IsPrefabValid(prefabId))
                 throw new InvalidOperationException("The prefab is not registered");
                 
             return _InternalSpawn(prefabId, position, rotation, scale, active, owner, scene);

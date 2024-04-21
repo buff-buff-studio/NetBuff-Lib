@@ -5,23 +5,13 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using LiteNetLib.Utils;
 using NetBuff.Misc;
-using UnityEngine;
 
 namespace NetBuff.Discover
 {
-    /// <summary>
-    /// Search for servers using UDP protocol in all available network interfaces
-    /// </summary>
     public class UDPServerDiscoverer : ServerDiscover<UDPServerDiscoverer.UDPGameInfo>
     {
-        /// <summary>
-        /// Holds a game server info along with the address
-        /// </summary>
         public class UDPGameInfo : GameInfo
         {
-            /// <summary>
-            /// Represents the host server IP address
-            /// </summary>
             public IPAddress Address { get; set; }
 
             public override string ToString()
@@ -70,7 +60,6 @@ namespace NetBuff.Discover
                             
                             try
                             {
-                                //try udp the address
                                 var udpClient = new UdpClient();
                                 udpClient.Client.SetSocketOption(SocketOptionLevel.Socket,
                                     SocketOptionName.ReuseAddress,
@@ -89,7 +78,7 @@ namespace NetBuff.Discover
                                 var response = udpClient.Receive(ref address2);
                                 udpClient.Close();
                                 var reader = new NetDataReader(response);
-                                reader.GetByte(); //just discard it
+                                reader.GetByte();
 
                                 if (reader.GetString(50) == "server_answer")
                                 {

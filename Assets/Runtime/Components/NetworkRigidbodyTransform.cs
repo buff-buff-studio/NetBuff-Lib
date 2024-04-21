@@ -110,7 +110,6 @@ namespace NetBuff.Components
                 _lastAngularVelocity = rigidbody.angularVelocity;
                 _lastIsKinematic = rigidbody.isKinematic;
                 
-                //FLAG POS ROT SCALE
                 var flag = (short) 0;
                 if (positionChanged)
                 {

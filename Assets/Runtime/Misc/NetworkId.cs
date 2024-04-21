@@ -7,19 +7,11 @@ using Random = System.Random;
 
 namespace NetBuff.Misc
 {
-    /// <summary>
-    /// Main network identifier for all networked objects
-    /// Represented by two ints or 16 hex characters
-    /// Used to keep track of networked objects across the network
-    /// </summary>
     [Serializable]
     public class NetworkId : IComparable
     {
         private static Random _random = new Random();
 
-        /// <summary>
-        /// Returns an empty NetworkId
-        /// </summary>
         public static NetworkId Empty => new NetworkId
         {
             high = 0,
@@ -38,10 +30,6 @@ namespace NetBuff.Misc
             this.low = low;
         }
         
-        /// <summary>
-        /// Creates a new random NetworkId 
-        /// </summary>
-        /// <returns></returns>
         public static NetworkId New()
         {
             return new NetworkId()
@@ -51,11 +39,6 @@ namespace NetBuff.Misc
             };
         }
         
-        /// <summary>
-        /// Reads a NetworkId from a binary reader
-        /// </summary>
-        /// <param name="reader"></param>
-        /// <returns></returns>
         public static NetworkId Read(BinaryReader reader)
         {
             return new NetworkId
@@ -65,9 +48,6 @@ namespace NetBuff.Misc
             };
         }
         
-        /// <summary>
-        /// Returns true if the NetworkId is empty
-        /// </summary>
         public bool IsEmpty => low == 0 && high == 0;
         
         [SerializeField]
@@ -75,21 +55,10 @@ namespace NetBuff.Misc
         [SerializeField]
         private int low;
         
-        /// <summary>
-        /// Returns the high part of the NetworkId
-        /// </summary>
         public int High => high;
         
-        /// <summary>
-        /// Returns the low part of the NetworkId
-        /// </summary>
         public int Low => low;
 
-        /// <summary>
-        /// Compares two NetworkIds
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
         public int CompareTo ( object obj )
         {
             switch (obj)
@@ -120,11 +89,6 @@ namespace NetBuff.Misc
             return low ^ high;
         }
         
-        /// <summary>
-        /// Serializes the NetworkId to a binary writer
-        /// </summary>
-        /// <param name="writer"></param>
-        /// <returns></returns>
         public NetworkId Serialize(BinaryWriter writer)
         {
             writer.Write(low);
@@ -132,11 +96,6 @@ namespace NetBuff.Misc
             return this;
         }
         
-        /// <summary>
-        /// Deserializes the NetworkId from a binary reader
-        /// </summary>
-        /// <param name="reader"></param>
-        /// <returns></returns>
         public NetworkId Deserialize(BinaryReader reader)
         {
             low = reader.ReadInt32();
@@ -152,12 +111,6 @@ namespace NetBuff.Misc
             return str.ToString();
         }
         
-        /// <summary>
-        /// Tries to parse a NetworkId from a string
-        /// </summary>
-        /// <param name="input"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
         public static bool TryParse(string input, out object result)
         {
             try
@@ -176,12 +129,6 @@ namespace NetBuff.Misc
             }
         }
         
-        /// <summary>
-        /// Compares two NetworkIds for equality
-        /// </summary>
-        /// <param name="a"></param>
-        /// <param name="b"></param>
-        /// <returns></returns>
         public static bool operator ==(NetworkId a, NetworkId b)
         {
             if (a is null || b is null)
@@ -189,12 +136,6 @@ namespace NetBuff.Misc
             return a.high == b.high && a.low == b.low;
         }
         
-        /// <summary>
-        /// Compares two NetworkIds for inequality
-        /// </summary>
-        /// <param name="a"></param>
-        /// <param name="b"></param>
-        /// <returns></returns>
         public static bool operator !=(NetworkId a, NetworkId b)
         {
             if (a is null || b is null)
@@ -231,7 +172,6 @@ namespace NetBuff.Misc
             }
             GUI.enabled = true;
         
-            //Create button to generate new UUID
             position.x += position.width;
             position.width = 20;
             GUI.enabled = !Application.isPlaying;

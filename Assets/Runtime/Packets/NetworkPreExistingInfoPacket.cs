@@ -5,80 +5,35 @@ using UnityEngine;
 
 namespace NetBuff.Packets
 {
-    /// <summary>
-    /// Used to sync the pre-existing state of network objects over the network
-    /// </summary>
     public class NetworkPreExistingInfoPacket : IPacket
     {
-        /// <summary>
-        /// Represents the pre-existing state of a network object
-        /// </summary>
         public class PreExistingState
         {
-            /// <summary>
-            /// The id of the network object
-            /// </summary>
             public NetworkId Id { get; set; }
             
-            /// <summary>
-            /// The id of the prefab of the network object
-            /// </summary>
             public NetworkId PrefabId { get; set; }
             
-            /// <summary>
-            /// The id of the owner of the network object
-            /// </summary>
             public int OwnerId { get; set; }
             
-            /// <summary>
-            /// The position of the network object
-            /// </summary>
             public Vector3 Position { get; set; }
             
-            /// <summary>
-            /// The rotation of the network object
-            /// </summary>
             public Quaternion Rotation { get; set; }
             
-            /// <summary>
-            /// The scale of the network object
-            /// </summary>
             public Vector3 Scale { get; set; }
             
-            /// <summary>
-            /// The active state of the network object
-            /// </summary>
             public bool IsActive { get; set; }
             
-            /// <summary>
-            /// The current scene id of the network object
-            /// </summary>
             public int SceneId { get; set; }
         }
         
-        /// <summary>
-        /// Holds the pre-existing state of network objects
-        /// </summary>
         public PreExistingState[] PreExistingObjects { get; set; }
         
-        /// <summary>
-        /// Represents all the pre-existing network objects that have been removed
-        /// </summary>
         public NetworkId[] RemovedObjects { get; set; }
         
-        /// <summary>
-        /// Represents all the scenes that is currently loaded
-        /// </summary>
         public string[] SceneNames { get; set; }
         
-        /// <summary>
-        /// Represents all non-pre-existing network objects that have been spawned
-        /// </summary>
         public NetworkObjectSpawnPacket[] SpawnedObjects { get; set; }
         
-        /// <summary>
-        /// Represents all the state of network behaviours
-        /// </summary>
         public NetworkValuesPacket[] NetworkValues { get; set; }
         
         public void Serialize(BinaryWriter writer)
