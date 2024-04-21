@@ -6,18 +6,43 @@ using UnityEngine;
 
 namespace NetBuff.Local
 {
+    /// <summary>
+    /// The local network transport is a transport that is mainly used for split-screen games or local multiplayer games
+    /// </summary>
     [Icon("Assets/Editor/Icons/LocalNetworkTransport.png")]
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/transports/#local")]
     public class LocalNetworkTransport : NetworkTransport
     {
         private Queue<Action> _dispatcher = new Queue<Action>();
 
+        /// <summary>
+        /// Represents the connection information of a client on the client side
+        /// </summary>
         public class LocalClientConnectionInfo : IClientConnectionInfo
         {
+            /// <summary>
+            /// Current connection RTT (Round Trip Time) in milliseconds
+            /// </summary>
             public int Latency => 0;
+            
+            /// <summary>
+            /// Total packets sent to the client
+            /// </summary>
             public long PacketSent => 0;
+            
+            /// <summary>
+            /// total packets received from the client
+            /// </summary>
             public long PacketReceived => 0;
+            
+            /// <summary>
+            /// Total packets lost between the client and the server
+            /// </summary>
             public long PacketLoss => 0;
+            
+            /// <summary>
+            /// Local client remote id on server
+            /// </summary>
             public int Id { get; }
             
             public LocalClientConnectionInfo(int id)

@@ -6,6 +6,9 @@ using UnityEngine.Serialization;
 
 namespace NetBuff.Misc
 {
+    /// <summary>
+    /// Base non-generic class for all network values
+    /// </summary>
     [Serializable]
     public abstract class NetworkValue
     {
@@ -15,22 +18,46 @@ namespace NetBuff.Misc
             Server,
             Everybody
         }
-
+        
+        /// <summary>
+        /// Returns the NetworkBehaviour this value is attached to
+        /// </summary>
         public NetworkBehaviour AttachedTo {get; set;}
-
+        
+        /// <summary>
+        /// Serializes the value to a binary writer
+        /// </summary>
+        /// <param name="writer"></param>
         public abstract void Serialize(BinaryWriter writer);
+        
+        /// <summary>
+        /// Deserializes the value from a binary reader
+        /// </summary>
+        /// <param name="reader"></param>
         public abstract void Deserialize(BinaryReader reader);
         
+        #if UNITY_EDITOR
         public abstract void EditorForceUpdate();
+        #endif
     }
-
+    
+    /// <summary>
+    /// Base generic class for all network values
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     [Serializable]
     public abstract class NetworkValue<T> : NetworkValue
     {
+        /// <summary>
+        /// Internally stored value
+        /// </summary>
         [FormerlySerializedAs("_value")] 
         [SerializeField]
         protected T value;
     
+        /// <summary>
+        /// Handles the value of the network value, handling permissions and network updates
+        /// </summary>
         public T Value 
         {
             get => value;
@@ -60,6 +87,9 @@ namespace NetBuff.Misc
         public delegate void ValueChangeHandler(T oldValue, T newValue);
         public event ValueChangeHandler OnValueChanged;
 
+        /// <summary>
+        /// Returns the type of permission required to modify the value
+        /// </summary>
         [FormerlySerializedAs("_type")] 
         [SerializeField]
         protected ModifierType type;
@@ -69,7 +99,11 @@ namespace NetBuff.Misc
             value = defaultValue;
             this.type = type;
         }
-
+        
+        /// <summary>
+        /// Checks if the network end has permission to modify the value
+        /// </summary>
+        /// <returns></returns>
         public bool CheckPermission()
         {
             switch(type)
@@ -84,7 +118,11 @@ namespace NetBuff.Misc
                     return false;
             }
         }
-
+        
+        /// <summary>
+        /// Used internally to set the value and invoke the OnValueChanged event
+        /// </summary>
+        /// <param name="newValue"></param>
         protected void SetValueCalling(T newValue)
         {
             var oldValue = value;
@@ -92,7 +130,8 @@ namespace NetBuff.Misc
             
             OnValueChanged?.Invoke(oldValue, newValue);
         }
-    
+        
+        #if UNITY_EDITOR
         public override void EditorForceUpdate()
         {
             SetValueCalling(value);
@@ -100,22 +139,17 @@ namespace NetBuff.Misc
             if(AttachedTo != null)
                 AttachedTo.MarkValueDirty(this);
         }
+        #endif
 
         public override string ToString()
         {
             return $"NetworkValue({value.ToString()})";
         }
-
-        /// <summary>
-        /// Shall used only as the starting value before the network is ready
-        /// </summary>
-        /// <param name="v"></param>
-        public void SetDefaultValue(T v)
-        {
-            this.value = v;
-        }
     }
     
+    /// <summary>
+    /// Handles a network value of type bool
+    /// </summary>
     [Serializable]
     public class BoolNetworkValue : NetworkValue<bool>
     {
@@ -133,6 +167,9 @@ namespace NetBuff.Misc
         }
     }
     
+    /// <summary>
+    /// Handles a network value of type byte
+    /// </summary>
     [Serializable]
     public class ByteNetworkValue : NetworkValue<byte>
     {
@@ -149,7 +186,10 @@ namespace NetBuff.Misc
             SetValueCalling(v);
         }
     }
-
+    
+    /// <summary>
+    /// Handles a network value of type sbyte
+    /// </summary>
     [Serializable]
     public class IntNetworkValue : NetworkValue<int>
     {
@@ -167,6 +207,9 @@ namespace NetBuff.Misc
         }
     }
     
+    /// <summary>
+    /// Handles a network value of type float
+    /// </summary>
     [Serializable]
     public class FloatNetworkValue : NetworkValue<float>
     {
@@ -184,6 +227,9 @@ namespace NetBuff.Misc
         }
     }
     
+    /// <summary>
+    /// Handles a network value of type double
+    /// </summary>
     [Serializable]
     public class DoubleNetworkValue : NetworkValue<double>
     {
@@ -201,6 +247,9 @@ namespace NetBuff.Misc
         }
     }
     
+    /// <summary>
+    /// Handles a network value of type long
+    /// </summary>
     [Serializable]
     public class LongNetworkValue : NetworkValue<long>
     {
@@ -218,6 +267,9 @@ namespace NetBuff.Misc
         }
     }
     
+    /// <summary>
+    /// Handles a network value of type short
+    /// </summary>
     [Serializable]
     public class ShortNetworkValue : NetworkValue<short>
     {
@@ -235,6 +287,9 @@ namespace NetBuff.Misc
         }
     }
     
+    /// <summary>
+    /// Handles a network value of type string
+    /// </summary>
     [Serializable]
     public class StringNetworkValue : NetworkValue<string>
     {
@@ -252,6 +307,9 @@ namespace NetBuff.Misc
         }
     }
  
+    /// <summary>
+    /// Handles a network value of type Vector2
+    /// </summary>
     [Serializable]
     public class Vector2NetworkValue : NetworkValue<Vector2>
     {
@@ -271,6 +329,9 @@ namespace NetBuff.Misc
         }
     }
     
+    /// <summary>
+    /// Handles a network value of type Vector3
+    /// </summary>
     [Serializable]
     public class Vector3NetworkValue : NetworkValue<Vector3>
     {
@@ -292,6 +353,9 @@ namespace NetBuff.Misc
         }
     }
     
+    /// <summary>
+    /// Handles a network value of type Vector4
+    /// </summary>
     [Serializable]
     public class Vector4NetworkValue : NetworkValue<Vector4>
     {
@@ -315,6 +379,9 @@ namespace NetBuff.Misc
         }
     }
  
+    /// <summary>
+    /// Handles a network value of type Quaternion
+    /// </summary>
     [Serializable]
     public class QuaternionNetworkValue : NetworkValue<Quaternion>
     {
@@ -338,6 +405,9 @@ namespace NetBuff.Misc
         }
     }
     
+    /// <summary>
+    /// Handles a network value of type Color
+    /// </summary>
     [Serializable]
     public class ColorNetworkValue : NetworkValue<Color>
     {
@@ -361,8 +431,10 @@ namespace NetBuff.Misc
         }
     }
     
+    /// <summary>
+    /// Handles a network value of type NetworkId
+    /// </summary>
     [Serializable]
-    //networkid
     public class NetworkIdNetworkValue : NetworkValue<NetworkId>
     {
         public NetworkIdNetworkValue(NetworkId defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue, type) {}

@@ -18,9 +18,11 @@ namespace NetBuff.Components
     public class NetworkAnimator : NetworkBehaviour, INetworkBehaviourSerializer
     {
         #region Public Fields
+        //Determines how often the transform should be synced. When set to -1, the default tick rate of the network manager will be used
         [Header("SETTINGS")]
         public int tickRate = -1;
         
+        // Current synced component
         [Header("REFERENCES")]
         public Animator animator;
         #endregion
@@ -298,6 +300,10 @@ namespace NetBuff.Components
         #endregion
         
         #region Animator Helpers
+        /// <summary>
+        /// Sets a trigger of the animator
+        /// </summary>
+        /// <param name="triggerHash"></param>
         public void SetTrigger(int triggerHash)
         {
             var packet = new AnimatorTriggerPacket
@@ -308,67 +314,131 @@ namespace NetBuff.Components
             SendPacket(packet);
         }
         
+        /// <summary>
+        /// Sets a trigger of the animator
+        /// </summary>
+        /// <param name="triggerName"></param>
         public void SetTrigger(string triggerName)
         {
             SetTrigger(Animator.StringToHash(triggerName));
             animator.SetTrigger(triggerName);
         }
         
+        /// <summary>
+        /// Gets the value of the given float parameter
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public float GetFloat(string name)
         {
             return animator.GetFloat(name);
         }
         
+        /// <summary>
+        /// Sets the value of the given float parameter
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="value"></param>
         public void SetFloat(string name, float value)
         {
             animator.SetFloat(name, value);
         }
         
+        /// <summary>
+        /// Returns the value of the given float parameter
+        /// </summary>
+        /// <param name="nameHash"></param>
+        /// <returns></returns>
         public float GetFloat(int nameHash)
         {
             return animator.GetFloat(nameHash);
         }
         
+        /// <summary>
+        /// Sets the value of the given float parameter
+        /// </summary>
+        /// <param name="nameHash"></param>
+        /// <param name="value"></param>
         public void SetFloat(int nameHash, float value)
         {
             animator.SetFloat(nameHash, value);
         }
         
+        /// <summary>
+        /// Returns the value of the given boolean parameter
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public bool GetBool(string name)
         {
             return animator.GetBool(name);
         }
         
+        /// <summary>
+        /// Sets the value of the given boolean parameter
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="value"></param>
         public void SetBool(string name, bool value)
         {
             animator.SetBool(name, value);
         }
         
+        /// <summary>
+        /// Returns the value of the given boolean parameter
+        /// </summary>
+        /// <param name="nameHash"></param>
+        /// <returns></returns>
         public bool GetBool(int nameHash)
         {
             return animator.GetBool(nameHash);
         }
         
+        /// <summary>
+        /// Sets the value of the given boolean parameter
+        /// </summary>
+        /// <param name="nameHash"></param>
+        /// <param name="value"></param>
         public void SetBool(int nameHash, bool value)
         {
             animator.SetBool(nameHash, value);
         }
         
+        /// <summary>
+        /// Returns the value of the given integer parameter
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public int GetInteger(string name)
         {
             return animator.GetInteger(name);
         }
         
+        /// <summary>
+        /// Sets the value of the given integer parameter
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="value"></param>
         public void SetInteger(string name, int value)
         {
             animator.SetInteger(name, value);
         }
         
+        /// <summary>
+        /// Returns the value of the given integer parameter
+        /// </summary>
+        /// <param name="nameHash"></param>
+        /// <returns></returns>
         public int GetInteger(int nameHash)
         {
             return animator.GetInteger(nameHash);
         }
         
+        /// <summary>
+        /// Sets the value of the given integer parameter
+        /// </summary>
+        /// <param name="nameHash"></param>
+        /// <param name="value"></param>
         public void SetInteger(int nameHash, int value)
         {
             animator.SetInteger(nameHash, value);
@@ -513,7 +583,10 @@ namespace NetBuff.Components
         }
         #endregion
     }
-
+    
+    /// <summary>
+    /// Packet that syncs the animator state and parameters
+    /// </summary>
     public class AnimatorSyncPacket : IOwnedPacket
     {
         [Flags]
@@ -525,21 +598,62 @@ namespace NetBuff.Components
             Speed = 4
         }
         
+        /// <summary>
+        /// Represents a animator layer state
+        /// </summary>
         public class LayerInfo
         {
+            /// <summary>
+            /// The index of the layer
+            /// </summary>
             public byte LayerIndex { get; set; }
+            
+            /// <summary>
+            /// Current state hash
+            /// </summary>
             public int StateHash { get; set; }
+            
+            /// <summary>
+            /// Current state normalized time
+            /// </summary>
             public float NormalizedTime { get; set; }
+            
+            /// <summary>
+            /// The weight of the layer
+            /// </summary>
             public float LayerWeight { get; set; }
         }
         
+        /// <summary>
+        /// The network id of the owner NetworkAnimator
+        /// </summary>
         public NetworkId Id { get; set; }
+        
+        /// <summary>
+        /// Flags that represent the changes in the animator
+        /// </summary>
         public Changes Change { get; set; } = Changes.None;
+        
+        /// <summary>
+        /// Holds the changed layer states
+        /// </summary>
         public LayerInfo[] Layers { get; set; }
+        
+        /// <summary>
+        /// Holds the changed speed of the animator
+        /// </summary>
         public float Speed { get; set; }
+        
+        /// <summary>
+        /// Represents the count of changed parameters
+        /// </summary>
         public byte ChangedParameters { get; set; }
+        
+        /// <summary>
+        /// The payload of the changed parameters
+        /// </summary>
         public byte[] ParameterData { get; set; }
-
+        
         public void Serialize(BinaryWriter writer)
         {
             Id.Serialize(writer);
@@ -601,9 +715,19 @@ namespace NetBuff.Components
         }
     }
     
+    /// <summary>
+    /// Used to sync an animator trigger
+    /// </summary>
     public class AnimatorTriggerPacket : IOwnedPacket
     {
+        /// <summary>
+        /// Represents the network id of the owner NetworkAnimator
+        /// </summary>
         public NetworkId Id { get; set; }
+        
+        /// <summary>
+        /// Current trigger hash
+        /// </summary>
         public int TriggerHash { get; set; }
 
         public void Serialize(BinaryWriter writer)
@@ -618,5 +742,4 @@ namespace NetBuff.Components
             TriggerHash = reader.ReadInt32();
         }
     }
-    
 }

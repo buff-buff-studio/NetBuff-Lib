@@ -14,6 +14,9 @@ using UnityEngine.Assertions;
 
 namespace NetBuff.UDP
 {
+    /// <summary>
+    /// Creates a interface using UDP to send and receive packets over the network
+    /// </summary>
     [Icon("Assets/Editor/Icons/UDPNetworkTransport.png")]
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/transports/#udp")]
     public class UDPNetworkTransport : NetworkTransport
@@ -44,10 +47,14 @@ namespace NetBuff.UDP
             public readonly Queue<IPacket> queueUnreliable = new Queue<IPacket>();
         }
         
+        //Represents the address to connect to or host
         [Header("SETTINGS")]
         public string address = "127.0.0.1";
+        //Represents the port to connect to or host
         public int port = 7777;
+        //Represents the connection password
         public string password = "";
+        //Represents the limit of clients that can connect to the server at the same time
         public int maxClients = 10;
         
         private UDPClient _client;

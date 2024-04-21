@@ -13,6 +13,9 @@ namespace NetBuff.Components
     public class NetworkRigidbodyTransform : NetworkTransform
     {
         #region Public Fields
+        /// <summary>
+        /// Current synced component
+        /// </summary>
         public new Rigidbody rigidbody;
         #endregion
         
@@ -39,6 +42,10 @@ namespace NetBuff.Components
         }
 
         #region Virtual Methods
+        /// <summary>
+        /// Creates a transform packet from the transform state
+        /// </summary>
+        /// <returns></returns>
         protected override TransformPacket CreateTransformPacket()
         {
             _lastVelocity = rigidbody.velocity;
@@ -67,7 +74,11 @@ namespace NetBuff.Components
             
             return new TransformPacket(Id, components.ToArray());
         }
-
+        
+        /// <summary>
+        /// Applies the transform packet to the game object.
+        /// </summary>
+        /// <param name="packet"></param>
         protected override void ApplyTransformPacket(TransformPacket packet)
         {
             var components = packet.Components;
@@ -104,7 +115,11 @@ namespace NetBuff.Components
             rigidbody.velocity = v;
             rigidbody.angularVelocity = av;
         }
-
+        
+        /// <summary>
+        /// Checks if the transform should be resynced
+        /// </summary>
+        /// <returns></returns>
         protected override bool ShouldResend()
         {
             return base.ShouldResend() || Vector3.Distance(rigidbody.velocity, _lastVelocity) > positionThreshold ||

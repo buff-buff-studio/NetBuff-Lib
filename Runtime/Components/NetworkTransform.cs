@@ -32,14 +32,25 @@ namespace NetBuff.Components
         #endregion
         
         #region Public Fields
+        //Determines how often the transform should be synced. When set to -1, the default tick rate of the network manager will be used
         [Header("SETTINGS")]
         public int tickRate = -1;
+        //The threshold for the position to be considered changed
         public float positionThreshold = 0.001f;
+        //The threshold for the rotation to be considered changed
         public float rotationThreshold = 0.001f;
+        //The threshold for the scale to be considered changed
         public float scaleThreshold = 0.001f;
-        
+        /// <summary>
+        /// The sync mode mask for the transform
+        /// This option determines which components of the transform should be synced
+        /// </summary>
         [SerializeField]
         protected SyncMode syncMode = SyncMode.PositionX | SyncMode.PositionY | SyncMode.PositionZ | SyncMode.RotationX | SyncMode.RotationY | SyncMode.RotationZ;
+        /// <summary>
+        /// The sync mode mask for the transform
+        /// This option determines which components of the transform should be synced
+        /// </summary>
         public SyncMode SyncModeMask => syncMode;
         #endregion
 
@@ -120,6 +131,10 @@ namespace NetBuff.Components
         #endregion
 
         #region Virtual Methods
+        /// <summary>
+        /// Checks if the transform should be resynced
+        /// </summary>
+        /// <returns></returns>
         protected virtual bool ShouldResend()
         {
             var t = transform;
@@ -128,6 +143,10 @@ namespace NetBuff.Components
                    Vector3.Distance(t.localScale, _lastScale) > scaleThreshold;
         }
 
+        /// <summary>
+        /// Creates a transform packet from the transform state
+        /// </summary>
+        /// <returns></returns>
         protected virtual TransformPacket CreateTransformPacket()
         {
             var t = transform;
@@ -149,6 +168,10 @@ namespace NetBuff.Components
             return new TransformPacket(Id, components.ToArray());
         }
         
+        /// <summary>
+        /// Applies the transform packet to the game object.
+        /// </summary>
+        /// <param name="packet"></param>
         protected virtual void ApplyTransformPacket(TransformPacket packet)
         {
             var components = packet.Components;
@@ -174,9 +197,19 @@ namespace NetBuff.Components
         #endregion
     }
 
+    /// <summary>
+    /// Used to sync the transform of a game object over the network.
+    /// </summary>
     public class TransformPacket : IOwnedPacket
     {
+        /// <summary>
+        /// The network id of the game object
+        /// </summary>
         public NetworkId Id { get; set; }
+        
+        /// <summary>
+        /// An array of the transform components
+        /// </summary>
         public float[] Components { get; set; }
         
         public TransformPacket() {}

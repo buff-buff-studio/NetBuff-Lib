@@ -9,10 +9,19 @@ using UnityEngine;
 
 namespace NetBuff.Discover
 {
+    /// <summary>
+    /// Search for servers using UDP protocol in all available network interfaces
+    /// </summary>
     public class UDPServerDiscoverer : ServerDiscover<UDPServerDiscoverer.UDPGameInfo>
     {
+        /// <summary>
+        /// Holds a game server info along with the address
+        /// </summary>
         public class UDPGameInfo : GameInfo
         {
+            /// <summary>
+            /// Represents the host server IP address
+            /// </summary>
             public IPAddress Address { get; set; }
 
             public override string ToString()
