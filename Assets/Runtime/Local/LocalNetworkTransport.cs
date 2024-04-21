@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using NetBuff.Discover;
 using NetBuff.Interface;
+using NetBuff.Packets;
 using UnityEngine;
 
 namespace NetBuff.Local
@@ -16,7 +16,7 @@ namespace NetBuff.Local
         public class LocalClientConnectionInfo : IClientConnectionInfo
         {
             public int Latency => 0;
-            
+
             public long PacketSent => 0;
             
             public long PacketReceived => 0;
@@ -30,16 +30,41 @@ namespace NetBuff.Local
                 Id = id;
             }
         }
-        
+
+        #region Inspector Fields
+        [SerializeField] 
+        protected int clientCount = 1;
+        #endregion
+       
+        #region Internal Fields
+        private int _loadedClients = 0;
         private int _nextClientId;
         private readonly Dictionary<int, LocalClientConnectionInfo> _clients = new Dictionary<int, LocalClientConnectionInfo>();
-        
-        private void CreatePlayer()
+        #endregion
+
+        #region Helper Properties
+        public int ClientCount
         {
-            var id = _nextClientId++;
-            _clients[id] = new LocalClientConnectionInfo(id);
-            OnConnect.Invoke();
-            OnClientConnected.Invoke(id);
+            get => clientCount;
+            set
+            {
+                if(Type is EndType.Client or EndType.Host)
+                    throw new Exception("Cannot change client count while clients are running");
+                
+                clientCount = value;
+            }
+        }
+        #endregion
+        
+        private void CreatePlayers()
+        {
+            for (var i = 0; i < clientCount; i++)
+            {
+                var id = _nextClientId++;
+                _clients[id] = new LocalClientConnectionInfo(id);
+                OnConnect.Invoke();
+                OnClientConnected.Invoke(id);
+            }
         }
 
         public override ServerDiscover GetServerDiscoverer()
@@ -49,18 +74,14 @@ namespace NetBuff.Local
 
         public override void StartHost(int magicNumber)
         {
+            if(clientCount == 0)
+                throw new Exception("Client count is 0");
+                
             Type = EndType.Host;
             OnServerStart?.Invoke();
-            CreatePlayer();
-            CreateOtherPlayer();
+            
+            CreatePlayers();
         }
-        
-        private async void CreateOtherPlayer()
-        {
-            await Task.Delay(500);
-            _dispatcher.Enqueue(CreatePlayer);
-        }
-        
         
         public override void StartServer()
         {
@@ -73,9 +94,12 @@ namespace NetBuff.Local
             if (Type == EndType.None)
                 throw new Exception("Cannot start client without a host or server");
             
+            if(clientCount == 0)
+                throw new Exception("Client count is 0");
+            
             Type = EndType.Host;
-            CreatePlayer();
-            CreateOtherPlayer();
+
+            CreatePlayers();
         }
 
         public override void Close()
@@ -126,6 +150,13 @@ namespace NetBuff.Local
 
         public override void SendClientPacket(IPacket packet, bool reliable = false)
         {
+            if (packet is NetworkPreExistingResponsePacket)
+            {
+                var curr = _loadedClients++;
+                _dispatcher.Enqueue(() => OnServerPacketReceived.Invoke(curr, packet));
+                return;
+            }
+
             _dispatcher.Enqueue(() => OnServerPacketReceived.Invoke(0, packet));
         }
 

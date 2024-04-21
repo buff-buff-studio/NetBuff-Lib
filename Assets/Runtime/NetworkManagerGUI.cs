@@ -125,8 +125,7 @@ namespace NetBuff
                 var list = new List<ServerDiscover.GameInfo>();
 
                 var discoverer = NetworkManager.Instance.Transport.GetServerDiscoverer();
-                
-                discoverer.Search((info) =>
+                discoverer?.Search((info) =>
                 {
                     list.Add(info);
                     _serverList = list.ToArray();

@@ -423,7 +423,7 @@ namespace NetBuff
         [ServerOnly]
         protected virtual void OnClientConnected(int clientId)
         {
-            var idPacket = new ClientIdPacket { ClientId = clientId };
+             var idPacket = new ClientIdPacket { ClientId = clientId };
             transport.SendServerPacket(idPacket, clientId, true);
 
             var prePacket = new NetworkPreExistingInfoPacket
@@ -537,6 +537,7 @@ namespace NetBuff
         [ServerOnly]
         protected virtual void OnServerReceivePacket(int clientId, IPacket packet)
         {
+            
             switch (packet)
             {
                 case NetworkPreExistingResponsePacket _:

@@ -13,4 +13,8 @@ MonoBehaviour:
   m_Name: LocalSplitScreen
   m_EditorClassIdentifier: 
   prefabs:
-    _serializedList: []
+    _serializedList:
+    - Key:
+        high: -1185160948
+        low: -1313797479
+      Value: {fileID: 2665851988792293729, guid: 7f361a9705fb9bf4cb57998a9c0bbba1, type: 3}

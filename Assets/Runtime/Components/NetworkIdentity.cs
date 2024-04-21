@@ -180,6 +180,18 @@ namespace NetBuff.Components
         {
             return NetworkManager.Instance.LocalClientIds.IndexOf(clientId);
         }
+        
+        [ClientOnly]
+        public int GetLocalClientCount()
+        {
+            return NetworkManager.Instance.LocalClientIds.Length;
+        }
+        
+        [ClientOnly]
+        public ReadOnlySpan<int> GetLocalClientIds()
+        {
+            return NetworkManager.Instance.LocalClientIds;
+        }
         #endregion
         
         #region Prefabs

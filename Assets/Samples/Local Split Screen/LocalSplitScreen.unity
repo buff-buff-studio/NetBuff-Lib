@@ -130,7 +130,7 @@ GameObject:
   - component: {fileID: 54401445}
   - component: {fileID: 54401444}
   - component: {fileID: 54401443}
-  - component: {fileID: 54401442}
+  - component: {fileID: 54401446}
   m_Layer: 0
   m_Name: Network Manager
   m_TagString: Untagged
@@ -138,23 +138,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &54401442
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 54401441}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5b23075050df442d8bd5d7cb60e79d25, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  name: server
-  address: 127.0.0.1
-  port: 7777
-  password: 
-  maxClients: 10
 --- !u!114 &54401443
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -181,10 +164,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   versionMagicNumber: 0
   defaultTickRate: 50
-  spawnsPlayer: 0
-  transport: {fileID: 54401442}
+  spawnsPlayer: 1
+  transport: {fileID: 54401446}
   prefabRegistry: {fileID: 11400000, guid: 5377ab5a6c226b247a9e3defe4df8721, type: 2}
-  playerPrefab: {fileID: 0}
+  playerPrefab: {fileID: 2665851988792293729, guid: 7f361a9705fb9bf4cb57998a9c0bbba1, type: 3}
   loadedScenes: []
   sourceScene: 
   networkObjects:
@@ -208,6 +191,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &54401446
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 54401441}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa89adf3902940709f8dc82a1314aaf2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  name: server
+  clientCount: 2
 --- !u!1 &400366222
 GameObject:
   m_ObjectHideFlags: 0

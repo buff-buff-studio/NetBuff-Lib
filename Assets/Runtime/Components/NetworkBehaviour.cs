@@ -331,6 +331,14 @@ namespace NetBuff.Components
         [ClientOnly]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetLocalClientIndex(int clientId) => Identity.GetLocalClientIndex(clientId);
+        
+        [ClientOnly]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int GetLocalClientCount() => Identity.GetLocalClientCount();
+        
+        [ClientOnly]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ReadOnlySpan<int> GetLocalClientIds() => Identity.GetLocalClientIds();
         #endregion
 
         #region Prefabs
