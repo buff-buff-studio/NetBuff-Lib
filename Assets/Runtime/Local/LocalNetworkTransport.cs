@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using NetBuff.Discover;
 using NetBuff.Interface;
 using UnityEngine;
 
@@ -10,7 +11,7 @@ namespace NetBuff.Local
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/transports/#local")]
     public class LocalNetworkTransport : NetworkTransport
     {
-        private Queue<Action> _dispatcher = new Queue<Action>();
+        private readonly Queue<Action> _dispatcher = new();
 
         public class LocalClientConnectionInfo : IClientConnectionInfo
         {
@@ -40,7 +41,12 @@ namespace NetBuff.Local
             OnConnect.Invoke();
             OnClientConnected.Invoke(id);
         }
-        
+
+        public override ServerDiscover GetServerDiscoverer()
+        {
+            return null;
+        }
+
         public override void StartHost(int magicNumber)
         {
             Type = EndType.Host;

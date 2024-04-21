@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 using LiteNetLib;
 using LiteNetLib.Utils;
+using NetBuff.Discover;
 using NetBuff.Interface;
 using NetBuff.Misc;
 using UnityEngine;
@@ -80,7 +81,12 @@ namespace NetBuff.UDP
         
         private UDPClient _client;
         private UDPServer _server;
-        
+
+        public override ServerDiscover GetServerDiscoverer()
+        {
+            return new UDPServerDiscoverer(NetworkManager.Instance.VersionMagicNumber, port);
+        }
+
         public override void StartHost(int magicNumber)
         {
             StartServer();

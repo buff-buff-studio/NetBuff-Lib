@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using LiteNetLib.Utils;
 using NetBuff.Misc;
+using NetBuff.UDP;
 
 namespace NetBuff.Discover
 {
@@ -16,7 +17,18 @@ namespace NetBuff.Discover
 
             public override string ToString()
             {
-                return $"Address: {Address}, Players: {Players}/{MaxPlayers}, Platform: {Platform}, HasPassword: {HasPassword}";
+                return $"{Name}'s game ({Address}) - {Players}/{MaxPlayers} {Platform} {(HasPassword ? "[Password]" : "")}";
+            }
+
+            public override bool Join()
+            {
+                var transport = NetworkManager.Instance.Transport;
+                var udp = transport as UDPNetworkTransport;
+                if(udp == null)
+                    throw new Exception("Transport is not UDP");
+                udp.Address = Address.ToString();
+                NetworkManager.Instance.StartClient();
+                return true;
             }
         }
         

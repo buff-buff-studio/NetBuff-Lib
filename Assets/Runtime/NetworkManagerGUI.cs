@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using NetBuff.Discover;
-using NetBuff.Misc;
 using NetBuff.UDP;
 using UnityEngine;
 
@@ -116,36 +115,28 @@ namespace NetBuff
         }
 
         
-        private UDPServerDiscoverer.UDPGameInfo[] _serverList;
+        private ServerDiscover.GameInfo[] _serverList;
 
         private void DrawServerList()
         {
             if (_serverList == null)
             {
-                _serverList = Array.Empty<UDPServerDiscoverer.UDPGameInfo>();
-                var list = new List<UDPServerDiscoverer.UDPGameInfo>();
+                _serverList = Array.Empty<ServerDiscover.GameInfo>();
+                var list = new List<ServerDiscover.GameInfo>();
+
+                var discoverer = NetworkManager.Instance.Transport.GetServerDiscoverer();
                 
-                if (NetworkManager.Instance.Transport is UDPNetworkTransport udp)
+                discoverer.Search((info) =>
                 {
-                    var discoverer = new UDPServerDiscoverer(NetworkManager.Instance.VersionMagicNumber, udp.Port);
-                    discoverer.Search((info) =>
-                    {
-                        list.Add(info);
-                        _serverList = list.ToArray();
-                    }, () => { });
-                }
+                    list.Add(info);
+                    _serverList = list.ToArray();
+                }, () => { });
             }
 
-            if (NetworkManager.Instance.Transport is UDPNetworkTransport transport)
+            foreach (var info in _serverList)
             {
-                foreach (var info in _serverList)
-                {
-                    if (GUILayout.Button($"{info.Address} - {info.Players}/{info.MaxPlayers} - {info.Platform} [{info.HasPassword}]"))
-                    {
-                        transport.Address = info.Address.ToString();
-                        NetworkManager.Instance.StartClient();
-                    }
-                }
+                if (GUILayout.Button(info.ToString()))
+                    info.Join();
             }
 
             if (GUILayout.Button("Refresh Server List"))

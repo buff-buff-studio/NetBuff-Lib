@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using NetBuff.Discover;
 using NetBuff.Interface;
 using NetBuff.Misc;
 using UnityEngine;
@@ -9,12 +10,6 @@ namespace NetBuff
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/transports")]
     public abstract class NetworkTransport : MonoBehaviour
     {
-        public enum ConnectionResponseStatus
-        {
-            Ok,
-            Error
-        }
-        
         public enum EndType
         {
             None,
@@ -49,7 +44,11 @@ namespace NetBuff
         public Action OnServerStop { get; set; }
         #endregion
 
-        #region ManagementMethods
+        #region Utils Methods
+        public abstract ServerDiscover GetServerDiscoverer();
+        #endregion
+
+        #region Management Methods
         public abstract void StartHost(int magicNumber);
         
         public abstract void StartServer();
