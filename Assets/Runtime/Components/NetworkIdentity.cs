@@ -119,35 +119,35 @@ namespace NetBuff.Components
         #region Object Methods
         public void Despawn()
         {
-            if (HasAuthority)
-            {
-                if(OwnerId == -1)
-                    ServerBroadcastPacket(new NetworkObjectDespawnPacket{Id = Id});
-                else
-                    ClientSendPacket(new NetworkObjectDespawnPacket{Id = Id});
-            }
+            if (!HasAuthority)
+                throw new InvalidOperationException("Only the object owner can despawn it");
+                
+            if(OwnerId == -1)
+                ServerBroadcastPacket(new NetworkObjectDespawnPacket{Id = Id});
+            else
+                ClientSendPacket(new NetworkObjectDespawnPacket{Id = Id});
         }
         
         public void SetActive(bool active)
         {
-            if (HasAuthority)
-            {
-                if(OwnerId == -1)
-                    ServerBroadcastPacket(new NetworkObjectActivePacket{Id = Id, IsActive = active});
-                else
-                    ClientSendPacket(new NetworkObjectActivePacket{Id = Id, IsActive = active});
-            }
+            if (!HasAuthority)
+                throw new InvalidOperationException("Only the object owner can set its active state");
+            
+            if(OwnerId == -1)
+                ServerBroadcastPacket(new NetworkObjectActivePacket{Id = Id, IsActive = active});
+            else
+                ClientSendPacket(new NetworkObjectActivePacket{Id = Id, IsActive = active});
         }
         
         public void SetOwner(int clientId)
         {
-            if (HasAuthority)
-            {
-                if(OwnerId == -1)
-                    ServerBroadcastPacket(new NetworkObjectOwnerPacket{Id = Id, OwnerId = clientId});
-                else
-                    ClientSendPacket(new NetworkObjectOwnerPacket{Id = Id, OwnerId = clientId});
-            }
+            if (!HasAuthority)
+                throw new InvalidOperationException("Only the object owner can change its owner");
+        
+            if(OwnerId == -1)
+                ServerBroadcastPacket(new NetworkObjectOwnerPacket{Id = Id, OwnerId = clientId});
+            else
+                ClientSendPacket(new NetworkObjectOwnerPacket{Id = Id, OwnerId = clientId});
         } 
         
         public static NetworkIdentity GetNetworkObject(NetworkId objectId)

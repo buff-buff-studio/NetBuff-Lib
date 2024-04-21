@@ -527,8 +527,8 @@ namespace NetBuff
 #endif
             {
                 foreach (var identity in networkObjects.Values)
-                foreach (var behaviour in identity.Behaviours)
-                    behaviour.OnActiveChanged(false);
+                    foreach (var behaviour in identity.Behaviours)
+                        behaviour.OnActiveChanged(false);
 
                 OnClearEnvironment();
             }
@@ -555,10 +555,9 @@ namespace NetBuff
                         OnSpawnPlayer(clientId);
                     }
 #endif
-
                     foreach (var identity in networkObjects.Values)
-                    foreach (var behaviour in identity.Behaviours)
-                        behaviour.OnClientConnected(clientId);
+                        foreach (var behaviour in identity.Behaviours)
+                            behaviour.OnClientConnected(clientId);
                     return;
                 }
 
@@ -580,7 +579,11 @@ namespace NetBuff
                 case NetworkObjectDespawnPacket destroyPacket:
                 {
                     if (!networkObjects.TryGetValue(destroyPacket.Id, out var identity)) return;
-                    if (identity.OwnerId != clientId) return;
+                    if (identity.OwnerId != clientId)
+                    {
+                        Debug.LogWarning($"Client {clientId} tried to destroy object {destroyPacket.Id} which it does not own");
+                        return;
+                    }
 
                     DespawnNetworkObjectForClients(destroyPacket.Id);
                     return;
@@ -589,7 +592,11 @@ namespace NetBuff
                 case NetworkObjectActivePacket activePacket:
                 {
                     if (!networkObjects.TryGetValue(activePacket.Id, out var identity)) return;
-                    if (identity.OwnerId != clientId) return;
+                    if (identity.OwnerId != clientId) 
+                    {
+                        Debug.LogWarning($"Client {clientId} tried to change active state of object {activePacket.Id} which it does not own");
+                        return;
+                    }   
 
                     SetNetworkObjectActiveForClients(activePacket.Id, activePacket.IsActive);
                     return;
@@ -598,7 +605,12 @@ namespace NetBuff
                 case NetworkObjectOwnerPacket authorityPacket:
                 {
                     if (!networkObjects.TryGetValue(authorityPacket.Id, out var identity)) return;
-                    if (identity.OwnerId != clientId) return;
+                    if (identity.OwnerId != clientId)
+                    {
+                        Debug.LogWarning(
+                            $"Client {clientId} tried to change owner of object {authorityPacket.Id} which it does not own");
+                        return;
+                    }
 
                     SetNetworkObjectOwnerForClients(authorityPacket.Id, authorityPacket.OwnerId);
                     return;
@@ -607,7 +619,12 @@ namespace NetBuff
                 case NetworkObjectMoveScenePacket moveObjectScenePacket:
                 {
                     if (!networkObjects.TryGetValue(moveObjectScenePacket.Id, out var identity)) return;
-                    if (identity.OwnerId != clientId) return;
+                    if (identity.OwnerId != clientId)
+                    {
+                        Debug.LogWarning(
+                            $"Client {clientId} tried to move object {moveObjectScenePacket.Id} which it does not own to another scene");
+                        return;
+                    }
 
                     MoveObjectToScene(moveObjectScenePacket.Id, moveObjectScenePacket.SceneId);
                     return;

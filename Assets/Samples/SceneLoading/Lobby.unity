@@ -419,7 +419,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 334fcbbd77286b240919f74ed5158faf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  magicNumber: 4357981
+  versionMagicNumber: 0
   defaultTickRate: 50
   spawnsPlayer: 1
   transport: {fileID: 899349348}

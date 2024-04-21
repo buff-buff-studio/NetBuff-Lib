@@ -134,8 +134,10 @@ namespace NetBuff.Components
             if (_values == null)
                 return;
             var index = Array.IndexOf(_values, value);
+            
             if (index == -1)
                 throw new InvalidOperationException("The value is not attached to this behaviour");
+            
             MarkValueDirty((byte) index);
         }
 
@@ -145,10 +147,10 @@ namespace NetBuff.Components
             _dirtyValues.Enqueue(index);
 
             if(IsDirty)
-                return;            
+                return;   
+            
             NetworkManager.Instance.DirtyBehaviours.Add(this);
         }
-        
         
         public void MarkSerializerDirty()
         {
