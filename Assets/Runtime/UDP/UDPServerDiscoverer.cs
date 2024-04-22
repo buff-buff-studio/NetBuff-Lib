@@ -4,10 +4,10 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using LiteNetLib.Utils;
+using NetBuff.Discover;
 using NetBuff.Misc;
-using NetBuff.UDP;
 
-namespace NetBuff.Discover
+namespace NetBuff.UDP
 {
     public class UDPServerDiscoverer : ServerDiscover<UDPServerDiscoverer.UDPGameInfo>
     {

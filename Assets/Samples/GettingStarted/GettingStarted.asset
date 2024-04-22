@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 639e7891589f41f48b97437ddb4718ec, type: 3}
+  m_Name: GettingStarted
+  m_EditorClassIdentifier: 
+  prefabs:
+    _serializedList:
+    - Key:
+        high: -140145868
+        low: 1513962570
+      Value: {fileID: 148450730213645687, guid: 1c2c96d693e388b459441e3f6ac71f13, type: 3}
