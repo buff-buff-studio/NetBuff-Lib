@@ -315,6 +315,10 @@ namespace NetBuff.Components
         public void SetOwner(int clientId) => Identity.SetOwner(clientId);
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [ServerOnly]
+        public void ForceSetOwner(int clientId) => Identity.ForceSetOwner(clientId);
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static NetworkIdentity GetNetworkObject(NetworkId objectId) => NetworkIdentity.GetNetworkObject(objectId);
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

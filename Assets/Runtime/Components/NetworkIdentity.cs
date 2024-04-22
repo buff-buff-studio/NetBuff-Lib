@@ -151,7 +151,20 @@ namespace NetBuff.Components
                 ServerBroadcastPacket(new NetworkObjectOwnerPacket{Id = Id, OwnerId = clientId});
             else
                 ClientSendPacket(new NetworkObjectOwnerPacket{Id = Id, OwnerId = clientId});
-        } 
+        }
+
+        [ServerOnly]
+        public void ForceSetOwner(int clientId)
+        {
+            if(clientId == OwnerId)
+                return;
+            
+            if(!IsServer)
+                throw new InvalidOperationException("Only the server can force set the owner of an object");
+            
+            ownerId = clientId;
+            ServerBroadcastPacket(new NetworkObjectOwnerPacket{Id = Id, OwnerId = clientId});
+        }
         
         public static NetworkIdentity GetNetworkObject(NetworkId objectId)
         {
