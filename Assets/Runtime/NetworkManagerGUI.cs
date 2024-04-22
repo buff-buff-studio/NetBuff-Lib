@@ -37,10 +37,10 @@ namespace NetBuff
         
         #region Internal Fields
         private readonly GraphPlotter.GraphPlotterData _fpsData = new();
-        private readonly GraphPlotter.GraphPlotterData _plotLatency = new();
-        private readonly GraphPlotter.GraphPlotterData _plotPacketSent = new() { Max = 100 };
-        private readonly GraphPlotter.GraphPlotterData _plotPacketReceived = new() { Max = 100 };
-        private readonly GraphPlotter.GraphPlotterData _plotPacketLoss = new() { Max = 100 };
+        private readonly GraphPlotter.GraphPlotterData _plotLatency = new() { Max = 250 };
+        private readonly GraphPlotter.GraphPlotterData _plotPacketSent = new() { Max = 0 };
+        private readonly GraphPlotter.GraphPlotterData _plotPacketReceived = new() { Max = 0 };
+        private readonly GraphPlotter.GraphPlotterData _plotPacketLoss = new() { Max = 0 };
         private long _lastPacketSent;
         private long _lastPacketReceived;
         private long _lastPacketLoss;
@@ -128,7 +128,7 @@ namespace NetBuff
             if (plotLatency)
             {
                 var info = NetworkManager.Instance.ClientConnectionInfo;
-                _plotLatency.AddData(info?.Latency ?? 0);
+                _plotLatency.AddData(info?.Latency ?? 0, false);
             }
             
             if (plotPacketRate)
@@ -139,9 +139,10 @@ namespace NetBuff
                 var packetReceived = info?.PacketReceived ?? 0;
                 var packetLoss = info?.PacketLossPercentage ?? 0;
                 
-                _plotPacketSent.AddData(packetSent - _lastPacketSent, false);
-                _plotPacketReceived.AddData(packetReceived - _lastPacketReceived, false);
-                _plotPacketLoss.AddData(packetLoss - _lastPacketLoss, false);
+                _plotPacketSent.AddData(packetSent - _lastPacketSent);
+                _plotPacketReceived.AddData(packetReceived - _lastPacketReceived);
+                _plotPacketLoss.AddData(packetLoss - _lastPacketLoss);
+                _plotPacketSent.Max = _plotPacketReceived.Max = Mathf.Max(_plotPacketSent.Max, _plotPacketReceived.Max);
                 
                 _lastPacketSent = packetSent;
                 _lastPacketReceived = packetReceived;
@@ -239,17 +240,17 @@ namespace NetBuff
             switch (currentGraph)
             {
                 case CurrentGraph.FPS:
-                    GraphPlotter.DrawGraph(0, h, 2, Color.green, w, _fpsData.Data, _fpsData.Max, h/2f);
+                    GraphPlotter.DrawGraph(0, h, 2, Color.green, w, _fpsData.Data, _fpsData.Max, h/4f);
                     break;
                 case CurrentGraph.Latency:
                     if (NetworkManager.Instance.EndType == NetworkTransport.EndType.None)
                         return;
-                    GraphPlotter.DrawGraph(0, h, 2, Color.red, w, _plotLatency.Data, _plotLatency.Max, h/2f);
+                    GraphPlotter.DrawGraph(0, h, 2, Color.red, w, _plotLatency.Data, _plotLatency.Max, h/4f);
                     break;
                 case CurrentGraph.PacketSent:
                     if (NetworkManager.Instance.EndType == NetworkTransport.EndType.None)
                         return;
-                    GraphPlotter.DrawGraph(0, h, 2, Color.blue, w, _plotPacketSent.Data, _plotPacketSent.Max, h/2f);
+                    GraphPlotter.DrawGraph(0, h, 2, Color.blue, w, _plotPacketSent.Data, _plotPacketSent.Max, h/4f);
                     break;
                 case CurrentGraph.PacketReceived:
                     if (NetworkManager.Instance.EndType == NetworkTransport.EndType.None)
