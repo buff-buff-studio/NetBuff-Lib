@@ -145,6 +145,11 @@ namespace NetBuff.Editor
                     {
                         ShowProblem($"Duplicate key {tt.Key}");
                     }
+                    
+                    if (tt.Key == NetworkId.Empty)
+                    {
+                        ShowProblem($"Empty key");
+                    }
 
                     var prefab = tt.Value;
                     
@@ -155,12 +160,6 @@ namespace NetBuff.Editor
                     }
                     
                     var networkIdentities = prefab.GetComponentsInChildren<NetworkIdentity>(true);
-
-                    if (networkIdentities.Length == 0)
-                    {
-                        ShowProblem($"Prefab {tt.Key} ({prefab.name}) has not network identity");
-                        continue;
-                    }  
                     
                     if (networkIdentities.Length > 1)
                     {

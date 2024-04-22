@@ -4,12 +4,12 @@ using NetBuff.Interface;
 namespace NetBuff.Packets
 {
     /// <summary>
-    /// Used to sync unloading a scene over the network
+    /// Packet sent from the server to the client to inform the client to unload a scene.
     /// </summary>
     public class NetworkUnloadScenePacket : IPacket
     {
         /// <summary>
-        /// Represents the name of the scene to unload
+        /// The name of the scene to unload.
         /// </summary>
         public string SceneName { get; set; }
 

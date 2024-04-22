@@ -1,5 +1,4 @@
-﻿using System;
-using NetBuff.Components;
+﻿using NetBuff.Components;
 using NetBuff.Misc;
 using TMPro;
 using UnityEngine;
@@ -12,11 +11,10 @@ namespace Samples.SceneLoading
         public TMP_Text text;
         public IntNetworkValue number = new(0);
         
-        public bool destroyable = false;
+        public bool destroyable;
         
         private static readonly Color[] _Colors = {Color.white, Color.red, Color.green, Color.blue, Color.yellow, Color.cyan, Color.magenta};
-
-
+        
         private void OnEnable()
         {
             WithValues(number);
@@ -43,10 +41,15 @@ namespace Samples.SceneLoading
         }
 
         private void Update()
-        {
+        {  
             if(HasAuthority && destroyable && Input.GetKeyDown(KeyCode.K))
             {
                 Despawn();
+            }
+            
+            if (number.CheckPermission() && Input.GetKeyDown(KeyCode.R))
+            {
+                number.Value = Random.Range(10, 99);
             }
         }
     }

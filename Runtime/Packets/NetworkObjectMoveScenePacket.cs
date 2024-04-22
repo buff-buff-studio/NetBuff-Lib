@@ -5,17 +5,17 @@ using NetBuff.Misc;
 namespace NetBuff.Packets
 {
     /// <summary>
-    /// Used to sync the change the scene of a network object over the network
+    /// Packet used to move a network object to a new scene.
     /// </summary>
     public class NetworkObjectMoveScenePacket : IPacket
     {
         /// <summary>
-        /// The id of the network object
+        /// The network id of the network object.
         /// </summary>
         public NetworkId Id { get; set; }
-        
+
         /// <summary>
-        /// The id of the target scene
+        /// The scene id to move the network object to.
         /// </summary>
         public int SceneId { get; set; }
 

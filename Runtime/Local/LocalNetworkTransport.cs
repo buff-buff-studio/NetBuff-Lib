@@ -1,113 +1,121 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using NetBuff.Discover;
 using NetBuff.Interface;
+using NetBuff.Packets;
 using UnityEngine;
 
 namespace NetBuff.Local
 {
     /// <summary>
-    /// The local network transport is a transport that is mainly used for split-screen games or local multiplayer games
+    /// Used for local running, does not actually send packets over the network.
+    /// Can be used on Split Screen games or for testing.
     /// </summary>
     [Icon("Assets/Editor/Icons/LocalNetworkTransport.png")]
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/transports/#local")]
     public class LocalNetworkTransport : NetworkTransport
     {
-        private Queue<Action> _dispatcher = new Queue<Action>();
+        
+        #region Inspector Fields
+        [SerializeField]
+        protected int clientCount = 1;
+        #endregion
 
+        #region Internal Fields
+        private int _loadedClients;
+        private int _nextClientId;
+        private readonly Dictionary<int, LocalClientConnectionInfo> _clients = new();
+        private readonly Queue<Action> _dispatcher = new();
+        #endregion
+
+        #region Helper Properties
         /// <summary>
-        /// Represents the connection information of a client on the client side
+        /// The amount of clients that will be created when the host is started.
         /// </summary>
-        public class LocalClientConnectionInfo : IClientConnectionInfo
+        /// <exception cref="Exception"></exception>
+        public int ClientCount
         {
-            /// <summary>
-            /// Current connection RTT (Round Trip Time) in milliseconds
-            /// </summary>
-            public int Latency => 0;
-            
-            /// <summary>
-            /// Total packets sent to the client
-            /// </summary>
-            public long PacketSent => 0;
-            
-            /// <summary>
-            /// total packets received from the client
-            /// </summary>
-            public long PacketReceived => 0;
-            
-            /// <summary>
-            /// Total packets lost between the client and the server
-            /// </summary>
-            public long PacketLoss => 0;
-            
-            /// <summary>
-            /// Local client remote id on server
-            /// </summary>
-            public int Id { get; }
-            
-            public LocalClientConnectionInfo(int id)
+            get => clientCount;
+            set
             {
-                Id = id;
+                if (Type is EnvironmentType.Client or EnvironmentType.Host)
+                    throw new Exception("Cannot change client count while clients are running");
+
+                clientCount = value;
             }
         }
-        
-        private int _nextClientId;
-        private readonly Dictionary<int, LocalClientConnectionInfo> _clients = new Dictionary<int, LocalClientConnectionInfo>();
-        
-        private void CreatePlayer()
+        #endregion
+
+        #region Unity Callbacks
+        private void Update()
         {
-            var id = _nextClientId++;
-            _clients[id] = new LocalClientConnectionInfo(id);
-            OnConnect.Invoke();
-            OnClientConnected.Invoke(id);
+            while (_dispatcher.Count > 0) _dispatcher.Dequeue().Invoke();
         }
-        
+        #endregion
+
+        #region Internal Methods
+        private void _CreatePlayers()
+        {
+            for (var i = 0; i < clientCount; i++)
+            {
+                var id = _nextClientId++;
+                _clients[id] = new LocalClientConnectionInfo(id);
+                OnConnect.Invoke();
+                OnClientConnected.Invoke(id);
+            }
+        }
+        #endregion
+
+        public override ServerDiscoverer GetServerDiscoverer()
+        {
+            return null;
+        }
+
         public override void StartHost(int magicNumber)
         {
-            Type = EndType.Host;
+            if (clientCount == 0)
+                throw new Exception("Client count is 0");
+
+            Type = EnvironmentType.Host;
             OnServerStart?.Invoke();
-            CreatePlayer();
-            CreateOtherPlayer();
+
+            _CreatePlayers();
         }
-        
-        private async void CreateOtherPlayer()
-        {
-            await Task.Delay(500);
-            _dispatcher.Enqueue(CreatePlayer);
-        }
-        
-        
+
         public override void StartServer()
         {
-            Type = EndType.Server;
+            Type = EnvironmentType.Server;
             OnServerStart?.Invoke();
         }
 
         public override void StartClient(int magicNumber)
         {
-            if (Type == EndType.None)
+            if (Type == EnvironmentType.None)
                 throw new Exception("Cannot start client without a host or server");
-            
-            Type = EndType.Host;
-            CreatePlayer();
-            CreateOtherPlayer();
+
+            if (clientCount == 0)
+                throw new Exception("Client count is 0");
+
+            Type = EnvironmentType.Host;
+
+            _CreatePlayers();
         }
 
         public override void Close()
         {
             switch (Type)
             {
-                case EndType.Host:
+                case EnvironmentType.Host:
                     OnServerStop?.Invoke();
                     OnDisconnect?.Invoke("disconnect");
                     break;
-                case EndType.Server:
+                case EnvironmentType.Server:
                     OnDisconnect?.Invoke("disconnect");
                     break;
-                case EndType.Client:
+                case EnvironmentType.Client:
                     OnDisconnect?.Invoke("disconnect");
                     break;
-                case EndType.None:
+                case EnvironmentType.None:
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -126,35 +134,50 @@ namespace NetBuff.Local
 
         public override IEnumerable<IClientConnectionInfo> GetClients()
         {
-           return _clients.Values;
+            return _clients.Values;
         }
 
         public override void ClientDisconnect(string reason)
         {
-            
         }
 
         public override void ServerDisconnect(int id, string reason)
         {
-            
         }
 
-        public override void SendClientPacket(IPacket packet, bool reliable = false)
+        public override void ClientSendPacket(IPacket packet, bool reliable = false)
         {
+            if (packet is NetworkPreExistingResponsePacket)
+            {
+                var curr = _loadedClients++;
+                _dispatcher.Enqueue(() => OnServerPacketReceived.Invoke(curr, packet));
+                return;
+            }
+
             _dispatcher.Enqueue(() => OnServerPacketReceived.Invoke(0, packet));
         }
 
-        public override void SendServerPacket(IPacket packet, int target = -1, bool reliable = false)
+        public override void ServerSendPacket(IPacket packet, int target = -1, bool reliable = false)
         {
             _dispatcher.Enqueue(() => OnClientPacketReceived.Invoke(packet));
         }
-        
-        private void Update()
+
+        private class LocalClientConnectionInfo : IClientConnectionInfo
         {
-            while (_dispatcher.Count > 0)
+            public LocalClientConnectionInfo(int id)
             {
-                _dispatcher.Dequeue().Invoke();
+                Id = id;
             }
+
+            public int Latency => 0;
+
+            public long PacketSent => 0;
+
+            public long PacketReceived => 0;
+
+            public long PacketLoss => 0;
+
+            public int Id { get; }
         }
     }
 }

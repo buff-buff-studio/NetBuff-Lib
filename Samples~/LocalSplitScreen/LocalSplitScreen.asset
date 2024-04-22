@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 639e7891589f41f48b97437ddb4718ec, type: 3}
+  m_Name: LocalSplitScreen
+  m_EditorClassIdentifier: 
+  prefabs:
+    _serializedList:
+    - Key:
+        high: -1185160948
+        low: -1313797479
+      Value: {fileID: 2665851988792293729, guid: 7f361a9705fb9bf4cb57998a9c0bbba1, type: 3}

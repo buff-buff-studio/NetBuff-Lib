@@ -5,21 +5,20 @@ using NetBuff.Misc;
 namespace NetBuff.Packets
 {
     /// <summary>
-    /// Used to sync the owner of a network object over the network
+    /// Packet used to change the owner of a network object.
     /// </summary>
     public class NetworkObjectOwnerPacket : IPacket
     {
         /// <summary>
-        /// The id of the network object
+        /// The network id of the network object.
         /// </summary>
         public NetworkId Id { get; set; }
-        
+
         /// <summary>
-        /// The id of the owner of the network object
-        /// If the owner id is -1, the object is owned by the server
+        /// The owner id of the network object.
         /// </summary>
         public int OwnerId { get; set; }
-        
+
         public void Serialize(BinaryWriter writer)
         {
             Id.Serialize(writer);

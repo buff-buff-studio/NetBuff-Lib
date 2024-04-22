@@ -1,12 +1,12 @@
 ﻿namespace NetBuff.Interface
 {
     /// <summary>
-    /// Represents the connection information of a client on the client side
+    /// Holds a connection information along with the remote client id.
     /// </summary>
     public interface IClientConnectionInfo : IConnectionInfo
     {
         /// <summary>
-        /// Local client remote id on server
+        /// The id of the remote client.
         /// </summary>
         public int Id { get; }
     }

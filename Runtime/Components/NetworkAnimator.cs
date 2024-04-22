@@ -10,23 +10,23 @@ using UnityEngine;
 namespace NetBuff.Components
 {
     /// <summary>
-    /// Component that syncs a animator state and parameters over the network
+    /// Syncs the state of an Animator component over the network, including parameters, layers, speed and time
     /// </summary>
     [SuppressMessage("ReSharper", "ParameterHidesMember")]
     [Icon("Assets/Editor/Icons/NetworkAnimator.png")]
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-animator")]
     public class NetworkAnimator : NetworkBehaviour, INetworkBehaviourSerializer
     {
-        #region Public Fields
-        //Determines how often the transform should be synced. When set to -1, the default tick rate of the network manager will be used
+        #region Inspector Fields
         [Header("SETTINGS")]
-        public int tickRate = -1;
-        
-        // Current synced component
+        [SerializeField]
+        protected int tickRate = -1;
+
         [Header("REFERENCES")]
-        public Animator animator;
+        [SerializeField]
+        protected Animator animator;
         #endregion
-        
+
         #region Internal Fields
         private float _animatorSpeed;
         private int[] _animationHash;
@@ -37,29 +37,45 @@ namespace NetBuff.Components
         private int[] _intParameters;
         private float[] _floatParameters;
         private bool[] _boolParameters;
-        
+
         private bool _running;
+        #endregion
+
+        #region Helper Properties
+        /// <summary>
+        /// Determines the tick rate of the NetworkAnimator. When set to -1, the default tick rate of the NetworkManager will be used.
+        /// </summary>
+        public int TickRate
+        {
+            get => tickRate;
+            set => tickRate = value;
+        }
+
+        /// <summary>
+        /// The Animator component to sync.
+        /// </summary>
+        public Animator Animator => animator;
         #endregion
 
         #region Unity Callbacks
         private void OnEnable()
         {
-            if(animator == null)
+            if (animator == null)
                 animator = GetComponent<Animator>();
-            
+
             _parameters = animator.parameters
                 .Where(par => !animator.IsParameterControlledByCurve(par.nameHash))
                 .ToArray();
-            
+
             _intParameters = new int[_parameters.Length];
             _floatParameters = new float[_parameters.Length];
             _boolParameters = new bool[_parameters.Length];
-            
+
             var layerCount = animator.layerCount;
             _animationHash = new int[layerCount];
             _transitionHash = new int[layerCount];
             _layerWeight = new float[layerCount];
-    
+
             if (NetworkManager.Instance != null)
             {
                 var man = NetworkManager.Instance;
@@ -67,7 +83,7 @@ namespace NetBuff.Components
                     _Begin();
             }
         }
-        
+
         private void OnDisable()
         {
             CancelInvoke(nameof(_Tick));
@@ -79,9 +95,10 @@ namespace NetBuff.Components
         {
             if (_running) return;
             _running = true;
-            InvokeRepeating(nameof(_Tick), 0, 1f / (tickRate == -1 ? NetworkManager.Instance.defaultTickRate : tickRate));
+            InvokeRepeating(nameof(_Tick), 0,
+                1f / (tickRate == -1 ? NetworkManager.Instance.DefaultTickRate : tickRate));
         }
-        
+
         private void _Tick()
         {
             if (!HasAuthority)
@@ -92,20 +109,20 @@ namespace NetBuff.Components
 
             var layers = new List<AnimatorSyncPacket.LayerInfo>();
             var changes = AnimatorSyncPacket.Changes.None;
-            
+
             for (var i = 0; i < animator.layerCount; i++)
             {
                 if (!_CheckAnimStateChanged(out var stateHash, out var normalizedTime, i))
                     continue;
-                
+
                 layers.Add(new AnimatorSyncPacket.LayerInfo
                 {
-                    LayerIndex = (byte) i,
+                    LayerIndex = (byte)i,
                     StateHash = stateHash,
                     NormalizedTime = normalizedTime,
                     LayerWeight = animator.GetLayerWeight(i)
                 });
-                
+
                 changes |= AnimatorSyncPacket.Changes.Layers;
             }
 
@@ -114,35 +131,33 @@ namespace NetBuff.Components
                 _animatorSpeed = animator.speed;
                 changes |= AnimatorSyncPacket.Changes.Speed;
             }
-            
-            //Check parameters
+
             var changedParameters = _CheckParameters(out var parameterData);
             if (changedParameters > 0)
                 changes |= AnimatorSyncPacket.Changes.Parameters;
-            
-            if (changes == AnimatorSyncPacket.Changes.None) 
+
+            if (changes == AnimatorSyncPacket.Changes.None)
                 return;
-            
+
             var packet = new AnimatorSyncPacket
             {
                 Id = Id,
                 Change = changes,
                 Layers = layers.ToArray(),
                 Speed = _animatorSpeed,
-                ChangedParameters = (byte) changedParameters,
+                ChangedParameters = (byte)changedParameters,
                 ParameterData = parameterData
             };
-            
+
             SendPacket(packet);
         }
 
         private int _CheckParameters(out byte[] bytes)
         {
-            var parameterCount = (byte) _parameters.Length;
+            var parameterCount = (byte)_parameters.Length;
             var writer = new BinaryWriter(new MemoryStream());
-            //writer.Write(parameterCount);
             var changed = 0;
-            
+
             for (byte i = 0; i < parameterCount; i++)
             {
                 var par = _parameters[i];
@@ -174,7 +189,7 @@ namespace NetBuff.Components
 
                         break;
                     }
-                    
+
                     case AnimatorControllerParameterType.Bool:
                     {
                         var newBoolValue = animator.GetBool(par.nameHash);
@@ -194,18 +209,18 @@ namespace NetBuff.Components
                         throw new ArgumentOutOfRangeException();
                 }
             }
-            
-            bytes = ((MemoryStream) writer.BaseStream).ToArray();
+
+            bytes = ((MemoryStream)writer.BaseStream).ToArray();
             return changed;
         }
-        
+
         private bool _CheckAnimStateChanged(out int stateHash, out float normalizedTime, int layerId)
         {
             var change = false;
             stateHash = 0;
             normalizedTime = 0;
             var info = animator.GetCurrentAnimatorStateInfo(layerId);
-            
+
             var lw = animator.GetLayerWeight(layerId);
             if (Mathf.Abs(lw - _layerWeight[layerId]) > 0.001f)
             {
@@ -213,60 +228,55 @@ namespace NetBuff.Components
                 if (Math.Abs(lw - 0) < 0.001f || Math.Abs(lw - 1) < 0.001f)
                 {
                     stateHash = info.fullPathHash;
-                    normalizedTime = info.normalizedTime;  
+                    normalizedTime = info.normalizedTime;
                 }
+
                 change = true;
             }
-            
+
             if (animator.IsInTransition(layerId))
             {
                 var tt = animator.GetAnimatorTransitionInfo(layerId);
                 if (tt.fullPathHash != _transitionHash[layerId])
                 {
-                    // first time in this transition
                     _transitionHash[layerId] = tt.fullPathHash;
                     _animationHash[layerId] = 0;
                     return true;
                 }
+
                 return change;
             }
-            
+
             var st = animator.GetCurrentAnimatorStateInfo(layerId);
             if (st.fullPathHash != _animationHash[layerId])
             {
-                // first time in this animation state
                 if (_animationHash[layerId] != 0)
                 {
-                    // came from another animation directly - from Play()
                     stateHash = st.fullPathHash;
                     normalizedTime = st.normalizedTime;
                 }
+
                 _transitionHash[layerId] = 0;
                 _animationHash[layerId] = st.fullPathHash;
                 return true;
             }
+
             return change;
         }
 
         private void _ApplyAnimatorSyncPacket(AnimatorSyncPacket packet)
         {
-            if (packet.Id != Id)
-                return;
-
             if ((packet.Change & AnimatorSyncPacket.Changes.Layers) != 0)
-            {
+                // ReSharper disable once ForCanBeConvertedToForeach
                 for (var i = 0; i < packet.Layers.Length; i++)
                 {
                     var layer = packet.Layers[i];
                     var index = layer.LayerIndex;
-   
+
                     animator.SetLayerWeight(index, layer.LayerWeight);
                     if (layer.StateHash != 0 && animator.enabled)
-                    {
                         animator.Play(layer.StateHash, index, layer.NormalizedTime);
-                    }
                 }
-            }
 
             if ((packet.Change & AnimatorSyncPacket.Changes.Speed) != 0)
                 animator.speed = packet.Speed;
@@ -298,10 +308,10 @@ namespace NetBuff.Components
             }
         }
         #endregion
-        
+
         #region Animator Helpers
         /// <summary>
-        /// Sets a trigger of the animator
+        /// Sets a trigger on the Animator component.
         /// </summary>
         /// <param name="triggerHash"></param>
         public void SetTrigger(int triggerHash)
@@ -313,9 +323,9 @@ namespace NetBuff.Components
             };
             SendPacket(packet);
         }
-        
+
         /// <summary>
-        /// Sets a trigger of the animator
+        /// Sets a trigger on the Animator component.
         /// </summary>
         /// <param name="triggerName"></param>
         public void SetTrigger(string triggerName)
@@ -323,9 +333,9 @@ namespace NetBuff.Components
             SetTrigger(Animator.StringToHash(triggerName));
             animator.SetTrigger(triggerName);
         }
-        
+
         /// <summary>
-        /// Gets the value of the given float parameter
+        /// Gets the value of the specified parameter.
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
@@ -333,9 +343,9 @@ namespace NetBuff.Components
         {
             return animator.GetFloat(name);
         }
-        
+
         /// <summary>
-        /// Sets the value of the given float parameter
+        /// Sets the value of the specified parameter.
         /// </summary>
         /// <param name="name"></param>
         /// <param name="value"></param>
@@ -343,9 +353,9 @@ namespace NetBuff.Components
         {
             animator.SetFloat(name, value);
         }
-        
+
         /// <summary>
-        /// Returns the value of the given float parameter
+        /// Gets the value of the specified parameter.
         /// </summary>
         /// <param name="nameHash"></param>
         /// <returns></returns>
@@ -353,9 +363,9 @@ namespace NetBuff.Components
         {
             return animator.GetFloat(nameHash);
         }
-        
+
         /// <summary>
-        /// Sets the value of the given float parameter
+        /// Sets the value of the specified parameter.
         /// </summary>
         /// <param name="nameHash"></param>
         /// <param name="value"></param>
@@ -363,9 +373,9 @@ namespace NetBuff.Components
         {
             animator.SetFloat(nameHash, value);
         }
-        
+
         /// <summary>
-        /// Returns the value of the given boolean parameter
+        /// Gets the value of the specified parameter.
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
@@ -373,9 +383,9 @@ namespace NetBuff.Components
         {
             return animator.GetBool(name);
         }
-        
+
         /// <summary>
-        /// Sets the value of the given boolean parameter
+        /// Sets the value of the specified parameter.
         /// </summary>
         /// <param name="name"></param>
         /// <param name="value"></param>
@@ -383,9 +393,9 @@ namespace NetBuff.Components
         {
             animator.SetBool(name, value);
         }
-        
+
         /// <summary>
-        /// Returns the value of the given boolean parameter
+        /// Gets the value of the specified parameter.
         /// </summary>
         /// <param name="nameHash"></param>
         /// <returns></returns>
@@ -393,9 +403,9 @@ namespace NetBuff.Components
         {
             return animator.GetBool(nameHash);
         }
-        
+
         /// <summary>
-        /// Sets the value of the given boolean parameter
+        /// Sets the value of the specified parameter.
         /// </summary>
         /// <param name="nameHash"></param>
         /// <param name="value"></param>
@@ -405,7 +415,7 @@ namespace NetBuff.Components
         }
         
         /// <summary>
-        /// Returns the value of the given integer parameter
+        /// Gets the value of the specified parameter.
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
@@ -413,9 +423,9 @@ namespace NetBuff.Components
         {
             return animator.GetInteger(name);
         }
-        
+
         /// <summary>
-        /// Sets the value of the given integer parameter
+        /// Sets the value of the specified parameter.
         /// </summary>
         /// <param name="name"></param>
         /// <param name="value"></param>
@@ -423,9 +433,9 @@ namespace NetBuff.Components
         {
             animator.SetInteger(name, value);
         }
-        
+
         /// <summary>
-        /// Returns the value of the given integer parameter
+        /// Gets the value of the specified parameter.  
         /// </summary>
         /// <param name="nameHash"></param>
         /// <returns></returns>
@@ -433,9 +443,9 @@ namespace NetBuff.Components
         {
             return animator.GetInteger(nameHash);
         }
-        
+
         /// <summary>
-        /// Sets the value of the given integer parameter
+        /// Sets the value of the specified parameter.
         /// </summary>
         /// <param name="nameHash"></param>
         /// <param name="value"></param>
@@ -450,24 +460,28 @@ namespace NetBuff.Components
         {
             _Begin();
         }
-        
+
         public override void OnServerReceivePacket(IOwnedPacket packet, int clientId)
         {
+            if (clientId != OwnerId)
+                return;
+
             switch (packet)
             {
                 case AnimatorSyncPacket animatorSyncPacket:
-                    if(clientId == OwnerId)
-                        ServerBroadcastPacketExceptFor(animatorSyncPacket, clientId);
+                    ServerBroadcastPacketExceptFor(animatorSyncPacket, clientId);
                     break;
                 case AnimatorTriggerPacket triggerPacket:
-                    if(clientId == OwnerId)
-                        ServerBroadcastPacketExceptFor(triggerPacket, clientId);
+                    ServerBroadcastPacketExceptFor(triggerPacket, clientId);
                     break;
             }
         }
 
         public override void OnClientReceivePacket(IOwnedPacket packet)
         {
+            if (HasAuthority)
+                return;
+
             switch (packet)
             {
                 case AnimatorSyncPacket syncPacket:
@@ -478,12 +492,12 @@ namespace NetBuff.Components
                     break;
             }
         }
-        
+
         public void OnSerialize(BinaryWriter writer, bool forceSendAll)
         {
             var layerCount = (byte)animator.layerCount;
             writer.Write(layerCount);
-            
+
             for (var i = 0; i < layerCount; i++)
             {
                 var st = animator.IsInTransition(i)
@@ -493,8 +507,7 @@ namespace NetBuff.Components
                 writer.Write(st.normalizedTime);
                 writer.Write(animator.GetLayerWeight(i));
             }
-            
-            //Parameters
+
             var parameterCount = (byte)_parameters.Length;
             writer.Write(parameterCount);
             for (var i = 0; i < parameterCount; i++)
@@ -523,15 +536,13 @@ namespace NetBuff.Components
                 }
             }
         }
-        
+
         public void OnDeserialize(BinaryReader reader)
         {
             var layerCount = reader.ReadByte();
+
             if (layerCount != animator.layerCount)
-            {
-                Debug.LogError("Layer count mismatch");
-                return;
-            }
+                throw new Exception("Layer count mismatch");
 
             for (var i = 0; i < layerCount; i++)
             {
@@ -545,13 +556,10 @@ namespace NetBuff.Components
 
             var parameterCount = reader.ReadByte();
             if (parameterCount != _parameters.Length)
-            {
-                Debug.LogError("Parameter count mismatch");
-                return;
-            }
+                throw new Exception("Parameter count mismatch");
 
             var animatorEnabled = animator.enabled;
-           
+
             for (var i = 0; i < parameterCount; i++)
             {
                 var par = _parameters[i];
@@ -585,84 +593,76 @@ namespace NetBuff.Components
     }
     
     /// <summary>
-    /// Packet that syncs the animator state and parameters
+    /// Packet used to sync the state of an Animator component.
     /// </summary>
     public class AnimatorSyncPacket : IOwnedPacket
     {
+        /// <summary>
+        /// Represents the changes that have been made to the Animator.
+        /// </summary>
         [Flags]
         public enum Changes
         {
+            /// <summary>
+            /// No changes have been made.
+            /// </summary>
             None = 0,
+            
+            /// <summary>
+            /// At least one layer have been changed.
+            /// </summary>
             Layers = 1,
+            
+            /// <summary>
+            /// At least one parameter have been changed.
+            /// </summary>
             Parameters = 2,
+            
+            /// <summary>
+            /// The speed of the Animator has been changed.
+            /// </summary>
             Speed = 4
         }
-        
+
         /// <summary>
-        /// Represents a animator layer state
-        /// </summary>
-        public class LayerInfo
-        {
-            /// <summary>
-            /// The index of the layer
-            /// </summary>
-            public byte LayerIndex { get; set; }
-            
-            /// <summary>
-            /// Current state hash
-            /// </summary>
-            public int StateHash { get; set; }
-            
-            /// <summary>
-            /// Current state normalized time
-            /// </summary>
-            public float NormalizedTime { get; set; }
-            
-            /// <summary>
-            /// The weight of the layer
-            /// </summary>
-            public float LayerWeight { get; set; }
-        }
-        
-        /// <summary>
-        /// The network id of the owner NetworkAnimator
-        /// </summary>
-        public NetworkId Id { get; set; }
-        
-        /// <summary>
-        /// Flags that represent the changes in the animator
+        /// Represents the changes that have been made to the Animator.
         /// </summary>
         public Changes Change { get; set; } = Changes.None;
-        
+
         /// <summary>
-        /// Holds the changed layer states
+        /// Holds information about the layers that have been changed.
         /// </summary>
         public LayerInfo[] Layers { get; set; }
-        
+
         /// <summary>
-        /// Holds the changed speed of the animator
+        /// The speed of the Animator.
         /// </summary>
         public float Speed { get; set; }
-        
+
         /// <summary>
-        /// Represents the count of changed parameters
+        /// The amount of parameters that have been changed.
         /// </summary>
         public byte ChangedParameters { get; set; }
-        
+
         /// <summary>
-        /// The payload of the changed parameters
+        /// Holds the data of the parameters that have been changed.
         /// </summary>
         public byte[] ParameterData { get; set; }
-        
+
+        /// <summary>
+        /// Holds the id of the object.
+        /// </summary>
+        public NetworkId Id { get; set; }
+
         public void Serialize(BinaryWriter writer)
         {
             Id.Serialize(writer);
-            
-            writer.Write((byte) Change);
-            
+
+            writer.Write((byte)Change);
+
             if ((Change & Changes.Layers) != 0)
             {
-                writer.Write((byte) Layers.Length);
+                writer.Write((byte)Layers.Length);
                 foreach (var layer in Layers)
                 {
                     writer.Write(layer.LayerIndex);
@@ -671,7 +671,7 @@ namespace NetBuff.Components
                     writer.Write(layer.LayerWeight);
                 }
             }
-            
+
             if ((Change & Changes.Speed) != 0)
                 writer.Write(Speed);
 
@@ -686,13 +686,12 @@ namespace NetBuff.Components
         public void Deserialize(BinaryReader reader)
         {
             Id = NetworkId.Read(reader);
-            Change = (Changes) reader.ReadByte();
+            Change = (Changes)reader.ReadByte();
             if ((Change & Changes.Layers) != 0)
             {
                 var count = reader.ReadByte();
                 Layers = new LayerInfo[count];
                 for (var i = 0; i < count; i++)
-                {
                     Layers[i] = new LayerInfo
                     {
                         LayerIndex = reader.ReadByte(),
@@ -700,12 +699,11 @@ namespace NetBuff.Components
                         NormalizedTime = reader.ReadSingle(),
                         LayerWeight = reader.ReadSingle()
                     };
-                }
             }
-            
+
             if ((Change & Changes.Speed) != 0)
                 Speed = reader.ReadSingle();
-            
+
             if ((Change & Changes.Parameters) != 0)
             {
                 ChangedParameters = reader.ReadByte();
@@ -713,22 +711,48 @@ namespace NetBuff.Components
                 ParameterData = reader.ReadBytes(count);
             }
         }
+        
+        /// <summary>
+        /// Holds information about a layer.
+        /// </summary>
+        public class LayerInfo
+        {
+            /// <summary>
+            /// The index of the layer.
+            /// </summary>
+            public byte LayerIndex { get; set; }
+            
+            /// <summary>
+            /// The hash of the current Animator state.
+            /// </summary>
+            public int StateHash { get; set; }
+            
+            /// <summary>
+            /// The normalized time of the current Animator state.
+            /// </summary>
+            public float NormalizedTime { get; set; }
+
+            /// <summary>
+            /// The weight of the layer.
+            /// </summary>
+            public float LayerWeight { get; set; }
+        }
     }
-    
+
     /// <summary>
-    /// Used to sync an animator trigger
+    /// Packet used to trigger an Animator trigger.
     /// </summary>
     public class AnimatorTriggerPacket : IOwnedPacket
     {
         /// <summary>
-        /// Represents the network id of the owner NetworkAnimator
-        /// </summary>
-        public NetworkId Id { get; set; }
-        
-        /// <summary>
-        /// Current trigger hash
+        /// The hash of the trigger.
         /// </summary>
         public int TriggerHash { get; set; }
+        
+        /// <summary>
+        /// The id of the object.
+        /// </summary>
+        public NetworkId Id { get; set; }
 
         public void Serialize(BinaryWriter writer)
         {

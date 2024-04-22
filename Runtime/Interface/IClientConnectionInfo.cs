@@ -1,32 +1,35 @@
 ﻿namespace NetBuff.Interface
 {
     /// <summary>
-    /// Represents the connection information of a client on the server side
+    /// Holds a connection information
     /// </summary>
     public interface IConnectionInfo
     {
         /// <summary>
-        /// Current connection RTT (Round Trip Time) in milliseconds
+        /// The latency of the connection (in milliseconds).
+        /// Represents the RTT (Round Trip Time) of the connection.
         /// </summary>
         public int Latency { get; }
         
         /// <summary>
-        /// Total packets sent to the client
+        /// The number of packets sent through the connection.
         /// </summary>
         public long PacketSent { get; }
-        
+    
         /// <summary>
-        /// total packets received from the client
+        /// The number of packets received through the connection.
         /// </summary>
         public long PacketReceived { get; }
-        
+
         /// <summary>
-        /// Total packets lost between the client and the server
+        /// The number of packets lost through the connection.
         /// </summary>
         public long PacketLoss { get; }
-        
+
         /// <summary>
-        /// Percentage of packets lost between the client and the server
+        /// The percentage of packet loss through the connection.
+        /// It is calculated as PacketLoss * 100 / PacketSent.
+        /// Float value between 0 and 100.
         /// </summary>
         public long PacketLossPercentage => PacketSent == 0 ? 0 : PacketLoss * 100 / PacketSent;
     }

@@ -4,15 +4,16 @@ using NetBuff.Interface;
 namespace NetBuff
 {
     /// <summary>
-    /// Class to register all packets used via the network
+    /// A registry for packet types.
+    /// Allows for easy creation of packets by ID.
     /// </summary>
     public static class PacketRegistry
     {
         private static int _nextId;
         private static Type[] _packets = new Type[8];
-        
+
         /// <summary>
-        /// Register a packet type
+        /// Registers a packet type.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         public static void RegisterPacket<T>() where T : IPacket, new()
@@ -23,13 +24,13 @@ namespace NetBuff
                 Array.Copy(_packets, arr, _packets.Length);
                 _packets = arr;
             }
-            
+
             _packets[_nextId] = typeof(T);
             _nextId++;
         }
-        
+
         /// <summary>
-        /// Register a packet type
+        /// Registers a packet type.
         /// </summary>
         /// <param name="type"></param>
         /// <exception cref="ArgumentException"></exception>
@@ -37,30 +38,29 @@ namespace NetBuff
         {
             if (!typeof(IPacket).IsAssignableFrom(type))
                 throw new ArgumentException("Type must implement IPacket");
-            
+
             if (_nextId >= _packets.Length)
             {
                 var arr = new Type[_packets.Length * 2];
                 Array.Copy(_packets, arr, _packets.Length);
                 _packets = arr;
             }
-            
+
             _packets[_nextId] = type;
             _nextId++;
         }
-        
-        
+
         /// <summary>
-        /// Clear all registered packets
+        /// Clears the registry.
         /// </summary>
         public static void Clear()
         {
             _nextId = 0;
             _packets = new Type[8];
         }
-        
+
         /// <summary>
-        /// Get the id for a packet type
+        /// Returns the id of a packet type.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
@@ -70,7 +70,7 @@ namespace NetBuff
         }
         
         /// <summary>
-        /// Get the id for a packet
+        /// Returns the id of a packet.
         /// </summary>
         /// <param name="packet"></param>
         /// <returns></returns>
@@ -78,9 +78,9 @@ namespace NetBuff
         {
             return Array.IndexOf(_packets, packet.GetType());
         }
-        
+
         /// <summary>
-        /// Create a new packet from its type id
+        /// Creates a packet by its id.
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -88,8 +88,8 @@ namespace NetBuff
         {
             if (id < 0 || id >= _packets.Length)
                 return null;
-            
-            return (IPacket) Activator.CreateInstance(_packets[id]);
+
+            return (IPacket)Activator.CreateInstance(_packets[id]);
         }
     }
 }
