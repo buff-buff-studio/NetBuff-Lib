@@ -7,6 +7,9 @@ using UnityEngine;
 
 namespace NetBuff.Components
 {
+    /// <summary>
+    /// Syncs the components of a transform over the network.
+    /// </summary>
     [Icon("Assets/Editor/Icons/NetworkTransform.png")]
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-transform")]
     public class NetworkTransform : NetworkBehaviour
@@ -27,33 +30,7 @@ namespace NetBuff.Components
             ScaleZ = 256
         }
         #endregion
-
-        private void _Begin()
-        {
-            if (_running) return;
-            if (!HasAuthority) return;
-
-            _running = true;
-            InvokeRepeating(nameof(Tick), 0,
-                1f / (tickRate == -1 ? NetworkManager.Instance.DefaultTickRate : tickRate));
-        }
-
-        private void _Stop()
-        {
-            if (_running)
-            {
-                CancelInvoke(nameof(Tick));
-                _running = false;
-            }
-        }
-
-        private void Tick()
-        {
-            if (!HasAuthority) return;
-            if (ShouldResend(out var packet))
-                SendPacket(packet);
-        }
-
+        
         #region Inspector Fields
         [Header("SETTINGS")]
         [SerializeField]
@@ -82,24 +59,36 @@ namespace NetBuff.Components
         #endregion
 
         #region Helper Properties
+        /// <summary>
+        /// Determines the tick rate of the NetworkAnimator. When set to -1, the default tick rate of the NetworkManager will be used.
+        /// </summary>
         public int TickRate
         {
             get => tickRate;
             set => tickRate = value;
         }
 
+        /// <summary>
+        /// Defines the threshold for the position to be considered changed.
+        /// </summary>
         public float PositionThreshold
         {
             get => positionThreshold;
             set => positionThreshold = value;
         }
 
+        /// <summary>
+        /// Defines the threshold for the rotation to be considered changed.
+        /// </summary>
         public float RotationThreshold
         {
             get => rotationThreshold;
             set => rotationThreshold = value;
         }
 
+        /// <summary>
+        /// Defines the threshold for the scale to be considered changed.
+        /// </summary>
         public float ScaleThreshold
         {
             get => scaleThreshold;
@@ -108,7 +97,7 @@ namespace NetBuff.Components
 
         public SyncMode SyncModeMask => syncMode;
         #endregion
-
+        
         #region Unity Callbacks
         protected virtual void OnEnable()
         {
@@ -131,6 +120,34 @@ namespace NetBuff.Components
         }
         #endregion
 
+        #region Internal Methods
+        private void _Begin()
+        {
+            if (_running) return;
+            if (!HasAuthority) return;
+
+            _running = true;
+            InvokeRepeating(nameof(Tick), 0,
+                1f / (tickRate == -1 ? NetworkManager.Instance.DefaultTickRate : tickRate));
+        }
+
+        private void _Stop()
+        {
+            if (_running)
+            {
+                CancelInvoke(nameof(Tick));
+                _running = false;
+            }
+        }
+
+        private void Tick()
+        {
+            if (!HasAuthority) return;
+            if (ShouldResend(out var packet))
+                SendPacket(packet);
+        }
+        #endregion
+        
         #region Network Callbacks
         public override void OnOwnershipChanged(int oldOwner, int newOwner)
         {
@@ -165,6 +182,11 @@ namespace NetBuff.Components
         #endregion
 
         #region Virtual Methods
+        /// <summary>
+        /// Determines if the transform should be resent to the server.
+        /// </summary>
+        /// <param name="packet"></param>
+        /// <returns></returns>
         protected virtual bool ShouldResend(out TransformPacket packet)
         {
             var positionChanged = Vector3.Distance(transform.position, lastPosition) > positionThreshold;
@@ -218,6 +240,10 @@ namespace NetBuff.Components
             return false;
         }
 
+        /// <summary>
+        /// Applies the transform components to the transform.
+        /// </summary>
+        /// <param name="packet"></param>
         protected virtual void ApplyTransformPacket(TransformPacket packet)
         {
             var cmp = packet.Components;
@@ -255,10 +281,24 @@ namespace NetBuff.Components
         #endregion
     }
 
+    /// <summary>
+    /// Packet used to sync the transform components.
+    /// </summary>
     public class TransformPacket : IOwnedPacket
     {
+        /// <summary>
+        /// The components of the transform.
+        /// </summary>
         public float[] Components { get; set; }
+        
+        /// <summary>
+        /// Determines which components have been changed.
+        /// </summary>
         public short Flag { get; set; }
+        
+        /// <summary>
+        /// The network id of the transform.
+        /// </summary>
         public NetworkId Id { get; set; }
 
         public void Serialize(BinaryWriter writer)

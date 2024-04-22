@@ -4,6 +4,9 @@ using NetBuff.Misc;
 
 namespace NetBuff.Packets
 {
+    /// <summary>
+    /// Packet used to change the owner of a network object.
+    /// </summary>
     public class NetworkObjectOwnerPacket : IPacket
     {
         public NetworkId Id { get; set; }

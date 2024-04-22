@@ -1,25 +1,70 @@
 using System;
 using System.IO;
+using System.Reflection;
 using NetBuff.Components;
 using UnityEngine;
 using UnityEngine.Serialization;
 
 namespace NetBuff.Misc
 {
+    /// <summary>
+    /// Base class for all network values.
+    /// Used to store values that are synchronized over the network.
+    /// </summary>
     [Serializable]
     public abstract class NetworkValue
     {
+        /// <summary>
+        /// Used to determine who can modify a value.
+        /// </summary>
         public enum ModifierType
         {
+            /// <summary>
+            /// Only the owner of the behaviour that this value is attached to can modify it.
+            /// </summary>
             OwnerOnly,
+            
+            /// <summary>
+            /// Only the server can modify it.
+            /// </summary>
             Server,
+            
+            /// <summary>
+            /// Everybody can modify it.
+            /// </summary>
             Everybody
         }
 
-        public NetworkBehaviour AttachedTo { get; set; }
-
+        #region Internal Fields
+        protected NetworkBehaviour attachedTo;
+        protected Action<NetworkValue> @delegate;
+        private static MethodInfo _markValueDirtyMethod;
+        #endregion
+        
+        /// <summary>
+        /// The behaviour that this value is attached to.
+        /// </summary>
+        public NetworkBehaviour AttachedTo
+        {
+            get => attachedTo;
+            set
+            {
+                attachedTo = value;
+                _markValueDirtyMethod ??= typeof(NetworkBehaviour).GetMethod("_MarkValueDirty", BindingFlags.NonPublic | BindingFlags.Instance);
+                @delegate = (Action<NetworkValue>) Delegate.CreateDelegate(typeof(Action<NetworkValue>), AttachedTo, _markValueDirtyMethod!);
+            }
+        }
+        
+        /// <summary>
+        /// Serializes the value to a binary writer.
+        /// </summary>
+        /// <param name="writer"></param>
         public abstract void Serialize(BinaryWriter writer);
 
+        /// <summary>
+        /// Deserializes the value from a binary reader.
+        /// </summary>
+        /// <param name="reader"></param>
         public abstract void Deserialize(BinaryReader reader);
 
         #if UNITY_EDITOR
@@ -46,6 +91,11 @@ namespace NetBuff.Misc
             this.type = type;
         }
 
+        /// <summary>
+        /// The value of this network value.
+        /// Can only be set if the environment has permission.
+        /// Use the CheckPermission method to check if the environment has permission.
+        /// </summary>
         public T Value
         {
             get => value;
@@ -57,25 +107,32 @@ namespace NetBuff.Misc
                     return;
 
                 var man = NetworkManager.Instance;
-                if (man == null || man.EndType == NetworkTransport.EndType.None)
+                if (man == null || man.EnvironmentType == NetworkTransport.EnvironmentType.None)
                 {
                     SetValueCalling(value);
                     return;
                 }
 
-                if (AttachedTo == null)
+                if (attachedTo == null)
                     throw new InvalidOperationException("This value is not attached to any NetworkBehaviour");
 
                 if (!CheckPermission())
                     throw new InvalidOperationException("You don't have permission to modify this value");
 
                 SetValueCalling(value);
-                AttachedTo.MarkValueDirty(this);
+                @delegate(this);
             }
         }
 
+        /// <summary>
+        /// Called when the value of this network value changes.
+        /// </summary>
         public event ValueChangeHandler OnValueChanged;
-
+        
+        /// <summary>
+        /// Checks if the environment has permission to modify this value.
+        /// </summary>
+        /// <returns></returns>
         public bool CheckPermission()
         {
             switch (type)
@@ -104,8 +161,8 @@ namespace NetBuff.Misc
         {
             SetValueCalling(value);
 
-            if (AttachedTo != null)
-                AttachedTo.MarkValueDirty(this);
+            if (attachedTo != null)
+                @delegate(this);
         }
         #endif
 
@@ -115,6 +172,9 @@ namespace NetBuff.Misc
         }
     }
 
+    /// <summary>
+    /// USed to store a boolean value that is synchronized over the network.
+    /// </summary>
     [Serializable]
     public class BoolNetworkValue : NetworkValue<bool>
     {
@@ -135,6 +195,9 @@ namespace NetBuff.Misc
         }
     }
 
+    /// <summary>
+    /// Used to store a byte value that is synchronized over the network.
+    /// </summary>
     [Serializable]
     public class ByteNetworkValue : NetworkValue<byte>
     {
@@ -154,7 +217,10 @@ namespace NetBuff.Misc
             SetValueCalling(v);
         }
     }
-
+    
+    /// <summary>
+    /// Used to store a int value that is synchronized over the network.
+    /// </summary>
     [Serializable]
     public class IntNetworkValue : NetworkValue<int>
     {
@@ -174,6 +240,9 @@ namespace NetBuff.Misc
         }
     }
 
+    /// <summary>
+    /// Used to store a float value that is synchronized over the network.
+    /// </summary>
     [Serializable]
     public class FloatNetworkValue : NetworkValue<float>
     {
@@ -194,6 +263,9 @@ namespace NetBuff.Misc
         }
     }
 
+    /// <summary>
+    /// Used to store a double value that is synchronized over the network.
+    /// </summary>
     [Serializable]
     public class DoubleNetworkValue : NetworkValue<double>
     {
@@ -213,7 +285,10 @@ namespace NetBuff.Misc
             SetValueCalling(v);
         }
     }
-
+    
+    /// <summary>
+    /// Used to store a long value that is synchronized over the network.
+    /// </summary>
     [Serializable]
     public class LongNetworkValue : NetworkValue<long>
     {
@@ -234,6 +309,9 @@ namespace NetBuff.Misc
         }
     }
 
+    /// <summary>
+    /// Used to store a short value that is synchronized over the network.
+    /// </summary>
     [Serializable]
     public class ShortNetworkValue : NetworkValue<short>
     {
@@ -253,7 +331,10 @@ namespace NetBuff.Misc
             SetValueCalling(v);
         }
     }
-
+    
+    /// <summary>
+    /// Used to store a string value that is synchronized over the network.
+    /// </summary>
     [Serializable]
     public class StringNetworkValue : NetworkValue<string>
     {
@@ -274,6 +355,9 @@ namespace NetBuff.Misc
         }
     }
 
+    /// <summary>
+    /// Used to store a Vector2 value that is synchronized over the network.
+    /// </summary>
     [Serializable]
     public class Vector2NetworkValue : NetworkValue<Vector2>
     {
@@ -296,6 +380,9 @@ namespace NetBuff.Misc
         }
     }
 
+    /// <summary>
+    /// Used to store a Vector3 value that is synchronized over the network.
+    /// </summary>
     [Serializable]
     public class Vector3NetworkValue : NetworkValue<Vector3>
     {
@@ -319,7 +406,10 @@ namespace NetBuff.Misc
             SetValueCalling(new Vector3(x, y, z));
         }
     }
-
+    
+    /// <summary>
+    /// Used to store a Vector4 value that is synchronized over the network.
+    /// </summary>
     [Serializable]
     public class Vector4NetworkValue : NetworkValue<Vector4>
     {
@@ -346,6 +436,9 @@ namespace NetBuff.Misc
         }
     }
 
+    /// <summary>
+    /// Used to store a Quaternion value that is synchronized over the network.
+    /// </summary>
     [Serializable]
     public class QuaternionNetworkValue : NetworkValue<Quaternion>
     {
@@ -372,6 +465,9 @@ namespace NetBuff.Misc
         }
     }
 
+    /// <summary>
+    /// Used to store a Color value that is synchronized over the network.
+    /// </summary>
     [Serializable]
     public class ColorNetworkValue : NetworkValue<Color>
     {
@@ -397,7 +493,40 @@ namespace NetBuff.Misc
             SetValueCalling(new Color(r, g, b, a));
         }
     }
+    
+    /// <summary>
+    /// Used to store a Color32 value that is synchronized over the network.
+    /// </summary>
+    [Serializable]
+    public class Color32NetworkValue : NetworkValue<Color32>
+    {
+        public Color32NetworkValue(Color32 defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue,
+            type)
+        {
+        }
 
+        public override void Serialize(BinaryWriter writer)
+        {
+            writer.Write(value.r);
+            writer.Write(value.g);
+            writer.Write(value.b);
+            writer.Write(value.a);
+        }
+
+        public override void Deserialize(BinaryReader reader)
+        {
+            var r = reader.ReadByte();
+            var g = reader.ReadByte();
+            var b = reader.ReadByte();
+            var a = reader.ReadByte();
+            SetValueCalling(new Color32(r, g, b, a));
+        }
+    }
+    
+    /// <summary>
+    /// Used to store a NetworkId value that is synchronized over the network.
+    /// Used to keep reference to other network objets throughout the network.
+    /// </summary>
     [Serializable]
     public class NetworkIdNetworkValue : NetworkValue<NetworkId>
     {

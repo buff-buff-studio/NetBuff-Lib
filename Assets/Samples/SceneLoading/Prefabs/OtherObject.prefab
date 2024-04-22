@@ -323,7 +323,7 @@ MonoBehaviour:
   text: {fileID: 3870626351534240110}
   number:
     value: 0
-    type: 0
+    type: 2
   destroyable: 0
 --- !u!114 &1910911300342589682
 MonoBehaviour:

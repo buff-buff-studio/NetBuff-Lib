@@ -7,24 +7,38 @@ using UnityEngine;
 
 namespace NetBuff.Local
 {
+    /// <summary>
+    /// Used for local running, does not actually send packets over the network.
+    /// Can be used on Split Screen games or for testing.
+    /// </summary>
     [Icon("Assets/Editor/Icons/LocalNetworkTransport.png")]
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/transports/#local")]
     public class LocalNetworkTransport : NetworkTransport
     {
+        
         #region Inspector Fields
         [SerializeField]
         protected int clientCount = 1;
         #endregion
 
+        #region Internal Fields
+        private int _loadedClients;
+        private int _nextClientId;
+        private readonly Dictionary<int, LocalClientConnectionInfo> _clients = new();
         private readonly Queue<Action> _dispatcher = new();
+        #endregion
 
         #region Helper Properties
+        /// <summary>
+        /// The amount of clients that will be created when the host is started.
+        /// </summary>
+        /// <exception cref="Exception"></exception>
         public int ClientCount
         {
             get => clientCount;
             set
             {
-                if (Type is EndType.Client or EndType.Host)
+                if (Type is EnvironmentType.Client or EnvironmentType.Host)
                     throw new Exception("Cannot change client count while clients are running");
 
                 clientCount = value;
@@ -32,12 +46,15 @@ namespace NetBuff.Local
         }
         #endregion
 
+        #region Unity Callbacks
         private void Update()
         {
             while (_dispatcher.Count > 0) _dispatcher.Dequeue().Invoke();
         }
+        #endregion
 
-        private void CreatePlayers()
+        #region Internal Methods
+        private void _CreatePlayers()
         {
             for (var i = 0; i < clientCount; i++)
             {
@@ -47,8 +64,9 @@ namespace NetBuff.Local
                 OnClientConnected.Invoke(id);
             }
         }
+        #endregion
 
-        public override ServerDiscover GetServerDiscoverer()
+        public override ServerDiscoverer GetServerDiscoverer()
         {
             return null;
         }
@@ -58,46 +76,46 @@ namespace NetBuff.Local
             if (clientCount == 0)
                 throw new Exception("Client count is 0");
 
-            Type = EndType.Host;
+            Type = EnvironmentType.Host;
             OnServerStart?.Invoke();
 
-            CreatePlayers();
+            _CreatePlayers();
         }
 
         public override void StartServer()
         {
-            Type = EndType.Server;
+            Type = EnvironmentType.Server;
             OnServerStart?.Invoke();
         }
 
         public override void StartClient(int magicNumber)
         {
-            if (Type == EndType.None)
+            if (Type == EnvironmentType.None)
                 throw new Exception("Cannot start client without a host or server");
 
             if (clientCount == 0)
                 throw new Exception("Client count is 0");
 
-            Type = EndType.Host;
+            Type = EnvironmentType.Host;
 
-            CreatePlayers();
+            _CreatePlayers();
         }
 
         public override void Close()
         {
             switch (Type)
             {
-                case EndType.Host:
+                case EnvironmentType.Host:
                     OnServerStop?.Invoke();
                     OnDisconnect?.Invoke("disconnect");
                     break;
-                case EndType.Server:
+                case EnvironmentType.Server:
                     OnDisconnect?.Invoke("disconnect");
                     break;
-                case EndType.Client:
+                case EnvironmentType.Client:
                     OnDisconnect?.Invoke("disconnect");
                     break;
-                case EndType.None:
+                case EnvironmentType.None:
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -144,7 +162,7 @@ namespace NetBuff.Local
             _dispatcher.Enqueue(() => OnClientPacketReceived.Invoke(packet));
         }
 
-        public class LocalClientConnectionInfo : IClientConnectionInfo
+        private class LocalClientConnectionInfo : IClientConnectionInfo
         {
             public LocalClientConnectionInfo(int id)
             {
@@ -161,11 +179,5 @@ namespace NetBuff.Local
 
             public int Id { get; }
         }
-
-        #region Internal Fields
-        private int _loadedClients;
-        private int _nextClientId;
-        private readonly Dictionary<int, LocalClientConnectionInfo> _clients = new();
-        #endregion
     }
 }

@@ -3,6 +3,9 @@
 // ReSharper disable BitwiseOperatorOnEnumWithoutFlags
 namespace NetBuff.Components
 {
+    /// <summary>
+    /// Syncs the components of a transform over the network, along with the velocity and angular velocity of a Rigidbody.
+    /// </summary>
     [RequireComponent(typeof(Rigidbody))]
     [Icon("Assets/Editor/Icons/NetworkRigidbodyTransform.png")]
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-rigidbody-transform")]
@@ -36,32 +39,50 @@ namespace NetBuff.Components
         #endregion
 
         #region Helper Properties
+        /// <summary>
+        /// The Rigidbody component to sync.
+        /// </summary>
         public Rigidbody Rigidbody => rigidbody;
 
+        /// <summary>
+        /// Defines whether the velocity should be synced.
+        /// </summary>
         public bool SyncVelocity
         {
             get => syncVelocity;
             set => syncVelocity = value;
         }
 
+        /// <summary>
+        /// Defines the threshold for the velocity to be considered changed.
+        /// </summary>
         public float VelocityThreshold
         {
             get => velocityThreshold;
             set => velocityThreshold = value;
         }
 
+        /// <summary>
+        /// Defines whether the angular velocity should be synced.
+        /// </summary>
         public bool SyncAngularVelocity
         {
             get => syncAngularVelocity;
             set => syncAngularVelocity = value;
         }
 
+        /// <summary>
+        /// Defines the threshold for the angular velocity to be considered changed.
+        /// </summary>
         public float AngularVelocityThreshold
         {
             get => angularVelocityThreshold;
             set => angularVelocityThreshold = value;
         }
 
+        /// <summary>
+        /// Defines whether the isKinematic property should be synced.
+        /// </summary>
         public bool SyncIsKinematic
         {
             get => syncIsKinematic;

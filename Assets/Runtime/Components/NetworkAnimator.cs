@@ -9,6 +9,9 @@ using UnityEngine;
 
 namespace NetBuff.Components
 {
+    /// <summary>
+    /// Syncs the state of an Animator component over the network, including parameters, layers, speed and time
+    /// </summary>
     [SuppressMessage("ReSharper", "ParameterHidesMember")]
     [Icon("Assets/Editor/Icons/NetworkAnimator.png")]
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-animator")]
@@ -38,13 +41,19 @@ namespace NetBuff.Components
         private bool _running;
         #endregion
 
-        #region Properties
+        #region Helper Properties
+        /// <summary>
+        /// Determines the tick rate of the NetworkAnimator. When set to -1, the default tick rate of the NetworkManager will be used.
+        /// </summary>
         public int TickRate
         {
             get => tickRate;
             set => tickRate = value;
         }
 
+        /// <summary>
+        /// The Animator component to sync.
+        /// </summary>
         public Animator Animator => animator;
         #endregion
 
@@ -258,6 +267,7 @@ namespace NetBuff.Components
         private void _ApplyAnimatorSyncPacket(AnimatorSyncPacket packet)
         {
             if ((packet.Change & AnimatorSyncPacket.Changes.Layers) != 0)
+                // ReSharper disable once ForCanBeConvertedToForeach
                 for (var i = 0; i < packet.Layers.Length; i++)
                 {
                     var layer = packet.Layers[i];
@@ -300,6 +310,10 @@ namespace NetBuff.Components
         #endregion
 
         #region Animator Helpers
+        /// <summary>
+        /// Sets a trigger on the Animator component.
+        /// </summary>
+        /// <param name="triggerHash"></param>
         public void SetTrigger(int triggerHash)
         {
             var packet = new AnimatorTriggerPacket
@@ -310,67 +324,131 @@ namespace NetBuff.Components
             SendPacket(packet);
         }
 
+        /// <summary>
+        /// Sets a trigger on the Animator component.
+        /// </summary>
+        /// <param name="triggerName"></param>
         public void SetTrigger(string triggerName)
         {
             SetTrigger(Animator.StringToHash(triggerName));
             animator.SetTrigger(triggerName);
         }
 
+        /// <summary>
+        /// Gets the value of the specified parameter.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public float GetFloat(string name)
         {
             return animator.GetFloat(name);
         }
 
+        /// <summary>
+        /// Sets the value of the specified parameter.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="value"></param>
         public void SetFloat(string name, float value)
         {
             animator.SetFloat(name, value);
         }
 
+        /// <summary>
+        /// Gets the value of the specified parameter.
+        /// </summary>
+        /// <param name="nameHash"></param>
+        /// <returns></returns>
         public float GetFloat(int nameHash)
         {
             return animator.GetFloat(nameHash);
         }
 
+        /// <summary>
+        /// Sets the value of the specified parameter.
+        /// </summary>
+        /// <param name="nameHash"></param>
+        /// <param name="value"></param>
         public void SetFloat(int nameHash, float value)
         {
             animator.SetFloat(nameHash, value);
         }
 
+        /// <summary>
+        /// Gets the value of the specified parameter.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public bool GetBool(string name)
         {
             return animator.GetBool(name);
         }
 
+        /// <summary>
+        /// Sets the value of the specified parameter.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="value"></param>
         public void SetBool(string name, bool value)
         {
             animator.SetBool(name, value);
         }
 
+        /// <summary>
+        /// Gets the value of the specified parameter.
+        /// </summary>
+        /// <param name="nameHash"></param>
+        /// <returns></returns>
         public bool GetBool(int nameHash)
         {
             return animator.GetBool(nameHash);
         }
 
+        /// <summary>
+        /// Sets the value of the specified parameter.
+        /// </summary>
+        /// <param name="nameHash"></param>
+        /// <param name="value"></param>
         public void SetBool(int nameHash, bool value)
         {
             animator.SetBool(nameHash, value);
         }
-
+        
+        /// <summary>
+        /// Gets the value of the specified parameter.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public int GetInteger(string name)
         {
             return animator.GetInteger(name);
         }
 
+        /// <summary>
+        /// Sets the value of the specified parameter.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="value"></param>
         public void SetInteger(string name, int value)
         {
             animator.SetInteger(name, value);
         }
 
+        /// <summary>
+        /// Gets the value of the specified parameter.  
+        /// </summary>
+        /// <param name="nameHash"></param>
+        /// <returns></returns>
         public int GetInteger(int nameHash)
         {
             return animator.GetInteger(nameHash);
         }
 
+        /// <summary>
+        /// Sets the value of the specified parameter.
+        /// </summary>
+        /// <param name="nameHash"></param>
+        /// <param name="value"></param>
         public void SetInteger(int nameHash, int value)
         {
             animator.SetInteger(nameHash, value);

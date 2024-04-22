@@ -14,6 +14,11 @@ using UnityEngine.Assertions;
 
 namespace NetBuff.UDP
 {
+    /// <summary>
+    ///  Uses the UDP (User Datagram Protocol) protocol to manage the connection between the server and clients.
+    /// Responsible for internally managing the connection between the server and clients.
+    /// Holds the connection information of clients and provides methods for sending and receiving packets.
+    /// </summary>
     [Icon("Assets/Editor/Icons/UDPNetworkTransport.png")]
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/transports/#udp")]
     public class UDPNetworkTransport : NetworkTransport
@@ -24,6 +29,7 @@ namespace NetBuff.UDP
         private static readonly BinaryWriter _Writer0 = new(new MemoryStream(_Buffer0));
         private static readonly BinaryWriter _Writer1 = new(new MemoryStream(_Buffer1));
 
+        #region Inspector Fields
         [Header("SETTINGS")]
         [SerializeField]
         protected string address = "127.0.0.1";
@@ -36,43 +42,61 @@ namespace NetBuff.UDP
 
         [SerializeField]
         protected int maxClients = 10;
+        #endregion
 
+        #region Internal Fields
         private UDPClient _client;
         private UDPServer _server;
+        #endregion
 
+        #region Helper Properties
+        /// <summary>
+        /// The address of the server.
+        /// </summary>
         public string Address
         {
             get => address;
             set => address = value;
         }
 
+        /// <summary>
+        /// The port of the server / client connection.
+        /// </summary>
         public int Port
         {
             get => port;
             set => port = value;
         }
 
+        /// <summary>
+        /// The password of the server.
+        /// The password that the client is using to connect to the server.
+        /// </summary>
         public string Password
         {
             get => password;
             set => password = value;
         }
-
+        
+        /// <summary>
+        /// The maximum number of clients that can connect to the server at the same time.
+        /// </summary>
         public int MaxClients
         {
             get => maxClients;
             set => maxClients = value;
         }
+        #endregion
 
+        #region Unity Callbacks
         private void Update()
         {
-            if (_client != null)
-                _client.Tick();
-            if (_server != null)
-                _server.Tick();
+            _client?.Tick();
+            _server?.Tick();
         }
+        #endregion
 
-        public override ServerDiscover GetServerDiscoverer()
+        public override ServerDiscoverer GetServerDiscoverer()
         {
             return new UDPServerDiscoverer(NetworkManager.Instance.VersionMagicNumber, port);
         }
@@ -81,37 +105,37 @@ namespace NetBuff.UDP
         {
             StartServer();
             StartClient(magicNumber);
-            Type = EndType.Host;
+            Type = EnvironmentType.Host;
         }
 
         public override void StartServer()
         {
             if (_server != null)
-                return;
+                throw new Exception("Server already started");
 
-            _server = new UDPServer(address, port, this, password, Name, maxClients);
-            Type = Type == EndType.None ? EndType.Server : EndType.Host;
+            _server = new UDPServer(address, port, this, password, NetworkManager.Instance.Name, maxClients);
+            Type = Type == EnvironmentType.None ? EnvironmentType.Server : EnvironmentType.Host;
             OnServerStart?.Invoke();
         }
 
         public override void StartClient(int magicNumber)
         {
             if (_client != null)
-                return;
+                throw new Exception("Client already started");
 
             _client = new UDPClient(magicNumber, address, port, this, password);
-            Type = Type == EndType.None ? EndType.Client : EndType.Host;
+            Type = Type == EnvironmentType.None ? EnvironmentType.Client : EnvironmentType.Host;
         }
 
         public override void Close()
         {
-            if (Type is EndType.Host or EndType.Server)
+            if (Type is EnvironmentType.Host or EnvironmentType.Server)
                 OnServerStop?.Invoke();
             _client?.Close();
             _server?.Close();
             _client = null;
             _server = null;
-            Type = EndType.None;
+            Type = EnvironmentType.None;
         }
 
         public override IClientConnectionInfo GetClientInfo(int id)
@@ -149,7 +173,7 @@ namespace NetBuff.UDP
             _server.SendPacket(packet, target, reliable);
         }
 
-        private static IEnumerable<ArraySegment<byte>> ProcessQueue(Queue<IPacket> queue, int maxSize)
+        private static IEnumerable<ArraySegment<byte>> _ProcessQueue(Queue<IPacket> queue, int maxSize)
         {
             if (queue.Count == 0)
                 yield break;
@@ -217,12 +241,12 @@ namespace NetBuff.UDP
             return sb.ToString();
         }
 
-        public class UDPClientInfo : IClientConnectionInfo
+        private class UDPClientConnectionInfo : IClientConnectionInfo
         {
             public readonly Queue<IPacket> queueReliable = new();
             public readonly Queue<IPacket> queueUnreliable = new();
 
-            public UDPClientInfo(int id, NetPeer peer)
+            public UDPClientConnectionInfo(int id, NetPeer peer)
             {
                 Id = id;
                 Peer = peer;
@@ -239,7 +263,7 @@ namespace NetBuff.UDP
 
         private class UDPServer : INetEventListener
         {
-            private readonly Dictionary<int, UDPClientInfo> _clients = new();
+            private readonly Dictionary<int, UDPClientConnectionInfo> _clients = new();
             private readonly int _maxClients;
             private readonly string _name;
             private readonly string _password;
@@ -266,7 +290,7 @@ namespace NetBuff.UDP
 
             public void OnPeerConnected(NetPeer peer)
             {
-                _clients.Add(peer.Id, new UDPClientInfo(peer.Id, peer));
+                _clients.Add(peer.Id, new UDPClientConnectionInfo(peer.Id, peer));
                 _transport.OnClientConnected?.Invoke(peer.Id);
             }
 
@@ -368,9 +392,9 @@ namespace NetBuff.UDP
 
                 foreach (var client in _clients)
                 {
-                    foreach (var data in ProcessQueue(client.Value.queueReliable, -1))
+                    foreach (var data in _ProcessQueue(client.Value.queueReliable, -1))
                         client.Value.Peer.Send(data, DeliveryMethod.ReliableOrdered);
-                    foreach (var data in ProcessQueue(client.Value.queueUnreliable,
+                    foreach (var data in _ProcessQueue(client.Value.queueUnreliable,
                                  client.Value.Peer.GetMaxSinglePacketSize(DeliveryMethod.Unreliable)))
                         client.Value.Peer.Send(data, DeliveryMethod.Unreliable);
                 }
@@ -419,7 +443,7 @@ namespace NetBuff.UDP
         private class UDPClient : INetEventListener
         {
             private readonly UDPNetworkTransport _transport;
-            private UDPClientInfo _clientInfo;
+            private UDPClientConnectionInfo _clientConnectionInfo;
             private NetManager _manager;
 
             public UDPClient(int magicNumber, string address, int port, UDPNetworkTransport transport, string password)
@@ -440,8 +464,8 @@ namespace NetBuff.UDP
 
             public void OnPeerConnected(NetPeer peer)
             {
-                _clientInfo = new UDPClientInfo(-1, peer);
-                _transport.ClientConnectionInfo = _clientInfo;
+                _clientConnectionInfo = new UDPClientConnectionInfo(-1, peer);
+                _transport.ClientConnectionInfo = _clientConnectionInfo;
                 _transport.OnConnect?.Invoke();
             }
 
@@ -455,7 +479,7 @@ namespace NetBuff.UDP
                 }
 
                 _transport.OnDisconnect?.Invoke(reason);
-                _transport.ClientConnectionInfo = _clientInfo = null;
+                _transport.ClientConnectionInfo = _clientConnectionInfo = null;
             }
 
             public void OnNetworkError(IPEndPoint endPoint, SocketError socketError)
@@ -484,7 +508,7 @@ namespace NetBuff.UDP
 
             public void OnNetworkLatencyUpdate(NetPeer peer, int latency)
             {
-                _clientInfo.Latency = latency;
+                _clientConnectionInfo.Latency = latency;
             }
 
             public void OnConnectionRequest(ConnectionRequest request)
@@ -505,11 +529,11 @@ namespace NetBuff.UDP
             {
                 _manager.PollEvents();
 
-                if (_clientInfo != null)
+                if (_clientConnectionInfo != null)
                 {
-                    foreach (var data in ProcessQueue(_clientInfo.queueReliable, -1))
+                    foreach (var data in _ProcessQueue(_clientConnectionInfo.queueReliable, -1))
                         _manager.FirstPeer.Send(data, DeliveryMethod.ReliableOrdered);
-                    foreach (var data in ProcessQueue(_clientInfo.queueUnreliable,
+                    foreach (var data in _ProcessQueue(_clientConnectionInfo.queueUnreliable,
                                  _manager.FirstPeer.GetMaxSinglePacketSize(DeliveryMethod.Unreliable)))
                         _manager.FirstPeer.Send(data, DeliveryMethod.Unreliable);
                 }
@@ -518,9 +542,9 @@ namespace NetBuff.UDP
             public void SendPacket(IPacket packet, bool reliable = false)
             {
                 if (reliable)
-                    _clientInfo.queueReliable.Enqueue(packet);
+                    _clientConnectionInfo.queueReliable.Enqueue(packet);
                 else
-                    _clientInfo.queueUnreliable.Enqueue(packet);
+                    _clientConnectionInfo.queueUnreliable.Enqueue(packet);
             }
         }
     }

@@ -13,52 +13,50 @@ namespace Samples.SessionDataTesting.Scripts
         public InputField nicknameInput;
         public Toggle shouldBeAccepted;
 
-
-        #region Session Data Restoring
-        protected override SessionData OnRestoreSessionData(int clientId, NetworkSessionEstablishPacket packet)
-        {
-            //Keeps the session using the nickname
-            var packetData = (ExampleNetworkSessionEstablishPacket)packet;
-            return GetAllDisconnectedSessionData<ExampleSessionData>()
-                .FirstOrDefault(data => data.nickname == packetData.Nickname);
-        }
-        #endregion
-
         #region Session Establishing
-        protected override NetworkSessionEstablishPacket OnCreateSessionEstablishPacket()
+        protected override NetworkSessionEstablishRequestPacket OnCreateSessionEstablishRequest()
         {
-            return new ExampleNetworkSessionEstablishPacket
+            return new ExampleNetworkSessionEstablishRequestPacket
             {
                 ShouldBeAccepted = shouldBeAccepted.isOn,
                 Nickname = nicknameInput.text
             };
         }
 
-        protected override SessionEstablishingResponse OnSessionEstablishingRequest(
-            NetworkSessionEstablishPacket packet)
+        protected override SessionEstablishingResponse OnSessionEstablishingRequest(NetworkSessionEstablishRequestPacket packet)
         {
-            var examplePacket = (ExampleNetworkSessionEstablishPacket)packet;
+            var examplePacket = (ExampleNetworkSessionEstablishRequestPacket) packet;
 
             if (examplePacket.ShouldBeAccepted)
                 return new SessionEstablishingResponse
                 {
-                    Type = SessionEstablishingResponse.SessionEstablishingResponseType.Accept
+                    Type = SessionEstablishingResponse.SessionEstablishingResponseType.Accept,
                 };
 
             return new SessionEstablishingResponse
-            {
-                Type = SessionEstablishingResponse.SessionEstablishingResponseType.Reject,
-                Reason = "just_testing"
-            };
+                {
+                    Type = SessionEstablishingResponse.SessionEstablishingResponseType.Reject,
+                    Reason = "just_testing"
+                };
+        }
+        #endregion
+
+
+        #region Session Data Restoring
+        protected override SessionData OnRestoreSessionData(int clientId, NetworkSessionEstablishRequestPacket packet)
+        {
+            //Keeps the session using the nickname
+            var packetData = (ExampleNetworkSessionEstablishRequestPacket) packet;
+            return GetAllDisconnectedSessionData<ExampleSessionData>().FirstOrDefault(data => data.nickname == packetData.Nickname);
         }
         #endregion
 
         #region Session Data Creation
         //Server Side
-        protected override SessionData OnCreateNewSessionData(int clientId, NetworkSessionEstablishPacket packet)
+        protected override SessionData OnCreateNewSessionData(int clientId, NetworkSessionEstablishRequestPacket packet)
         {
-            var packetData = (ExampleNetworkSessionEstablishPacket)packet;
-            return new ExampleSessionData
+            var packetData = (ExampleNetworkSessionEstablishRequestPacket) packet;
+            return new ExampleSessionData()
             {
                 nickname = packetData.Nickname
             };
@@ -76,7 +74,7 @@ namespace Samples.SessionDataTesting.Scripts
             if (Time.frameCount % 100 != 0)
                 return;
 
-            if (!IsServerRunning)
+            if(!IsServerRunning)
                 return;
 
             foreach (var sessionData in GetAllSessionData<ExampleSessionData>())
@@ -98,7 +96,7 @@ namespace Samples.SessionDataTesting.Scripts
         #endregion
     }
 
-    public class ExampleNetworkSessionEstablishPacket : NetworkSessionEstablishPacket
+    public class ExampleNetworkSessionEstablishRequestPacket : NetworkSessionEstablishRequestPacket
     {
         public bool ShouldBeAccepted { get; set; }
         public string Nickname { get; set; }

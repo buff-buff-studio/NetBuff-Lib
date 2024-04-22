@@ -3,7 +3,10 @@ using NetBuff.Interface;
 
 namespace NetBuff.Packets
 {
-    public class NetworkSessionEstablishPacket : IPacket
+    /// <summary>
+    /// Base packet for all session establish request packets.
+    /// </summary>
+    public class NetworkSessionEstablishRequestPacket : IPacket
     {
         public virtual void Serialize(BinaryWriter writer)
         {

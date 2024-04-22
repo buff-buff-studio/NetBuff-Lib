@@ -195,7 +195,7 @@ MonoBehaviour:
     [M] Move player between
     scenes
 
-'
+    [R] Re-generate numbers (if has permission to)'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -410,8 +410,8 @@ MonoBehaviour:
   graphPlottingRate: 10
   plotFPS: 0
   plotLatency: 0
-  plotPacketRate: 0
-  currentGraph: 0
+  plotPacketRate: 1
+  currentGraph: 3
 --- !u!114 &899349346
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -424,6 +424,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 334fcbbd77286b240919f74ed5158faf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  name: server
   versionMagicNumber: 0
   defaultTickRate: 50
   spawnsPlayer: 1
@@ -432,12 +433,12 @@ MonoBehaviour:
   prefabRegistry: {fileID: 11400000, guid: 1c87b8f95c13b164ca498de55aa5a703, type: 2}
   playerPrefab: {fileID: 8412692207167386886, guid: 4e8a65caa91e21148ae84c3c6a102ad4, type: 3}
   loadedScenes: []
-  sourceScene: 
+  mainScene: 
   networkObjects:
     _serializedList: []
   removedPreExistingObjects: []
   dirtyBehaviours: []
-  endTypeAfterReload: 0
+  environmentTypeAfterReload: 0
   isClientReloaded: 0
   persistentSessionData:
     _serializedList: []
@@ -469,7 +470,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5b23075050df442d8bd5d7cb60e79d25, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  name: server
   address: 127.0.0.1
   port: 7777
   password: 

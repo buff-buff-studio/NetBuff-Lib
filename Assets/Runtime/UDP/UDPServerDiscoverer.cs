@@ -9,11 +9,45 @@ using NetBuff.Misc;
 
 namespace NetBuff.UDP
 {
-    public class UDPServerDiscoverer : ServerDiscover<UDPServerDiscoverer.UDPGameInfo>
+    /// <summary>
+    /// Used to find all available servers using UDP.
+    /// Searches through all available network interfaces and sends a broadcast message to find servers.
+    /// </summary>
+    public class UDPServerDiscoverer : ServerDiscoverer<UDPServerDiscoverer.UDPServerInfo>
     {
+        /// <summary>
+        /// Holds the information about a UDP server.
+        /// </summary>
+        public class UDPServerInfo : ServerInfo
+        {
+            /// <summary>
+            /// The server's IP address.
+            /// </summary>
+            public IPAddress Address { get; set; }
+
+            public override string ToString()
+            {
+                return
+                    $"{Name}'s game ({Address}) - {Players}/{MaxPlayers} {Platform} {(HasPassword ? "[Password]" : "")}";
+            }
+
+            public override bool Join()
+            {
+                var transport = NetworkManager.Instance.Transport;
+                var udp = transport as UDPNetworkTransport;
+                if (udp == null)
+                    throw new Exception("Transport is not UDP");
+                udp.Address = Address.ToString();
+                NetworkManager.Instance.StartClient();
+                return true;
+            }
+        }
+
+        #region Internal Fields
         private readonly int _magicNumber;
         private readonly int _port;
         private int _searchId;
+        #endregion
 
         public UDPServerDiscoverer(int magicNumber, int port)
         {
@@ -21,7 +55,7 @@ namespace NetBuff.UDP
             _port = port;
         }
 
-        public override async void Search(Action<UDPGameInfo> onFindServer, Action onFinish)
+        public override async void Search(Action<UDPServerInfo> onFindServer, Action onFinish)
         {
             var id = ++_searchId;
             var waiting = 0;
@@ -82,7 +116,7 @@ namespace NetBuff.UDP
 
                                     if (id != _searchId)
                                         return;
-                                    onFindServer(new UDPGameInfo
+                                    onFindServer(new UDPServerInfo
                                     {
                                         Name = name,
                                         Address = address2.Address,
@@ -115,28 +149,6 @@ namespace NetBuff.UDP
         public override void Cancel()
         {
             _searchId++;
-        }
-
-        public class UDPGameInfo : GameInfo
-        {
-            public IPAddress Address { get; set; }
-
-            public override string ToString()
-            {
-                return
-                    $"{Name}'s game ({Address}) - {Players}/{MaxPlayers} {Platform} {(HasPassword ? "[Password]" : "")}";
-            }
-
-            public override bool Join()
-            {
-                var transport = NetworkManager.Instance.Transport;
-                var udp = transport as UDPNetworkTransport;
-                if (udp == null)
-                    throw new Exception("Transport is not UDP");
-                udp.Address = Address.ToString();
-                NetworkManager.Instance.StartClient();
-                return true;
-            }
         }
     }
 }

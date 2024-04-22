@@ -4,7 +4,10 @@ using NetBuff.Misc;
 
 namespace NetBuff.Packets
 {
-    public class NetworkValuesPacket : IPacket
+    /// <summary>
+    /// Packet used to synchronize data of a network behaviour.
+    /// </summary>
+    public class NetworkBehaviourDataPacket : IPacket
     {
         public NetworkId Id { get; set; }
 

@@ -5,17 +5,81 @@ using UnityEngine;
 
 namespace NetBuff.Packets
 {
+    /// <summary>
+    /// Packet used to send information about pre-existing objects in the network.
+    /// </summary>
     public class NetworkPreExistingInfoPacket : IPacket
     {
+        /// <summary>
+        /// Represents the state of a pre-existing object in the network.
+        /// </summary>
+        public class PreExistingState
+        {
+            /// <summary>
+            /// The id of the object.
+            /// </summary>
+            public NetworkId Id { get; set; }
+        
+            /// <summary>
+            /// The id of the prefab.
+            /// </summary>
+            public NetworkId PrefabId { get; set; }
+            
+            /// <summary>
+            /// The id of the owner of the object.
+            /// </summary>
+            public int OwnerId { get; set; }
+
+            /// <summary>
+            /// The position of the object.
+            /// </summary>
+            public Vector3 Position { get; set; }
+
+            /// <summary>
+            /// The rotation of the object.
+            /// </summary>
+            public Quaternion Rotation { get; set; }
+
+            /// <summary>
+            /// The scale of the object.
+            /// </summary>
+            public Vector3 Scale { get; set; }
+
+            /// <summary>
+            /// The state of the object.
+            /// </summary>
+            public bool IsActive { get; set; }
+
+            /// <summary>
+            /// The id of the scene where the object is.
+            /// </summary>
+            public int SceneId { get; set; }
+        }
+        
+        /// <summary>
+        /// The pre-existing objects in the network.
+        /// </summary>
         public PreExistingState[] PreExistingObjects { get; set; }
 
+        /// <summary>
+        /// The id of the pre-existing objects that were removed from the network.
+        /// </summary>
         public NetworkId[] RemovedObjects { get; set; }
 
+        /// <summary>
+        /// The names of the scenes that are loaded in the network.
+        /// </summary>
         public string[] SceneNames { get; set; }
-
+        
+        /// <summary>
+        /// The spawned objects in the network.
+        /// </summary>
         public NetworkObjectSpawnPacket[] SpawnedObjects { get; set; }
-
-        public NetworkValuesPacket[] NetworkValues { get; set; }
+        
+        /// <summary>
+        /// The data of the network behaviours in the network.
+        /// </summary>
+        public NetworkBehaviourDataPacket[] NetworkValues { get; set; }
 
         public void Serialize(BinaryWriter writer)
         {
@@ -62,7 +126,6 @@ namespace NetBuff.Packets
                 writer.Write(spawnedObject.Scale.y);
                 writer.Write(spawnedObject.Scale.z);
                 writer.Write(spawnedObject.IsActive);
-                writer.Write(spawnedObject.IsRetroactive);
                 writer.Write(spawnedObject.SceneId);
             }
 
@@ -115,38 +178,18 @@ namespace NetBuff.Packets
                         reader.ReadSingle()),
                     Scale = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()),
                     IsActive = reader.ReadBoolean(),
-                    IsRetroactive = reader.ReadBoolean(),
                     SceneId = reader.ReadInt32()
                 };
 
             var networkValuesLength = reader.ReadInt32();
-            NetworkValues = new NetworkValuesPacket[networkValuesLength];
+            NetworkValues = new NetworkBehaviourDataPacket[networkValuesLength];
             for (var i = 0; i < networkValuesLength; i++)
-                NetworkValues[i] = new NetworkValuesPacket
+                NetworkValues[i] = new NetworkBehaviourDataPacket
                 {
                     Id = NetworkId.Read(reader),
                     BehaviourId = reader.ReadByte(),
                     Payload = reader.ReadBytes(reader.ReadInt32())
                 };
-        }
-
-        public class PreExistingState
-        {
-            public NetworkId Id { get; set; }
-
-            public NetworkId PrefabId { get; set; }
-
-            public int OwnerId { get; set; }
-
-            public Vector3 Position { get; set; }
-
-            public Quaternion Rotation { get; set; }
-
-            public Vector3 Scale { get; set; }
-
-            public bool IsActive { get; set; }
-
-            public int SceneId { get; set; }
         }
     }
 }
