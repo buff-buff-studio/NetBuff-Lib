@@ -25,12 +25,12 @@ namespace NetBuff.UDP
         private static readonly BinaryWriter _Writer0 = new(new MemoryStream(_Buffer0));
         private static readonly BinaryWriter _Writer1 = new(new MemoryStream(_Buffer1));
         
-        private class UDPClientInfo : IClientConnectionInfo
+        public class UDPClientInfo : IClientConnectionInfo
         {
             public int Id { get;}
             public int Latency { get; set;}
             public NetPeer Peer { get;}
-            
+            public string Address => Peer.Address.ToString();
             public long PacketSent => Peer.Statistics.PacketsSent;
             public long PacketReceived => Peer.Statistics.PacketsReceived;
             public long PacketLoss => Peer.Statistics.PacketLoss;
@@ -149,12 +149,12 @@ namespace NetBuff.UDP
             _server.Disconnect(id, reason);
         }
 
-        public override void SendClientPacket(IPacket packet, bool reliable = false)
+        public override void ClientSendPacket(IPacket packet, bool reliable = false)
         {
             _client.SendPacket(packet, reliable);
         }
 
-        public override void SendServerPacket(IPacket packet, int target = -1, bool reliable = false)
+        public override void ServerSendPacket(IPacket packet, int target = -1, bool reliable = false)
         {
             _server.SendPacket(packet, target, reliable);
         }
@@ -433,8 +433,8 @@ namespace NetBuff.UDP
                 var reason = _ToSnakeCase(disconnectInfo.Reason.ToString());
                 if (disconnectInfo.AdditionalData.AvailableBytes > 0)
                 {
-                    var reader = disconnectInfo.AdditionalData;
-                    reason = reader.GetString();
+                    var reader = disconnectInfo.AdditionalData.RawData;
+                    reason = Encoding.UTF8.GetString(reader);
                 }
                 _transport.OnDisconnect?.Invoke(reason);
                 _transport.ClientConnectionInfo = _clientInfo = null;

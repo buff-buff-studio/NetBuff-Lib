@@ -148,7 +148,7 @@ namespace NetBuff.Local
             
         }
 
-        public override void SendClientPacket(IPacket packet, bool reliable = false)
+        public override void ClientSendPacket(IPacket packet, bool reliable = false)
         {
             if (packet is NetworkPreExistingResponsePacket)
             {
@@ -160,7 +160,7 @@ namespace NetBuff.Local
             _dispatcher.Enqueue(() => OnServerPacketReceived.Invoke(0, packet));
         }
 
-        public override void SendServerPacket(IPacket packet, int target = -1, bool reliable = false)
+        public override void ServerSendPacket(IPacket packet, int target = -1, bool reliable = false)
         {
             _dispatcher.Enqueue(() => OnClientPacketReceived.Invoke(packet));
         }

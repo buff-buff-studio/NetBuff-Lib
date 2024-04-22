@@ -3,7 +3,7 @@ using NetBuff.Interface;
 
 namespace NetBuff.Packets
 {
-    public class ClientIdPacket : IPacket
+    public class NetworkClientIdPacket : IPacket
     {
         public int ClientId { get; set; }
     

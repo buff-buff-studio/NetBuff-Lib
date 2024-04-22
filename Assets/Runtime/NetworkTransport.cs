@@ -77,15 +77,15 @@ namespace NetBuff
         public abstract void ServerDisconnect(int id, string reason);
         
         [ClientOnly]
-        public abstract void SendClientPacket(IPacket packet, bool reliable = false);
+        public abstract void ClientSendPacket(IPacket packet, bool reliable = false);
         
         [ServerOnly]
-        public abstract void SendServerPacket(IPacket packet, int target = -1, bool reliable = false);
+        public abstract void ServerSendPacket(IPacket packet, int target = -1, bool reliable = false);
         
         [ServerOnly]
         public void BroadcastServerPacket(IPacket packet, bool reliable = false)
         {
-            SendServerPacket(packet, -1, reliable);
+            ServerSendPacket(packet, -1, reliable);
         }
         #endregion
     }

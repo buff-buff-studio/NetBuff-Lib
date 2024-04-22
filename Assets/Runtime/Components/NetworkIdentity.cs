@@ -97,10 +97,10 @@ namespace NetBuff.Components
         public void ServerBroadcastPacketExceptFor(IPacket packet, int except, bool reliable = false) => NetworkManager.Instance.BroadcastServerPacketExceptFor(packet, except, reliable);
         
         [ServerOnly]
-        public void ServerSendPacket(IPacket packet, int clientId, bool reliable = false) => NetworkManager.Instance.SendServerPacket(packet, clientId, reliable);
+        public void ServerSendPacket(IPacket packet, int clientId, bool reliable = false) => NetworkManager.Instance.ServerSendPacket(packet, clientId, reliable);
         
         [ClientOnly]
-        public void ClientSendPacket(IPacket packet, bool reliable = false) => NetworkManager.Instance.SendClientPacket(packet, reliable);
+        public void ClientSendPacket(IPacket packet, bool reliable = false) => NetworkManager.Instance.ClientSendPacket(packet, reliable);
 
         public void SendPacket(IPacket packet, bool reliable = false)
         {
@@ -317,7 +317,7 @@ namespace NetBuff.Components
             if (NetworkManager.Instance.IsServerRunning)
                 NetworkManager.Instance.BroadcastServerPacket(packet, true);
             else
-                NetworkManager.Instance.SendClientPacket(packet, true);
+                NetworkManager.Instance.ClientSendPacket(packet, true);
             
             return packet.Id;
         }

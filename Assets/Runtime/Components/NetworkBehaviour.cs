@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using NetBuff.Interface;
 using NetBuff.Misc;
 using NetBuff.Packets;
+using NetBuff.Session;
 using UnityEngine;
 
 namespace NetBuff.Components
