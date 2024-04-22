@@ -9,8 +9,14 @@ namespace NetBuff.Packets
     /// </summary>
     public class NetworkObjectOwnerPacket : IPacket
     {
+        /// <summary>
+        /// The network id of the network object.
+        /// </summary>
         public NetworkId Id { get; set; }
 
+        /// <summary>
+        /// The owner id of the network object.
+        /// </summary>
         public int OwnerId { get; set; }
 
         public void Serialize(BinaryWriter writer)

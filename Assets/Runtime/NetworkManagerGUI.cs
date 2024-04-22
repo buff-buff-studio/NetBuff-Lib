@@ -115,7 +115,10 @@ namespace NetBuff
                 OnValidate();
             }
         }
-
+        
+        /// <summary>
+        /// Determines whether the Latency graph is plotted.
+        /// </summary>
         public bool PlotLatency
         {
             get => plotLatency;

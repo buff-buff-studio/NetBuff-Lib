@@ -9,8 +9,16 @@ namespace NetBuff.Interface
     /// </summary>
     public interface IPacket
     {
+        /// <summary>
+        /// Serializes the packet to a binary writer.
+        /// </summary>
+        /// <param name="writer"></param>
         void Serialize(BinaryWriter writer);
 
+        /// <summary>
+        /// Deserializes the packet from a binary reader.
+        /// </summary>
+        /// <param name="reader"></param>
         void Deserialize(BinaryReader reader);
     }
 }

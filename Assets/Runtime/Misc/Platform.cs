@@ -42,6 +42,9 @@ namespace NetBuff.Misc
         /// </summary>
         IOS,
 
+        /// <summary>
+        /// Unknown platform.
+        /// </summary>
         Unknown
     }
 

@@ -72,6 +72,11 @@ namespace NetBuff.Misc
         #endif
     }
 
+    /// <summary>
+    /// Base class for all network values.
+    /// Used to store values that are synchronized over the network.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     [Serializable]
     public abstract class NetworkValue<T> : NetworkValue
     {
@@ -93,7 +98,7 @@ namespace NetBuff.Misc
 
         /// <summary>
         /// The value of this network value.
-        /// Can only be set if the environment has permission.
+        /// Can only be set if the local environment has permission.
         /// Use the CheckPermission method to check if the environment has permission.
         /// </summary>
         public T Value
@@ -147,7 +152,12 @@ namespace NetBuff.Misc
                     return false;
             }
         }
-
+        
+        /// <summary>
+        /// Used to set the value of this network value.
+        /// Shall only be used internally.
+        /// </summary>
+        /// <param name="newValue"></param>
         protected void SetValueCalling(T newValue)
         {
             var oldValue = value;
@@ -165,7 +175,11 @@ namespace NetBuff.Misc
                 @delegate(this);
         }
         #endif
-
+        
+        /// <summary>
+        /// Returns a string representation of this network value.
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
             return $"NetworkValue({value.ToString()})";

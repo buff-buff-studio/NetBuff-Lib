@@ -19,8 +19,15 @@
             /// </summary>
             Reject
         }
-
+        
+        /// <summary>
+        /// The type of response.
+        /// </summary>
         public SessionEstablishingResponseType Type { get; set; }
+        
+        /// <summary>
+        /// The reason for rejecting the session establishing request.
+        /// </summary>
         public string Reason { get; set; }
     }
 }

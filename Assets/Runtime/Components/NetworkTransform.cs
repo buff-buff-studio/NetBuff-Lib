@@ -18,15 +18,54 @@ namespace NetBuff.Components
         [Flags]
         public enum SyncMode
         {
+            /// <summary>
+            /// No components are synced.
+            /// </summary>
             None = 0,
+            
+            /// <summary>
+            /// The x position of the transform is synced.
+            /// </summary>
             PositionX = 1,
+            
+            /// <summary>
+            /// The y position of the transform is synced.
+            /// </summary>
             PositionY = 2,
+            
+            /// <summary>
+            /// The z position of the transform is synced.
+            /// </summary>
             PositionZ = 4,
+            
+            /// <summary>
+            /// The x rotation of the transform is synced.
+            /// </summary>
             RotationX = 8,
+            
+            /// <summary>
+            /// The y rotation of the transform is synced.
+            /// </summary>
             RotationY = 16,
+            
+            /// <summary>
+            /// The z rotation of the transform is synced.
+            /// </summary>
             RotationZ = 32,
+            
+            /// <summary>
+            /// The x scale of the transform is synced.
+            /// </summary>
             ScaleX = 64,
+            
+            /// <summary>
+            /// The y scale of the transform is synced.
+            /// </summary>
             ScaleY = 128,
+            
+            /// <summary>
+            /// The z scale of the transform is synced.
+            /// </summary>
             ScaleZ = 256
         }
         #endregion
@@ -95,6 +134,9 @@ namespace NetBuff.Components
             set => scaleThreshold = value;
         }
 
+        /// <summary>
+        /// Defines which components of the transform should be synced.
+        /// </summary>
         public SyncMode SyncModeMask => syncMode;
         #endregion
         

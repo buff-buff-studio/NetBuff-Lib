@@ -9,10 +9,19 @@ namespace NetBuff.Packets
     /// </summary>
     public class NetworkBehaviourDataPacket : IPacket
     {
+        /// <summary>
+        /// The network id of the network object.
+        /// </summary>
         public NetworkId Id { get; set; }
-
+        
+        /// <summary>
+        /// The behaviour id of the network behaviour (index in the network object).
+        /// </summary>
         public byte BehaviourId { get; set; }
-
+    
+        /// <summary>
+        /// The payload of the network behaviour data.
+        /// </summary>
         public byte[] Payload { get; set; }
 
         public void Serialize(BinaryWriter writer)
