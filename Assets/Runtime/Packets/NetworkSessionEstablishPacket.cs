@@ -8,11 +8,10 @@ namespace NetBuff.Packets
         public virtual void Serialize(BinaryWriter writer)
         {
         }
-        
+
 
         public virtual void Deserialize(BinaryReader reader)
         {
-            
         }
     }
 }

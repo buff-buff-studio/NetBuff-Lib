@@ -407,6 +407,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f50078f9f0a4835ae0368ca65528c5a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  graphPlottingRate: 10
+  plotFPS: 0
+  plotLatency: 0
+  plotPacketRate: 0
+  currentGraph: 0
 --- !u!114 &899349346
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -422,6 +427,7 @@ MonoBehaviour:
   versionMagicNumber: 0
   defaultTickRate: 50
   spawnsPlayer: 1
+  supportsSessionRestoration: 1
   transport: {fileID: 899349348}
   prefabRegistry: {fileID: 11400000, guid: 1c87b8f95c13b164ca498de55aa5a703, type: 2}
   playerPrefab: {fileID: 8412692207167386886, guid: 4e8a65caa91e21148ae84c3c6a102ad4, type: 3}
@@ -433,6 +439,9 @@ MonoBehaviour:
   dirtyBehaviours: []
   endTypeAfterReload: 0
   isClientReloaded: 0
+  persistentSessionData:
+    _serializedList: []
+  persistentDisconnectedSessionData: []
 --- !u!4 &899349347
 Transform:
   m_ObjectHideFlags: 0
@@ -587,8 +596,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 65bf33cceedf44dcbc6b81c5b5ae1454, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scene1: Scene1
-  scene2: Scene2
+  scene1: SceneLoadingSub1
+  scene2: SceneLoadingSub2
   prefab: {fileID: 4993544480538405186, guid: 35a54608597011141b59598e7a5e3f33, type: 3}
 --- !u!114 &1705818153
 MonoBehaviour:

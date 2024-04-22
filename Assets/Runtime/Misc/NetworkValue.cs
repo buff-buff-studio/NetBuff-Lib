@@ -1,7 +1,7 @@
 using System;
 using System.IO;
-using UnityEngine;
 using NetBuff.Components;
+using UnityEngine;
 using UnityEngine.Serialization;
 
 namespace NetBuff.Misc
@@ -15,29 +15,41 @@ namespace NetBuff.Misc
             Server,
             Everybody
         }
-        
-        public NetworkBehaviour AttachedTo {get; set;}
-        
+
+        public NetworkBehaviour AttachedTo { get; set; }
+
         public abstract void Serialize(BinaryWriter writer);
-        
+
         public abstract void Deserialize(BinaryReader reader);
-        
+
         #if UNITY_EDITOR
         public abstract void EditorForceUpdate();
         #endif
     }
-    
+
     [Serializable]
     public abstract class NetworkValue<T> : NetworkValue
     {
-        [FormerlySerializedAs("_value")] 
+        public delegate void ValueChangeHandler(T oldValue, T newValue);
+
+        [FormerlySerializedAs("_value")]
         [SerializeField]
         protected T value;
-    
-        public T Value 
+
+        [FormerlySerializedAs("_type")]
+        [SerializeField]
+        protected ModifierType type;
+
+        protected NetworkValue(T defaultValue, ModifierType type = ModifierType.OwnerOnly)
+        {
+            value = defaultValue;
+            this.type = type;
+        }
+
+        public T Value
         {
             get => value;
-            
+
             [RequiresAuthority]
             set
             {
@@ -50,34 +62,23 @@ namespace NetBuff.Misc
                     SetValueCalling(value);
                     return;
                 }
-                
-                if(AttachedTo == null)
+
+                if (AttachedTo == null)
                     throw new InvalidOperationException("This value is not attached to any NetworkBehaviour");
-                
-                if(!CheckPermission())
+
+                if (!CheckPermission())
                     throw new InvalidOperationException("You don't have permission to modify this value");
-                
+
                 SetValueCalling(value);
                 AttachedTo.MarkValueDirty(this);
             }
         }
 
-        public delegate void ValueChangeHandler(T oldValue, T newValue);
         public event ValueChangeHandler OnValueChanged;
 
-        [FormerlySerializedAs("_type")] 
-        [SerializeField]
-        protected ModifierType type;
-
-        protected NetworkValue(T defaultValue, ModifierType type = ModifierType.OwnerOnly)
-        {
-            value = defaultValue;
-            this.type = type;
-        }
-        
         public bool CheckPermission()
         {
-            switch(type)
+            switch (type)
             {
                 case ModifierType.OwnerOnly:
                     return AttachedTo.HasAuthority;
@@ -89,21 +90,21 @@ namespace NetBuff.Misc
                     return false;
             }
         }
-        
+
         protected void SetValueCalling(T newValue)
         {
             var oldValue = value;
             value = newValue;
-            
+
             OnValueChanged?.Invoke(oldValue, newValue);
         }
-        
+
         #if UNITY_EDITOR
         public override void EditorForceUpdate()
         {
             SetValueCalling(value);
-            
-            if(AttachedTo != null)
+
+            if (AttachedTo != null)
                 AttachedTo.MarkValueDirty(this);
         }
         #endif
@@ -113,11 +114,14 @@ namespace NetBuff.Misc
             return $"NetworkValue({value.ToString()})";
         }
     }
-    
+
     [Serializable]
     public class BoolNetworkValue : NetworkValue<bool>
     {
-        public BoolNetworkValue(bool defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue, type) {}
+        public BoolNetworkValue(bool defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue,
+            type)
+        {
+        }
 
         public override void Serialize(BinaryWriter writer)
         {
@@ -130,11 +134,14 @@ namespace NetBuff.Misc
             SetValueCalling(v);
         }
     }
-    
+
     [Serializable]
     public class ByteNetworkValue : NetworkValue<byte>
     {
-        public ByteNetworkValue(byte defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue, type) {}
+        public ByteNetworkValue(byte defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue,
+            type)
+        {
+        }
 
         public override void Serialize(BinaryWriter writer)
         {
@@ -147,11 +154,13 @@ namespace NetBuff.Misc
             SetValueCalling(v);
         }
     }
-    
+
     [Serializable]
     public class IntNetworkValue : NetworkValue<int>
     {
-        public IntNetworkValue(int defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue, type) {}
+        public IntNetworkValue(int defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue, type)
+        {
+        }
 
         public override void Serialize(BinaryWriter writer)
         {
@@ -164,11 +173,14 @@ namespace NetBuff.Misc
             SetValueCalling(v);
         }
     }
-    
+
     [Serializable]
     public class FloatNetworkValue : NetworkValue<float>
     {
-        public FloatNetworkValue(float defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue, type) {}
+        public FloatNetworkValue(float defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue,
+            type)
+        {
+        }
 
         public override void Serialize(BinaryWriter writer)
         {
@@ -181,11 +193,14 @@ namespace NetBuff.Misc
             SetValueCalling(v);
         }
     }
-    
+
     [Serializable]
     public class DoubleNetworkValue : NetworkValue<double>
     {
-        public DoubleNetworkValue(double defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue, type) {}
+        public DoubleNetworkValue(double defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue,
+            type)
+        {
+        }
 
         public override void Serialize(BinaryWriter writer)
         {
@@ -198,11 +213,14 @@ namespace NetBuff.Misc
             SetValueCalling(v);
         }
     }
-    
+
     [Serializable]
     public class LongNetworkValue : NetworkValue<long>
     {
-        public LongNetworkValue(long defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue, type) {}
+        public LongNetworkValue(long defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue,
+            type)
+        {
+        }
 
         public override void Serialize(BinaryWriter writer)
         {
@@ -215,11 +233,14 @@ namespace NetBuff.Misc
             SetValueCalling(v);
         }
     }
-    
+
     [Serializable]
     public class ShortNetworkValue : NetworkValue<short>
     {
-        public ShortNetworkValue(short defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue, type) {}
+        public ShortNetworkValue(short defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue,
+            type)
+        {
+        }
 
         public override void Serialize(BinaryWriter writer)
         {
@@ -232,11 +253,14 @@ namespace NetBuff.Misc
             SetValueCalling(v);
         }
     }
-    
+
     [Serializable]
     public class StringNetworkValue : NetworkValue<string>
     {
-        public StringNetworkValue(string defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue, type) {}
+        public StringNetworkValue(string defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue,
+            type)
+        {
+        }
 
         public override void Serialize(BinaryWriter writer)
         {
@@ -249,11 +273,14 @@ namespace NetBuff.Misc
             SetValueCalling(v);
         }
     }
- 
+
     [Serializable]
     public class Vector2NetworkValue : NetworkValue<Vector2>
     {
-        public Vector2NetworkValue(Vector2 defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue, type) {}
+        public Vector2NetworkValue(Vector2 defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(
+            defaultValue, type)
+        {
+        }
 
         public override void Serialize(BinaryWriter writer)
         {
@@ -268,11 +295,14 @@ namespace NetBuff.Misc
             SetValueCalling(new Vector2(x, y));
         }
     }
-    
+
     [Serializable]
     public class Vector3NetworkValue : NetworkValue<Vector3>
     {
-        public Vector3NetworkValue(Vector3 defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue, type) {}
+        public Vector3NetworkValue(Vector3 defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(
+            defaultValue, type)
+        {
+        }
 
         public override void Serialize(BinaryWriter writer)
         {
@@ -289,11 +319,14 @@ namespace NetBuff.Misc
             SetValueCalling(new Vector3(x, y, z));
         }
     }
-    
+
     [Serializable]
     public class Vector4NetworkValue : NetworkValue<Vector4>
     {
-        public Vector4NetworkValue(Vector4 defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue, type) {}
+        public Vector4NetworkValue(Vector4 defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(
+            defaultValue, type)
+        {
+        }
 
         public override void Serialize(BinaryWriter writer)
         {
@@ -312,11 +345,14 @@ namespace NetBuff.Misc
             SetValueCalling(new Vector4(x, y, z, w));
         }
     }
- 
+
     [Serializable]
     public class QuaternionNetworkValue : NetworkValue<Quaternion>
     {
-        public QuaternionNetworkValue(Quaternion defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue, type) {}
+        public QuaternionNetworkValue(Quaternion defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(
+            defaultValue, type)
+        {
+        }
 
         public override void Serialize(BinaryWriter writer)
         {
@@ -335,11 +371,14 @@ namespace NetBuff.Misc
             SetValueCalling(new Quaternion(x, y, z, w));
         }
     }
-    
+
     [Serializable]
     public class ColorNetworkValue : NetworkValue<Color>
     {
-        public ColorNetworkValue(Color defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue, type) {}
+        public ColorNetworkValue(Color defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue,
+            type)
+        {
+        }
 
         public override void Serialize(BinaryWriter writer)
         {
@@ -358,11 +397,14 @@ namespace NetBuff.Misc
             SetValueCalling(new Color(r, g, b, a));
         }
     }
-    
+
     [Serializable]
     public class NetworkIdNetworkValue : NetworkValue<NetworkId>
     {
-        public NetworkIdNetworkValue(NetworkId defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue, type) {}
+        public NetworkIdNetworkValue(NetworkId defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(
+            defaultValue, type)
+        {
+        }
 
         public override void Serialize(BinaryWriter writer)
         {

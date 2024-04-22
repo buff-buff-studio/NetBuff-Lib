@@ -13,7 +13,7 @@ namespace NetBuff
         public enum EndType
         {
             None,
-            Server, 
+            Server,
             Host,
             Client
         }
@@ -22,13 +22,21 @@ namespace NetBuff
         [SerializeField]
         protected new string name = "server";
         #endregion
-        
+
+        #region Utils Methods
+        public abstract ServerDiscover GetServerDiscoverer();
+        #endregion
+
         #region Helper Properties
         public EndType Type { get; protected set; } = EndType.None;
-        
+
         public IConnectionInfo ClientConnectionInfo { get; protected set; }
-        
-        public string Name { get => name; set => name = value; }
+
+        public string Name
+        {
+            get => name;
+            set => name = value;
+        }
         #endregion
 
         #region Callbacks
@@ -38,33 +46,29 @@ namespace NetBuff
         public Action<int, string> OnClientDisconnected { get; set; }
         public Action OnConnect { get; set; }
         public Action<string> OnDisconnect { get; set; }
-        
-        public Action OnServerStart { get; set; }
-        
-        public Action OnServerStop { get; set; }
-        #endregion
 
-        #region Utils Methods
-        public abstract ServerDiscover GetServerDiscoverer();
+        public Action OnServerStart { get; set; }
+
+        public Action OnServerStop { get; set; }
         #endregion
 
         #region Management Methods
         public abstract void StartHost(int magicNumber);
-        
+
         public abstract void StartServer();
-        
+
         public abstract void StartClient(int magicNumber);
-        
+
         public abstract void Close();
         #endregion
 
         #region Client Methods
         [ServerOnly]
         public abstract IClientConnectionInfo GetClientInfo(int id);
-        
+
         [ServerOnly]
         public abstract int GetClientCount();
-        
+
         [ServerOnly]
         public abstract IEnumerable<IClientConnectionInfo> GetClients();
         #endregion
@@ -72,16 +76,16 @@ namespace NetBuff
         #region Lifecycle
         [ClientOnly]
         public abstract void ClientDisconnect(string reason);
-        
+
         [ServerOnly]
         public abstract void ServerDisconnect(int id, string reason);
-        
+
         [ClientOnly]
         public abstract void ClientSendPacket(IPacket packet, bool reliable = false);
-        
+
         [ServerOnly]
         public abstract void ServerSendPacket(IPacket packet, int target = -1, bool reliable = false);
-        
+
         [ServerOnly]
         public void BroadcastServerPacket(IPacket packet, bool reliable = false)
         {

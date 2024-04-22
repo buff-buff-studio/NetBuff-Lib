@@ -11,36 +11,12 @@ namespace NetBuff.Local
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/transports/#local")]
     public class LocalNetworkTransport : NetworkTransport
     {
-        private readonly Queue<Action> _dispatcher = new();
-
-        public class LocalClientConnectionInfo : IClientConnectionInfo
-        {
-            public int Latency => 0;
-
-            public long PacketSent => 0;
-            
-            public long PacketReceived => 0;
-            
-            public long PacketLoss => 0;
-            
-            public int Id { get; }
-            
-            public LocalClientConnectionInfo(int id)
-            {
-                Id = id;
-            }
-        }
-
         #region Inspector Fields
-        [SerializeField] 
+        [SerializeField]
         protected int clientCount = 1;
         #endregion
-       
-        #region Internal Fields
-        private int _loadedClients = 0;
-        private int _nextClientId;
-        private readonly Dictionary<int, LocalClientConnectionInfo> _clients = new Dictionary<int, LocalClientConnectionInfo>();
-        #endregion
+
+        private readonly Queue<Action> _dispatcher = new();
 
         #region Helper Properties
         public int ClientCount
@@ -48,14 +24,19 @@ namespace NetBuff.Local
             get => clientCount;
             set
             {
-                if(Type is EndType.Client or EndType.Host)
+                if (Type is EndType.Client or EndType.Host)
                     throw new Exception("Cannot change client count while clients are running");
-                
+
                 clientCount = value;
             }
         }
         #endregion
-        
+
+        private void Update()
+        {
+            while (_dispatcher.Count > 0) _dispatcher.Dequeue().Invoke();
+        }
+
         private void CreatePlayers()
         {
             for (var i = 0; i < clientCount; i++)
@@ -74,15 +55,15 @@ namespace NetBuff.Local
 
         public override void StartHost(int magicNumber)
         {
-            if(clientCount == 0)
+            if (clientCount == 0)
                 throw new Exception("Client count is 0");
-                
+
             Type = EndType.Host;
             OnServerStart?.Invoke();
-            
+
             CreatePlayers();
         }
-        
+
         public override void StartServer()
         {
             Type = EndType.Server;
@@ -93,10 +74,10 @@ namespace NetBuff.Local
         {
             if (Type == EndType.None)
                 throw new Exception("Cannot start client without a host or server");
-            
-            if(clientCount == 0)
+
+            if (clientCount == 0)
                 throw new Exception("Client count is 0");
-            
+
             Type = EndType.Host;
 
             CreatePlayers();
@@ -135,17 +116,15 @@ namespace NetBuff.Local
 
         public override IEnumerable<IClientConnectionInfo> GetClients()
         {
-           return _clients.Values;
+            return _clients.Values;
         }
 
         public override void ClientDisconnect(string reason)
         {
-            
         }
 
         public override void ServerDisconnect(int id, string reason)
         {
-            
         }
 
         public override void ClientSendPacket(IPacket packet, bool reliable = false)
@@ -164,13 +143,29 @@ namespace NetBuff.Local
         {
             _dispatcher.Enqueue(() => OnClientPacketReceived.Invoke(packet));
         }
-        
-        private void Update()
+
+        public class LocalClientConnectionInfo : IClientConnectionInfo
         {
-            while (_dispatcher.Count > 0)
+            public LocalClientConnectionInfo(int id)
             {
-                _dispatcher.Dequeue().Invoke();
+                Id = id;
             }
+
+            public int Latency => 0;
+
+            public long PacketSent => 0;
+
+            public long PacketReceived => 0;
+
+            public long PacketLoss => 0;
+
+            public int Id { get; }
         }
+
+        #region Internal Fields
+        private int _loadedClients;
+        private int _nextClientId;
+        private readonly Dictionary<int, LocalClientConnectionInfo> _clients = new();
+        #endregion
     }
 }

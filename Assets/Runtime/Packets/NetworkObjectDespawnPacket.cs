@@ -7,7 +7,7 @@ namespace NetBuff.Packets
     public class NetworkObjectDespawnPacket : IPacket
     {
         public NetworkId Id { get; set; }
-        
+
         public void Serialize(BinaryWriter writer)
         {
             Id.Serialize(writer);

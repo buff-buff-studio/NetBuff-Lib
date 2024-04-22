@@ -7,15 +7,15 @@ namespace NetBuff.Misc
         Desktop,
         Windows,
         Linux,
-        MacOS, 
-        
+        MacOS,
+
         Mobile,
         Android,
         IOS,
-        
+
         Unknown
     }
-    
+
     public static class PlatformExtensions
     {
         public static Platform GetPlatform()

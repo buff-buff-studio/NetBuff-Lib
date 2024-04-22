@@ -7,7 +7,7 @@ namespace NetBuff.Packets
     public class NetworkObjectMoveScenePacket : IPacket
     {
         public NetworkId Id { get; set; }
-        
+
         public int SceneId { get; set; }
 
         public void Serialize(BinaryWriter writer)

@@ -7,9 +7,9 @@ namespace NetBuff.Packets
     public class NetworkValuesPacket : IPacket
     {
         public NetworkId Id { get; set; }
-        
+
         public byte BehaviourId { get; set; }
-        
+
         public byte[] Payload { get; set; }
 
         public void Serialize(BinaryWriter writer)

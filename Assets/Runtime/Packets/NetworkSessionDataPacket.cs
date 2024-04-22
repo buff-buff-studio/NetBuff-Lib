@@ -8,7 +8,7 @@ namespace NetBuff.Packets
     {
         public int ClientId { get; set; }
         public ArraySegment<byte> Data { get; set; }
-        
+
         public void Serialize(BinaryWriter writer)
         {
             writer.Write(ClientId);

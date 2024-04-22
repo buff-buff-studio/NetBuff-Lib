@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 // ReSharper disable BitwiseOperatorOnEnumWithoutFlags
 namespace NetBuff.Components
@@ -13,23 +12,23 @@ namespace NetBuff.Components
         #pragma warning disable 0109
         [SerializeField]
         protected new Rigidbody rigidbody;
-        
+
         [SerializeField]
         protected bool syncVelocity = true;
-        
+
         [SerializeField]
         protected float velocityThreshold = 0.001f;
-        
-        [SerializeField] 
+
+        [SerializeField]
         protected bool syncAngularVelocity = true;
-        
+
         [SerializeField]
         protected float angularVelocityThreshold = 0.001f;
-        
+
         [SerializeField]
         protected bool syncIsKinematic;
         #endregion
-        
+
         #region Internal Fields
         private Vector3 _lastVelocity;
         private Vector3 _lastAngularVelocity;
@@ -50,40 +49,41 @@ namespace NetBuff.Components
             get => velocityThreshold;
             set => velocityThreshold = value;
         }
-        
+
         public bool SyncAngularVelocity
         {
             get => syncAngularVelocity;
             set => syncAngularVelocity = value;
         }
-        
+
         public float AngularVelocityThreshold
         {
             get => angularVelocityThreshold;
             set => angularVelocityThreshold = value;
         }
-        
+
         public bool SyncIsKinematic
         {
             get => syncIsKinematic;
             set => syncIsKinematic = value;
         }
-        
         #endregion
-        
+
         protected override void OnEnable()
         {
             base.OnEnable();
-            if(rigidbody == null)
+            if (rigidbody == null)
                 if (TryGetComponent(out Rigidbody rb))
+                {
                     rigidbody = rb;
+                }
                 else
                 {
                     Debug.LogError("No Rigidbody component found on " + name);
                     enabled = false;
                     return;
                 }
-                
+
             _lastVelocity = rigidbody.velocity;
             _lastAngularVelocity = rigidbody.angularVelocity;
             _lastIsKinematic = rigidbody.isKinematic;
@@ -95,14 +95,18 @@ namespace NetBuff.Components
             var positionChanged = Vector3.Distance(transform.position, lastPosition) > positionThreshold;
             var rotationChanged = Vector3.Distance(transform.eulerAngles, lastRotation) > rotationThreshold;
             var scaleChanged = Vector3.Distance(transform.localScale, lastScale) > scaleThreshold;
-            var velocityChanged = syncVelocity && Vector3.Distance(rigidbody.velocity, _lastVelocity) > velocityThreshold;
-            var angularVelocityChanged = syncAngularVelocity && Vector3.Distance(rigidbody.angularVelocity, _lastAngularVelocity) > angularVelocityThreshold;
+            var velocityChanged =
+                syncVelocity && Vector3.Distance(rigidbody.velocity, _lastVelocity) > velocityThreshold;
+            var angularVelocityChanged = syncAngularVelocity &&
+                                         Vector3.Distance(rigidbody.angularVelocity, _lastAngularVelocity) >
+                                         angularVelocityThreshold;
             var isKinematicChanged = syncIsKinematic && rigidbody.isKinematic != _lastIsKinematic;
-            
-            if(positionChanged || rotationChanged || scaleChanged || velocityChanged || angularVelocityChanged || isKinematicChanged)
+
+            if (positionChanged || rotationChanged || scaleChanged || velocityChanged || angularVelocityChanged ||
+                isKinematicChanged)
             {
                 components.Clear();
-                
+
                 var t = transform;
                 lastPosition = t.position;
                 lastRotation = t.eulerAngles;
@@ -110,8 +114,8 @@ namespace NetBuff.Components
                 _lastVelocity = rigidbody.velocity;
                 _lastAngularVelocity = rigidbody.angularVelocity;
                 _lastIsKinematic = rigidbody.isKinematic;
-                
-                var flag = (short) 0;
+
+                var flag = (short)0;
                 if (positionChanged)
                 {
                     flag |= 1;
@@ -119,7 +123,7 @@ namespace NetBuff.Components
                     if ((syncMode & SyncMode.PositionY) != 0) components.Add(lastPosition.y);
                     if ((syncMode & SyncMode.PositionZ) != 0) components.Add(lastPosition.z);
                 }
-                
+
                 if (rotationChanged)
                 {
                     flag |= 2;
@@ -127,7 +131,7 @@ namespace NetBuff.Components
                     if ((syncMode & SyncMode.RotationY) != 0) components.Add(lastRotation.y);
                     if ((syncMode & SyncMode.RotationZ) != 0) components.Add(lastRotation.z);
                 }
-                
+
                 if (scaleChanged)
                 {
                     flag |= 4;
@@ -135,7 +139,7 @@ namespace NetBuff.Components
                     if ((syncMode & SyncMode.ScaleY) != 0) components.Add(lastScale.y);
                     if ((syncMode & SyncMode.ScaleZ) != 0) components.Add(lastScale.z);
                 }
-                
+
                 if (velocityChanged)
                 {
                     flag |= 8;
@@ -143,7 +147,7 @@ namespace NetBuff.Components
                     components.Add(_lastVelocity.y);
                     components.Add(_lastVelocity.z);
                 }
-                
+
                 if (angularVelocityChanged)
                 {
                     flag |= 16;
@@ -151,13 +155,13 @@ namespace NetBuff.Components
                     components.Add(_lastAngularVelocity.y);
                     components.Add(_lastAngularVelocity.z);
                 }
-                
+
                 if (isKinematicChanged)
                 {
                     flag |= 32;
                     components.Add(_lastIsKinematic ? 1 : 0);
                 }
-                
+
                 packet = new TransformPacket
                 {
                     Id = Id,
@@ -166,7 +170,7 @@ namespace NetBuff.Components
                 };
                 return true;
             }
-            
+
             packet = null;
             return false;
         }
@@ -176,7 +180,7 @@ namespace NetBuff.Components
             var cmp = packet.Components;
             var flag = packet.Flag;
             var t = transform;
-            
+
             var index = 0;
             if ((flag & 1) != 0)
             {
@@ -186,7 +190,7 @@ namespace NetBuff.Components
                 if ((syncMode & SyncMode.PositionZ) != 0) pos.z = cmp[index++];
                 t.position = pos;
             }
-            
+
             if ((flag & 2) != 0)
             {
                 var rot = t.eulerAngles;
@@ -195,7 +199,7 @@ namespace NetBuff.Components
                 if ((syncMode & SyncMode.RotationZ) != 0) rot.z = cmp[index++];
                 t.eulerAngles = rot;
             }
-            
+
             if ((flag & 4) != 0)
             {
                 var scale = t.localScale;
@@ -204,18 +208,18 @@ namespace NetBuff.Components
                 if ((syncMode & SyncMode.ScaleZ) != 0) scale.z = cmp[index++];
                 t.localScale = scale;
             }
-            
+
             if ((flag & 8) != 0)
             {
                 var velocity = rigidbody.velocity;
                 velocity.x = cmp[index++];
                 velocity.y = cmp[index++];
                 velocity.z = cmp[index++];
-                
-                if(!rigidbody.isKinematic)
+
+                if (!rigidbody.isKinematic)
                     rigidbody.velocity = velocity;
             }
-            
+
             if ((flag & 16) != 0)
             {
                 var angularVelocity = rigidbody.angularVelocity;
@@ -224,11 +228,8 @@ namespace NetBuff.Components
                 angularVelocity.z = cmp[index++];
                 rigidbody.angularVelocity = angularVelocity;
             }
-            
-            if ((flag & 32) != 0)
-            {
-                rigidbody.isKinematic = cmp[index] > 0;
-            }
+
+            if ((flag & 32) != 0) rigidbody.isKinematic = cmp[index] > 0;
         }
         #endregion
     }

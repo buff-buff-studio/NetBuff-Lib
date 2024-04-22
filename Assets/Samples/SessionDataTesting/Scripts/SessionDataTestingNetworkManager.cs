@@ -13,6 +13,17 @@ namespace Samples.SessionDataTesting.Scripts
         public InputField nicknameInput;
         public Toggle shouldBeAccepted;
 
+
+        #region Session Data Restoring
+        protected override SessionData OnRestoreSessionData(int clientId, NetworkSessionEstablishPacket packet)
+        {
+            //Keeps the session using the nickname
+            var packetData = (ExampleNetworkSessionEstablishPacket)packet;
+            return GetAllDisconnectedSessionData<ExampleSessionData>()
+                .FirstOrDefault(data => data.nickname == packetData.Nickname);
+        }
+        #endregion
+
         #region Session Establishing
         protected override NetworkSessionEstablishPacket OnCreateSessionEstablishPacket()
         {
@@ -23,31 +34,22 @@ namespace Samples.SessionDataTesting.Scripts
             };
         }
 
-        protected override SessionEstablishingResponse OnSessionEstablishingRequest(NetworkSessionEstablishPacket packet)
+        protected override SessionEstablishingResponse OnSessionEstablishingRequest(
+            NetworkSessionEstablishPacket packet)
         {
-            var examplePacket = (ExampleNetworkSessionEstablishPacket) packet;
-            
+            var examplePacket = (ExampleNetworkSessionEstablishPacket)packet;
+
             if (examplePacket.ShouldBeAccepted)
                 return new SessionEstablishingResponse
                 {
-                    Type = SessionEstablishingResponse.SessionEstablishingResponseType.Accept,
+                    Type = SessionEstablishingResponse.SessionEstablishingResponseType.Accept
                 };
-            
-            return new SessionEstablishingResponse
-                {
-                    Type = SessionEstablishingResponse.SessionEstablishingResponseType.Reject,
-                    Reason = "just_testing"
-                };
-        }
-        #endregion
-        
 
-        #region Session Data Restoring
-        protected override SessionData OnRestoreSessionData(int clientId, NetworkSessionEstablishPacket packet)
-        {
-            //Keeps the session using the nickname
-            var packetData = (ExampleNetworkSessionEstablishPacket) packet;
-            return GetAllDisconnectedSessionData<ExampleSessionData>().FirstOrDefault(data => data.nickname == packetData.Nickname);
+            return new SessionEstablishingResponse
+            {
+                Type = SessionEstablishingResponse.SessionEstablishingResponseType.Reject,
+                Reason = "just_testing"
+            };
         }
         #endregion
 
@@ -55,28 +57,28 @@ namespace Samples.SessionDataTesting.Scripts
         //Server Side
         protected override SessionData OnCreateNewSessionData(int clientId, NetworkSessionEstablishPacket packet)
         {
-            var packetData = (ExampleNetworkSessionEstablishPacket) packet;
-            return new ExampleSessionData()
+            var packetData = (ExampleNetworkSessionEstablishPacket)packet;
+            return new ExampleSessionData
             {
                 nickname = packetData.Nickname
             };
         }
-        
+
         protected override SessionData OnCreateEmptySessionData()
         {
             return new ExampleSessionData();
         }
         #endregion
-        
+
         #region Session Data Manipulation
         public void Update()
         {
             if (Time.frameCount % 100 != 0)
                 return;
-            
-            if(!IsServerRunning)
+
+            if (!IsServerRunning)
                 return;
-            
+
             foreach (var sessionData in GetAllSessionData<ExampleSessionData>())
             {
                 sessionData.someInt++;
@@ -90,7 +92,7 @@ namespace Samples.SessionDataTesting.Scripts
         {
             var exampleSessionData = GetLocalSessionData<ExampleSessionData>();
             //var exampleSessionData = (ExampleSessionData) data;
-            
+
             Debug.LogError($"Test: {exampleSessionData.someInt}");
         }
         #endregion
@@ -100,7 +102,7 @@ namespace Samples.SessionDataTesting.Scripts
     {
         public bool ShouldBeAccepted { get; set; }
         public string Nickname { get; set; }
-        
+
         public override void Serialize(BinaryWriter writer)
         {
             writer.Write(ShouldBeAccepted);
@@ -113,12 +115,12 @@ namespace Samples.SessionDataTesting.Scripts
             Nickname = reader.ReadString();
         }
     }
-    
+
     public class ExampleSessionData : SessionData
     {
         //Doesn't needs to be synced to the client
         public string nickname;
-        
+
         //Needs to be synced to the client
         public int someInt;
 

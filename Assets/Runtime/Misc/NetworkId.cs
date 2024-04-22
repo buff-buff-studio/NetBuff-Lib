@@ -2,64 +2,51 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
+using System.Text;
 using UnityEngine;
 using Random = System.Random;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace NetBuff.Misc
 {
     [Serializable]
     public class NetworkId : IComparable
     {
-        private static Random _random = new Random();
+        private static Random _random = new();
 
-        public static NetworkId Empty => new NetworkId
-        {
-            high = 0,
-            low = 0
-        };
-        
+        [SerializeField]
+        private int high;
+
+        [SerializeField]
+        private int low;
+
         private NetworkId()
         {
             low = _random.Next(-2147483648, 2147483647);
             high = _random.Next(-2147483648, 2147483647);
         }
-        
+
         public NetworkId(int high, int low)
         {
             this.high = high;
             this.low = low;
         }
-        
-        public static NetworkId New()
+
+        public static NetworkId Empty => new()
         {
-            return new NetworkId()
-            {
-                low = _random.Next(-2147483648, 2147483647),
-                high = _random.Next(-2147483648, 2147483647)
-            };
-        }
-        
-        public static NetworkId Read(BinaryReader reader)
-        {
-            return new NetworkId
-            {
-                low = reader.ReadInt32(),
-                high = reader.ReadInt32()
-            };
-        }
-        
+            high = 0,
+            low = 0
+        };
+
         public bool IsEmpty => low == 0 && high == 0;
-        
-        [SerializeField]
-        private int high;
-        [SerializeField]
-        private int low;
-        
+
         public int High => high;
-        
+
         public int Low => low;
 
-        public int CompareTo ( object obj )
+        public int CompareTo(object obj)
         {
             switch (obj)
             {
@@ -69,11 +56,29 @@ namespace NetBuff.Misc
                     var cmp = high.CompareTo(networkId.high);
                     return cmp == 0 ? low.CompareTo(networkId.low) : cmp;
             }
-            
+
             return -1;
         }
-        
-        public override bool Equals ( object obj )
+
+        public static NetworkId New()
+        {
+            return new NetworkId
+            {
+                low = _random.Next(-2147483648, 2147483647),
+                high = _random.Next(-2147483648, 2147483647)
+            };
+        }
+
+        public static NetworkId Read(BinaryReader reader)
+        {
+            return new NetworkId
+            {
+                low = reader.ReadInt32(),
+                high = reader.ReadInt32()
+            };
+        }
+
+        public override bool Equals(object obj)
         {
             return obj switch
             {
@@ -82,20 +87,20 @@ namespace NetBuff.Misc
                 _ => false
             };
         }
-        
+
         [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
         public override int GetHashCode()
         {
             return low ^ high;
         }
-        
+
         public NetworkId Serialize(BinaryWriter writer)
         {
             writer.Write(low);
             writer.Write(high);
             return this;
         }
-        
+
         public NetworkId Deserialize(BinaryReader reader)
         {
             low = reader.ReadInt32();
@@ -105,12 +110,12 @@ namespace NetBuff.Misc
 
         public override string ToString()
         {
-            var str = new System.Text.StringBuilder();
+            var str = new StringBuilder();
             str.Append(high.ToString("x8"));
             str.Append(low.ToString("x8"));
             return str.ToString();
         }
-        
+
         public static bool TryParse(string input, out object result)
         {
             try
@@ -128,50 +133,47 @@ namespace NetBuff.Misc
                 return false;
             }
         }
-        
+
         public static bool operator ==(NetworkId a, NetworkId b)
         {
             if (a is null || b is null)
                 return a is null && b is null;
             return a.high == b.high && a.low == b.low;
         }
-        
+
         public static bool operator !=(NetworkId a, NetworkId b)
         {
-            if (a is null || b is null)
-            {
-                return a is not null || b is not null;
-            }
+            if (a is null || b is null) return a is not null || b is not null;
             return a.high != b.high || a.low != b.low;
         }
     }
-    
-    
-#if UNITY_EDITOR
-    [UnityEditor.CustomPropertyDrawer(typeof(NetworkId))]
-    public class NetworkIdDrawer : UnityEditor.PropertyDrawer
+
+
+    #if UNITY_EDITOR
+    [CustomPropertyDrawer(typeof(NetworkId))]
+    public class NetworkIdDrawer : PropertyDrawer
     {
-        public override void OnGUI(Rect position, UnityEditor.SerializedProperty property, GUIContent label)
+        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             position.width -= 20;
             var a = property.FindPropertyRelative("high").intValue;
             var b = property.FindPropertyRelative("low").intValue;
-            var str = new System.Text.StringBuilder();
+            var str = new StringBuilder();
             str.Append(a.ToString("x8"));
             str.Append(b.ToString("x8"));
             var old = str.ToString();
-            var changed = UnityEditor.EditorGUI.TextField(position, label, old);
-        
+            var changed = EditorGUI.TextField(position, label, old);
+
             if (changed != old)
-            {
                 if (changed.Length == 16)
                 {
                     property.FindPropertyRelative("high").intValue = int.Parse(changed[..8], NumberStyles.HexNumber);
-                    property.FindPropertyRelative("low").intValue = int.Parse(changed.Substring(8, 8), NumberStyles.HexNumber);
+                    property.FindPropertyRelative("low").intValue =
+                        int.Parse(changed.Substring(8, 8), NumberStyles.HexNumber);
                 }
-            }
+
             GUI.enabled = true;
-        
+
             position.x += position.width;
             position.width = 20;
             GUI.enabled = !Application.isPlaying;
@@ -181,10 +183,9 @@ namespace NetBuff.Misc
                 property.FindPropertyRelative("low").intValue = new Random().Next(-2147483648, 2147483647);
                 property.serializedObject.ApplyModifiedProperties();
             }
+
             GUI.enabled = true;
         }
     }
     #endif
 }
-
-

@@ -1,5 +1,9 @@
-﻿namespace NetBuff.Misc
+﻿using System;
+
+namespace NetBuff.Misc
 {
-    [System.AttributeUsage(System.AttributeTargets.Method | System.AttributeTargets.Field | System.AttributeTargets.Property)]
-    public class RequiresAuthorityAttribute : System.Attribute {}
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Field | AttributeTargets.Property)]
+    public class RequiresAuthorityAttribute : Attribute
+    {
+    }
 }

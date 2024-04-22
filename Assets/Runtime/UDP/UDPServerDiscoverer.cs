@@ -11,31 +11,10 @@ namespace NetBuff.UDP
 {
     public class UDPServerDiscoverer : ServerDiscover<UDPServerDiscoverer.UDPGameInfo>
     {
-        public class UDPGameInfo : GameInfo
-        {
-            public IPAddress Address { get; set; }
-
-            public override string ToString()
-            {
-                return $"{Name}'s game ({Address}) - {Players}/{MaxPlayers} {Platform} {(HasPassword ? "[Password]" : "")}";
-            }
-
-            public override bool Join()
-            {
-                var transport = NetworkManager.Instance.Transport;
-                var udp = transport as UDPNetworkTransport;
-                if(udp == null)
-                    throw new Exception("Transport is not UDP");
-                udp.Address = Address.ToString();
-                NetworkManager.Instance.StartClient();
-                return true;
-            }
-        }
-        
         private readonly int _magicNumber;
         private readonly int _port;
         private int _searchId;
-       
+
         public UDPServerDiscoverer(int magicNumber, int port)
         {
             _magicNumber = magicNumber;
@@ -59,17 +38,17 @@ namespace NetBuff.UDP
                 {
                     if (id != _searchId)
                         return;
-                    
+
                     if (uip.Address.AddressFamily == AddressFamily.InterNetwork)
                     {
                         var address = uip.Address;
 
-#pragma warning disable CS4014
+                        #pragma warning disable CS4014
                         Task.Run(async () =>
-#pragma warning restore CS4014
+                            #pragma warning restore CS4014
                         {
                             waiting++;
-                            
+
                             try
                             {
                                 var udpClient = new UdpClient();
@@ -84,7 +63,8 @@ namespace NetBuff.UDP
                                 writer.Put("server_search");
                                 writer.Put(_magicNumber);
                                 var data = writer.CopyData();
-                                await udpClient.SendAsync(data, data.Length, new IPEndPoint(IPAddress.Broadcast, _port));
+                                await udpClient.SendAsync(data, data.Length,
+                                    new IPEndPoint(IPAddress.Broadcast, _port));
 
                                 var address2 = new IPEndPoint(IPAddress.Any, _port);
                                 var response = udpClient.Receive(ref address2);
@@ -99,7 +79,7 @@ namespace NetBuff.UDP
                                     var maxPlayers = reader.GetInt();
                                     var platform = (Platform)reader.GetInt();
                                     var hasPassword = reader.GetBool();
-                                    
+
                                     if (id != _searchId)
                                         return;
                                     onFindServer(new UDPGameInfo
@@ -127,7 +107,7 @@ namespace NetBuff.UDP
 
             while (waiting > 0)
                 await Task.Delay(100);
-        
+
             if (id == _searchId)
                 onFinish?.Invoke();
         }
@@ -135,6 +115,28 @@ namespace NetBuff.UDP
         public override void Cancel()
         {
             _searchId++;
+        }
+
+        public class UDPGameInfo : GameInfo
+        {
+            public IPAddress Address { get; set; }
+
+            public override string ToString()
+            {
+                return
+                    $"{Name}'s game ({Address}) - {Players}/{MaxPlayers} {Platform} {(HasPassword ? "[Password]" : "")}";
+            }
+
+            public override bool Join()
+            {
+                var transport = NetworkManager.Instance.Transport;
+                var udp = transport as UDPNetworkTransport;
+                if (udp == null)
+                    throw new Exception("Transport is not UDP");
+                udp.Address = Address.ToString();
+                NetworkManager.Instance.StartClient();
+                return true;
+            }
         }
     }
 }

@@ -7,12 +7,10 @@ namespace NetBuff.Packets
     {
         public void Serialize(BinaryWriter writer)
         {
-            
         }
 
         public void Deserialize(BinaryReader reader)
         {
-            
         }
     }
 }

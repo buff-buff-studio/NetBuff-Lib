@@ -6,7 +6,7 @@ namespace NetBuff.Packets
     public class NetworkClientIdPacket : IPacket
     {
         public int ClientId { get; set; }
-    
+
         public void Serialize(BinaryWriter writer)
         {
             writer.Write(ClientId);

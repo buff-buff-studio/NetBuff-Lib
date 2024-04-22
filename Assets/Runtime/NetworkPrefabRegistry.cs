@@ -11,20 +11,20 @@ namespace NetBuff
     public class NetworkPrefabRegistry : ScriptableObject
     {
         [SerializeField]
-        private SerializedDictionary<NetworkId, GameObject> prefabs = new SerializedDictionary<NetworkId, GameObject>();
-        
+        private SerializedDictionary<NetworkId, GameObject> prefabs = new();
+
         public SerializedDictionary<NetworkId, GameObject> Prefabs => prefabs;
 
         public bool IsPrefabValid(NetworkId id)
         {
             return prefabs.ContainsKey(id);
         }
-        
+
         public bool IsPrefabValid(GameObject prefab)
         {
             return prefab != null && prefabs.ContainsValue(prefab);
         }
-        
+
         public NetworkId GetPrefabId(GameObject prefab)
         {
             var v = prefabs.FirstOrDefault(pair => pair.Value == prefab);

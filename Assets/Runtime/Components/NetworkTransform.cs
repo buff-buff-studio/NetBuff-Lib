@@ -24,22 +24,53 @@ namespace NetBuff.Components
             RotationZ = 32,
             ScaleX = 64,
             ScaleY = 128,
-            ScaleZ = 256,
+            ScaleZ = 256
         }
         #endregion
-        
+
+        private void _Begin()
+        {
+            if (_running) return;
+            if (!HasAuthority) return;
+
+            _running = true;
+            InvokeRepeating(nameof(Tick), 0,
+                1f / (tickRate == -1 ? NetworkManager.Instance.DefaultTickRate : tickRate));
+        }
+
+        private void _Stop()
+        {
+            if (_running)
+            {
+                CancelInvoke(nameof(Tick));
+                _running = false;
+            }
+        }
+
+        private void Tick()
+        {
+            if (!HasAuthority) return;
+            if (ShouldResend(out var packet))
+                SendPacket(packet);
+        }
+
         #region Inspector Fields
         [Header("SETTINGS")]
         [SerializeField]
         protected int tickRate = -1;
+
         [SerializeField]
         protected float positionThreshold = 0.001f;
+
         [SerializeField]
         protected float rotationThreshold = 0.001f;
+
         [SerializeField]
         protected float scaleThreshold = 0.001f;
+
         [SerializeField]
-        protected SyncMode syncMode = SyncMode.PositionX | SyncMode.PositionY | SyncMode.PositionZ | SyncMode.RotationX | SyncMode.RotationY | SyncMode.RotationZ;
+        protected SyncMode syncMode = SyncMode.PositionX | SyncMode.PositionY | SyncMode.PositionZ |
+                                      SyncMode.RotationX | SyncMode.RotationY | SyncMode.RotationZ;
         #endregion
 
         #region Internal Fields
@@ -51,31 +82,30 @@ namespace NetBuff.Components
         #endregion
 
         #region Helper Properties
-
         public int TickRate
         {
             get => tickRate;
             set => tickRate = value;
         }
-        
+
         public float PositionThreshold
         {
             get => positionThreshold;
             set => positionThreshold = value;
         }
-        
+
         public float RotationThreshold
         {
             get => rotationThreshold;
             set => rotationThreshold = value;
-        }   
-        
+        }
+
         public float ScaleThreshold
         {
             get => scaleThreshold;
             set => scaleThreshold = value;
         }
-        
+
         public SyncMode SyncModeMask => syncMode;
         #endregion
 
@@ -94,40 +124,14 @@ namespace NetBuff.Components
                     _Begin();
             }
         }
-        
+
         private void OnDisable()
         {
             _Stop();
         }
         #endregion
-        
-        private void _Begin()
-        {
-            if (_running) return;
-            if (!HasAuthority) return;
-            
-            _running = true;
-            InvokeRepeating(nameof(Tick), 0, 1f / (tickRate == -1 ? NetworkManager.Instance.DefaultTickRate : tickRate));
-        }
-
-        private void _Stop()
-        {
-            if (_running)
-            {
-                CancelInvoke(nameof(Tick));
-                _running = false;
-            }
-        }
-        
-        private void Tick()
-        {
-            if (!HasAuthority) return;
-            if (ShouldResend(out var packet))
-                SendPacket(packet);
-        }
 
         #region Network Callbacks
-
         public override void OnOwnershipChanged(int oldOwner, int newOwner)
         {
             if (HasAuthority)
@@ -140,12 +144,12 @@ namespace NetBuff.Components
         {
             _Begin();
         }
-        
+
         public override void OnServerReceivePacket(IOwnedPacket packet, int clientId)
         {
             if (clientId != OwnerId)
                 return;
-            
+
             if (packet is TransformPacket transformPacket)
                 ServerBroadcastPacketExceptFor(transformPacket, clientId);
         }
@@ -154,7 +158,7 @@ namespace NetBuff.Components
         {
             if (HasAuthority)
                 return;
-            
+
             if (packet is TransformPacket transformPacket)
                 ApplyTransformPacket(transformPacket);
         }
@@ -166,17 +170,17 @@ namespace NetBuff.Components
             var positionChanged = Vector3.Distance(transform.position, lastPosition) > positionThreshold;
             var rotationChanged = Vector3.Distance(transform.eulerAngles, lastRotation) > rotationThreshold;
             var scaleChanged = Vector3.Distance(transform.localScale, lastScale) > scaleThreshold;
-            
-            if(positionChanged || rotationChanged || scaleChanged)
+
+            if (positionChanged || rotationChanged || scaleChanged)
             {
                 components.Clear();
-                
+
                 var t = transform;
                 lastPosition = t.position;
                 lastRotation = t.eulerAngles;
                 lastScale = t.localScale;
-                
-                var flag = (short) 0;
+
+                var flag = (short)0;
                 if (positionChanged)
                 {
                     flag |= 1;
@@ -184,7 +188,7 @@ namespace NetBuff.Components
                     if ((syncMode & SyncMode.PositionY) != 0) components.Add(lastPosition.y);
                     if ((syncMode & SyncMode.PositionZ) != 0) components.Add(lastPosition.z);
                 }
-                
+
                 if (rotationChanged)
                 {
                     flag |= 2;
@@ -192,7 +196,7 @@ namespace NetBuff.Components
                     if ((syncMode & SyncMode.RotationY) != 0) components.Add(lastRotation.y);
                     if ((syncMode & SyncMode.RotationZ) != 0) components.Add(lastRotation.z);
                 }
-                
+
                 if (scaleChanged)
                 {
                     flag |= 4;
@@ -200,7 +204,7 @@ namespace NetBuff.Components
                     if ((syncMode & SyncMode.ScaleY) != 0) components.Add(lastScale.y);
                     if ((syncMode & SyncMode.ScaleZ) != 0) components.Add(lastScale.z);
                 }
-                
+
                 packet = new TransformPacket
                 {
                     Id = Id,
@@ -209,7 +213,7 @@ namespace NetBuff.Components
                 };
                 return true;
             }
-            
+
             packet = null;
             return false;
         }
@@ -219,7 +223,7 @@ namespace NetBuff.Components
             var cmp = packet.Components;
             var flag = packet.Flag;
             var t = transform;
-            
+
             var index = 0;
             if ((flag & 1) != 0)
             {
@@ -229,7 +233,7 @@ namespace NetBuff.Components
                 if ((syncMode & SyncMode.PositionZ) != 0) pos.z = cmp[index++];
                 t.position = pos;
             }
-            
+
             if ((flag & 2) != 0)
             {
                 var rot = t.eulerAngles;
@@ -238,7 +242,7 @@ namespace NetBuff.Components
                 if ((syncMode & SyncMode.RotationZ) != 0) rot.z = cmp[index++];
                 t.eulerAngles = rot;
             }
-            
+
             if ((flag & 4) != 0)
             {
                 var scale = t.localScale;
@@ -253,16 +257,16 @@ namespace NetBuff.Components
 
     public class TransformPacket : IOwnedPacket
     {
-        public NetworkId Id { get; set; }
         public float[] Components { get; set; }
         public short Flag { get; set; }
-        
+        public NetworkId Id { get; set; }
+
         public void Serialize(BinaryWriter writer)
         {
             Id.Serialize(writer);
             writer.Write(Flag);
-            
-            writer.Write((byte) Components.Length);
+
+            writer.Write((byte)Components.Length);
             foreach (var t in Components)
                 writer.Write(t);
         }
@@ -271,7 +275,7 @@ namespace NetBuff.Components
         {
             Id = NetworkId.Read(reader);
             Flag = reader.ReadInt16();
-            
+
             var count = reader.ReadByte();
             Components = new float[count];
             for (var i = 0; i < count; i++)

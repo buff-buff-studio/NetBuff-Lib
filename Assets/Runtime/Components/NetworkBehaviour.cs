@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 using NetBuff.Interface;
 using NetBuff.Misc;
 using NetBuff.Packets;
-using NetBuff.Session;
 using UnityEngine;
 
 namespace NetBuff.Components
@@ -23,105 +22,127 @@ namespace NetBuff.Components
         #endregion
 
         #region Helper Properties
-        public byte BehaviourId => (byte) Array.IndexOf(Identity.Behaviours, this);
+        public byte BehaviourId => (byte)Array.IndexOf(Identity.Behaviours, this);
         public bool IsDirty => NetworkManager.Instance.DirtyBehaviours.Contains(this);
         public ReadOnlySpan<NetworkValue> Values => new(_values);
         public NetworkIdentity Identity => _identity ??= GetComponent<NetworkIdentity>();
-        
+
         public NetworkId Id
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return Identity.Id; }
+            get => Identity.Id;
         }
 
         public int OwnerId
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return Identity.OwnerId; }
+            get => Identity.OwnerId;
         }
 
         public NetworkId PrefabId
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return Identity.PrefabId; }
+            get => Identity.PrefabId;
         }
 
         public bool HasAuthority
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return Identity.HasAuthority; }
+            get => Identity.HasAuthority;
         }
 
         public bool IsOwnedByClient
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return Identity.IsOwnedByClient; }
+            get => Identity.IsOwnedByClient;
         }
 
         public int SceneId
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return Identity.SceneId; }
+            get => Identity.SceneId;
         }
 
         public bool IsServer
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return Identity.IsServer; }
+            get => Identity.IsServer;
         }
 
         public int LoadedSceneCount
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return Identity.LoadedSceneCount; }
+            get => Identity.LoadedSceneCount;
         }
 
         public string SourceScene
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return Identity.SourceScene; }
+            get => Identity.SourceScene;
         }
 
         public string LastLoadedScene
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return Identity.LastLoadedScene; }
+            get => Identity.LastLoadedScene;
+        }
+        #endregion
+
+        #region Listeners
+        [ServerOnly]
+        public virtual void OnServerReceivePacket(IOwnedPacket packet, int clientId)
+        {
         }
 
-        #endregion
-        
-         #region Listeners
-        [ServerOnly]
-        public virtual void OnServerReceivePacket(IOwnedPacket packet, int clientId) { }
-        
         [ClientOnly]
-        public virtual void OnClientReceivePacket(IOwnedPacket packet) { }
+        public virtual void OnClientReceivePacket(IOwnedPacket packet)
+        {
+        }
 
-        public virtual void OnSpawned(bool isRetroactive){}
-        
-        public virtual void OnSceneChanged(int fromScene, int toScene) {}
-        
+        public virtual void OnSpawned(bool isRetroactive)
+        {
+        }
+
+        public virtual void OnSceneChanged(int fromScene, int toScene)
+        {
+        }
+
         [ServerOnly]
-        public virtual void OnClientConnected(int clientId){}
-        
+        public virtual void OnClientConnected(int clientId)
+        {
+        }
+
         [ServerOnly]
-        public virtual void OnClientDisconnected(int clientId){}
-        
-        public virtual void OnDespawned(){}
-        
-        public virtual void OnActiveChanged(bool active){}
-        
-        public virtual void OnOwnershipChanged(int oldOwner, int newOwner){}
-        
-        public virtual void OnSceneLoaded(int sceneId){}
-        
-        public virtual void OnSceneUnloaded(int sceneId){}
-        
-        public virtual void OnAnyObjectSpawned(NetworkIdentity identity, bool isRetroactive){}
+        public virtual void OnClientDisconnected(int clientId)
+        {
+        }
+
+        public virtual void OnDespawned()
+        {
+        }
+
+        public virtual void OnActiveChanged(bool active)
+        {
+        }
+
+        public virtual void OnOwnershipChanged(int oldOwner, int newOwner)
+        {
+        }
+
+        public virtual void OnSceneLoaded(int sceneId)
+        {
+        }
+
+        public virtual void OnSceneUnloaded(int sceneId)
+        {
+        }
+
+        public virtual void OnAnyObjectSpawned(NetworkIdentity identity, bool isRetroactive)
+        {
+        }
         #endregion
-        
-        #region Value Methods
 
+        #region Value Methods
         public void WithValues(params NetworkValue[] values)
         {
             foreach (var value in values)
@@ -135,11 +156,11 @@ namespace NetBuff.Components
             if (_values == null)
                 return;
             var index = Array.IndexOf(_values, value);
-            
+
             if (index == -1)
                 throw new InvalidOperationException("The value is not attached to this behaviour");
-            
-            MarkValueDirty((byte) index);
+
+            MarkValueDirty((byte)index);
         }
 
 
@@ -147,116 +168,116 @@ namespace NetBuff.Components
         {
             _dirtyValues.Enqueue(index);
 
-            if(IsDirty)
-                return;   
-            
+            if (IsDirty)
+                return;
+
             NetworkManager.Instance.DirtyBehaviours.Add(this);
         }
-        
+
         public void MarkSerializerDirty()
         {
-            if(IsDirty)
+            if (IsDirty)
                 return;
-            
-            if(this is not INetworkBehaviourSerializer)
+
+            if (this is not INetworkBehaviourSerializer)
                 throw new InvalidOperationException("The behaviour does not implement INetworkBehaviourSerializer");
 
             _serializerDirty = true;
             NetworkManager.Instance.DirtyBehaviours.Add(this);
         }
-        
+
         public void UpdateDirtyValues()
         {
             var writer = new BinaryWriter(new MemoryStream());
-            writer.Write((byte) _dirtyValues.Count);
+            writer.Write((byte)_dirtyValues.Count);
             while (_dirtyValues.Count > 0)
             {
                 var index = _dirtyValues.Dequeue();
                 writer.Write(index);
                 _values[index].Serialize(writer);
             }
-            
+
             if (_serializerDirty)
             {
-                if(this is INetworkBehaviourSerializer nbs)
+                if (this is INetworkBehaviourSerializer nbs)
                     nbs.OnSerialize(writer, false);
                 _serializerDirty = false;
             }
-            
+
             var packet = new NetworkValuesPacket
             {
                 Id = Id,
                 BehaviourId = BehaviourId,
-                Payload = ((MemoryStream) writer.BaseStream).ToArray()
+                Payload = ((MemoryStream)writer.BaseStream).ToArray()
             };
 
             if (NetworkManager.Instance.IsServerRunning)
             {
-                if(NetworkManager.Instance.IsClientRunning)
+                if (NetworkManager.Instance.IsClientRunning)
                     ServerBroadcastPacketExceptFor(packet, NetworkManager.Instance.LocalClientIds[0], true);
                 else
                     ServerBroadcastPacket(packet, true);
             }
             else
+            {
                 ClientSendPacket(packet, true);
+            }
         }
 
         [ServerOnly]
         public void SendNetworkValuesToClient(int clientId)
         {
-            if(!IsServer)
+            if (!IsServer)
                 throw new Exception("This method can only be called on the server");
-            
+
             var packet = GetPreExistingValuesPacket();
-            if(packet != null)
+            if (packet != null)
                 ServerSendPacket(packet, clientId, true);
         }
-        
+
         [ServerOnly]
         public NetworkValuesPacket GetPreExistingValuesPacket()
         {
-            if(!IsServer)
+            if (!IsServer)
                 throw new Exception("This method can only be called on the server");
-            
-            if(_values == null || _values.Length == 0)
+
+            if (_values == null || _values.Length == 0)
             {
                 var writer = new BinaryWriter(new MemoryStream());
-                writer.Write((byte) 0);
-                
+                writer.Write((byte)0);
+
                 if (this is INetworkBehaviourSerializer nbs)
                 {
                     nbs.OnSerialize(writer, true);
-                    
+
                     return new NetworkValuesPacket
                     {
                         Id = Id,
                         BehaviourId = BehaviourId,
-                        Payload = ((MemoryStream) writer.BaseStream).ToArray()
+                        Payload = ((MemoryStream)writer.BaseStream).ToArray()
                     };
                 }
+
                 return null;
             }
             else
             {
                 var writer = new BinaryWriter(new MemoryStream());
-                writer.Write((byte) _values.Length);
-    
-                for(var i = 0; i < _values.Length; i++)
+                writer.Write((byte)_values.Length);
+
+                for (var i = 0; i < _values.Length; i++)
                 {
-                    writer.Write((byte) i);
+                    writer.Write((byte)i);
                     _values[i].Serialize(writer);
                 }
-                
-                if (this is INetworkBehaviourSerializer nbs)
-                {
-                    nbs.OnSerialize(writer, true);
-                }
-                
+
+                if (this is INetworkBehaviourSerializer nbs) nbs.OnSerialize(writer, true);
+
                 return new NetworkValuesPacket
                 {
                     Id = Id,
                     BehaviourId = BehaviourId,
-                    Payload = ((MemoryStream) writer.BaseStream).ToArray()
+                    Payload = ((MemoryStream)writer.BaseStream).ToArray()
                 };
             }
         }
@@ -270,132 +291,225 @@ namespace NetBuff.Components
                 var index = reader.ReadByte();
                 _values[index].Deserialize(reader);
             }
-            
-            if(reader.BaseStream.Position != reader.BaseStream.Length && this is INetworkBehaviourSerializer nbs )
-            {
+
+            if (reader.BaseStream.Position != reader.BaseStream.Length && this is INetworkBehaviourSerializer nbs)
                 nbs.OnDeserialize(reader);
-            }
         }
         #endregion
 
         #region Packet Methods
         [ServerOnly]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ServerBroadcastPacket(IPacket packet, bool reliable = false) => Identity.ServerBroadcastPacket(packet, reliable);
-        
+        public void ServerBroadcastPacket(IPacket packet, bool reliable = false)
+        {
+            Identity.ServerBroadcastPacket(packet, reliable);
+        }
+
         [ServerOnly]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ServerBroadcastPacketExceptFor(IPacket packet, int except, bool reliable = false) => Identity.ServerBroadcastPacketExceptFor(packet, except, reliable);
-        
+        public void ServerBroadcastPacketExceptFor(IPacket packet, int except, bool reliable = false)
+        {
+            Identity.ServerBroadcastPacketExceptFor(packet, except, reliable);
+        }
+
         [ServerOnly]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ServerSendPacket(IPacket packet, int clientId, bool reliable = false) => Identity.ServerSendPacket(packet, clientId, reliable);
-        
+        public void ServerSendPacket(IPacket packet, int clientId, bool reliable = false)
+        {
+            Identity.ServerSendPacket(packet, clientId, reliable);
+        }
+
         [ClientOnly]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ClientSendPacket(IPacket packet, bool reliable = false) => Identity.ClientSendPacket(packet, reliable);
+        public void ClientSendPacket(IPacket packet, bool reliable = false)
+        {
+            Identity.ClientSendPacket(packet, reliable);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SendPacket(IPacket packet, bool reliable = false) => Identity.SendPacket(packet, reliable);
- 
+        public void SendPacket(IPacket packet, bool reliable = false)
+        {
+            Identity.SendPacket(packet, reliable);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public PacketListener<T> GetPacketListener<T>() where T : IPacket => Identity.GetPacketListener<T>();
+        public PacketListener<T> GetPacketListener<T>() where T : IPacket
+        {
+            return Identity.GetPacketListener<T>();
+        }
         #endregion
 
         #region Object Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresAuthority]
-        public void Despawn() => Identity.Despawn();
-        
+        public void Despawn()
+        {
+            Identity.Despawn();
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresAuthority]
-        public void SetActive(bool active) => Identity.SetActive(active);
-        
+        public void SetActive(bool active)
+        {
+            Identity.SetActive(active);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresAuthority]
-        public void SetOwner(int clientId) => Identity.SetOwner(clientId);
-        
+        public void SetOwner(int clientId)
+        {
+            Identity.SetOwner(clientId);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [ServerOnly]
-        public void ForceSetOwner(int clientId) => Identity.ForceSetOwner(clientId);
-        
+        public void ForceSetOwner(int clientId)
+        {
+            Identity.ForceSetOwner(clientId);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkIdentity GetNetworkObject(NetworkId objectId) => NetworkIdentity.GetNetworkObject(objectId);
-        
+        public static NetworkIdentity GetNetworkObject(NetworkId objectId)
+        {
+            return NetworkIdentity.GetNetworkObject(objectId);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IEnumerable<NetworkIdentity> GetNetworkObjects() => NetworkIdentity.GetNetworkObjects();
-        
+        public static IEnumerable<NetworkIdentity> GetNetworkObjects()
+        {
+            return NetworkIdentity.GetNetworkObjects();
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int GetNetworkObjectCount() => NetworkIdentity.GetNetworkObjectCount();
-        
+        public static int GetNetworkObjectCount()
+        {
+            return NetworkIdentity.GetNetworkObjectCount();
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IEnumerable<NetworkIdentity> GetNetworkObjectsOwnedBy(int clientId) => NetworkIdentity.GetNetworkObjectsOwnedBy(clientId);
+        public static IEnumerable<NetworkIdentity> GetNetworkObjectsOwnedBy(int clientId)
+        {
+            return NetworkIdentity.GetNetworkObjectsOwnedBy(clientId);
+        }
         #endregion
 
         #region Client Methods
         [ClientOnly]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int GetLocalClientIndex(int clientId) => Identity.GetLocalClientIndex(clientId);
-        
+        public int GetLocalClientIndex(int clientId)
+        {
+            return Identity.GetLocalClientIndex(clientId);
+        }
+
         [ClientOnly]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int GetLocalClientCount() => Identity.GetLocalClientCount();
-        
+        public int GetLocalClientCount()
+        {
+            return Identity.GetLocalClientCount();
+        }
+
         [ClientOnly]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ReadOnlySpan<int> GetLocalClientIds() => Identity.GetLocalClientIds();
+        public ReadOnlySpan<int> GetLocalClientIds()
+        {
+            return Identity.GetLocalClientIds();
+        }
         #endregion
 
         #region Prefabs
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public GameObject GetPrefabById(NetworkId prefab) => Identity.GetPrefabById(prefab);
-        
+        public GameObject GetPrefabById(NetworkId prefab)
+        {
+            return Identity.GetPrefabById(prefab);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NetworkId GetIdForPrefab(GameObject prefab) => Identity.GetIdForPrefab(prefab);
-        
+        public NetworkId GetIdForPrefab(GameObject prefab)
+        {
+            return Identity.GetIdForPrefab(prefab);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool IsPrefabValid(NetworkId prefab) => Identity.IsPrefabValid(prefab);
+        public bool IsPrefabValid(NetworkId prefab)
+        {
+            return Identity.IsPrefabValid(prefab);
+        }
         #endregion
 
         #region Scene Moving
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresAuthority]
-        public void MoveToScene(int sceneId) => Identity.MoveToScene(sceneId);
+        public void MoveToScene(int sceneId)
+        {
+            Identity.MoveToScene(sceneId);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresAuthority]
-        public void MoveToScene(string sceneName) => Identity.MoveToScene(sceneName);
+        public void MoveToScene(string sceneName)
+        {
+            Identity.MoveToScene(sceneName);
+        }
         #endregion
 
         #region Scene Utils
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerable<string> GetLoadedScenes() => Identity.GetLoadedScenes();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)] 
-        public int GetSceneId(string sceneName) => Identity.GetSceneId(sceneName);
+        public IEnumerable<string> GetLoadedScenes()
+        {
+            return Identity.GetLoadedScenes();
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public string GetSceneName(int sceneId) => Identity.GetSceneName(sceneId);
+        public int GetSceneId(string sceneName)
+        {
+            return Identity.GetSceneId(sceneName);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public string GetSceneName(int sceneId)
+        {
+            return Identity.GetSceneName(sceneId);
+        }
         #endregion
 
         #region Spawning
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkId Spawn(GameObject prefab) => NetworkIdentity.Spawn(prefab);
+        public static NetworkId Spawn(GameObject prefab)
+        {
+            return NetworkIdentity.Spawn(prefab);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation, bool active) => NetworkIdentity.Spawn(prefab, position, rotation, active);
+        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation, bool active)
+        {
+            return NetworkIdentity.Spawn(prefab, position, rotation, active);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation, int owner) => NetworkIdentity.Spawn(prefab, position, rotation, owner);
+        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation, int owner)
+        {
+            return NetworkIdentity.Spawn(prefab, position, rotation, owner);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation) => NetworkIdentity.Spawn(prefab, position, rotation);
+        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation)
+        {
+            return NetworkIdentity.Spawn(prefab, position, rotation);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation, Vector3 scale, bool active, int owner = -1, int scene = -1) => NetworkIdentity.Spawn(prefab, position, rotation, scale, active, owner, scene);
+        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation, Vector3 scale,
+            bool active, int owner = -1, int scene = -1)
+        {
+            return NetworkIdentity.Spawn(prefab, position, rotation, scale, active, owner, scene);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkId Spawn(NetworkId prefabId, Vector3 position, Quaternion rotation, Vector3 scale, bool active, int owner = -1, int scene = -1) => NetworkIdentity.Spawn(prefabId, position, rotation, scale, active, owner, scene);
+        public static NetworkId Spawn(NetworkId prefabId, Vector3 position, Quaternion rotation, Vector3 scale,
+            bool active, int owner = -1, int scene = -1)
+        {
+            return NetworkIdentity.Spawn(prefabId, position, rotation, scale, active, owner, scene);
+        }
         #endregion
     }
 }

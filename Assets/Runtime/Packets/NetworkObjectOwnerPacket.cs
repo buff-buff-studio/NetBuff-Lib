@@ -7,9 +7,9 @@ namespace NetBuff.Packets
     public class NetworkObjectOwnerPacket : IPacket
     {
         public NetworkId Id { get; set; }
-        
+
         public int OwnerId { get; set; }
-        
+
         public void Serialize(BinaryWriter writer)
         {
             Id.Serialize(writer);

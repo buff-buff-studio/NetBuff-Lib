@@ -8,23 +8,23 @@ namespace NetBuff.Packets
     public class NetworkObjectSpawnPacket : IPacket
     {
         public NetworkId Id { get; set; }
-        
+
         public NetworkId PrefabId { get; set; }
-        
+
         public int OwnerId { get; set; }
-        
+
         public Vector3 Position { get; set; }
-        
+
         public Quaternion Rotation { get; set; }
-        
+
         public Vector3 Scale { get; set; }
-        
+
         public bool IsActive { get; set; }
-        
+
         public bool IsRetroactive { get; set; }
-        
-        public int SceneId { get; set; } 
-        
+
+        public int SceneId { get; set; }
+
         public void Serialize(BinaryWriter writer)
         {
             Id.Serialize(writer);
@@ -51,7 +51,8 @@ namespace NetBuff.Packets
             PrefabId = NetworkId.Read(reader);
             OwnerId = reader.ReadInt32();
             Position = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
-            Rotation = new Quaternion(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
+            Rotation = new Quaternion(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(),
+                reader.ReadSingle());
             Scale = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
             IsRetroactive = reader.ReadBoolean();
             IsActive = reader.ReadBoolean();
