@@ -571,21 +571,18 @@ namespace NetBuff
             {
                 case NetworkSessionEstablishPacket establishPacket:
                 {
-                    var response = GetSessionEstablishingResponse(establishPacket);
+                    var response = OnSessionEstablishingRequest(establishPacket);
                     if (response.Type == SessionEstablishingResponse.SessionEstablishingResponseType.Reject)
                     {
                         transport.ServerDisconnect(clientId, response.Reason);
                         return;
                     }
                     
-                    var data = (SupportSessionRestoration ? OnTryToRestoreSessionData(clientId, establishPacket) : null) ?? OnCreateNewSessionData(clientId, establishPacket);
+                    var data = (SupportSessionRestoration ? OnRestoreSessionData(clientId, establishPacket) : null) ?? OnCreateNewSessionData(clientId, establishPacket);
                     _ClientIdField.SetValue(data, clientId);
 
                     if(data == null)
                         throw new Exception("Session data is null");
-                    
-                    if (!data.GetType().IsSerializable)
-                        throw new Exception($"Session data type {data.GetType()} is not serializable");
                     
                     _sessionData[clientId] = data;
                     _disconnectedSessionData.Remove(data);
@@ -797,7 +794,7 @@ namespace NetBuff
         }
         
         [ServerOnly]
-        protected virtual SessionData OnTryToRestoreSessionData(int clientId, NetworkSessionEstablishPacket packet)
+        protected virtual SessionData OnRestoreSessionData(int clientId, NetworkSessionEstablishPacket packet)
         {
             return GetAllDisconnectedSessionData<SessionData>().FirstOrDefault(data => data.ClientId == clientId);
         }
@@ -809,7 +806,7 @@ namespace NetBuff
         }
         
         [ServerOnly]
-        public virtual SessionEstablishingResponse GetSessionEstablishingResponse(NetworkSessionEstablishPacket packet)
+        public virtual SessionEstablishingResponse OnSessionEstablishingRequest(NetworkSessionEstablishPacket packet)
         {
             return new SessionEstablishingResponse
             {

@@ -24,7 +24,7 @@ namespace Samples.SessionDataTesting.Scripts
             };
         }
 
-        public override SessionEstablishingResponse GetSessionEstablishingResponse(NetworkSessionEstablishPacket packet)
+        public override SessionEstablishingResponse OnSessionEstablishingRequest(NetworkSessionEstablishPacket packet)
         {
             var examplePacket = (ExampleNetworkSessionEstablishPacket) packet;
             
@@ -44,7 +44,7 @@ namespace Samples.SessionDataTesting.Scripts
         
 
         #region Session Data Restoring
-        protected override SessionData OnTryToRestoreSessionData(int clientId, NetworkSessionEstablishPacket packet)
+        protected override SessionData OnRestoreSessionData(int clientId, NetworkSessionEstablishPacket packet)
         {
             //Keeps the session using the nickname
             var packetData = (ExampleNetworkSessionEstablishPacket) packet;
@@ -115,7 +115,6 @@ namespace Samples.SessionDataTesting.Scripts
         }
     }
     
-    [Serializable]
     public class ExampleSessionData : SessionData
     {
         //Doesn't needs to be synced to the client
