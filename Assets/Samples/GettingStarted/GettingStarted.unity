@@ -167,6 +167,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f50078f9f0a4835ae0368ca65528c5a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  graphPlottingRate: 10
+  plotFPS: 0
+  plotLatency: 0
+  plotPacketRate: 1
+  currentGraph: 5
 --- !u!114 &1292922732
 MonoBehaviour:
   m_ObjectHideFlags: 0

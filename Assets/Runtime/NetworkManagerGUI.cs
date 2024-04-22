@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using NetBuff.Discover;
+using NetBuff.Misc;
 using NetBuff.UDP;
 using UnityEngine;
 
@@ -11,6 +12,146 @@ namespace NetBuff
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-manager-gui")]
     public class NetworkManagerGUI : MonoBehaviour
     {
+        public enum CurrentGraph
+        {
+            None,
+            FPS,
+            Latency,
+            PacketSent,
+            PacketReceived,
+            PacketLoss
+        }
+        
+        #region Inspector Fields
+        [SerializeField]
+        private int graphPlottingRate = 10;
+        [SerializeField]
+        private bool plotFPS;
+        [SerializeField]
+        private bool plotLatency;
+        [SerializeField]
+        private bool plotPacketRate;
+        [SerializeField]
+        private CurrentGraph currentGraph = CurrentGraph.None;
+        #endregion
+        
+        #region Internal Fields
+        private readonly GraphPlotter.GraphPlotterData _fpsData = new();
+        private readonly GraphPlotter.GraphPlotterData _plotLatency = new();
+        private readonly GraphPlotter.GraphPlotterData _plotPacketSent = new() { Max = 100 };
+        private readonly GraphPlotter.GraphPlotterData _plotPacketReceived = new() { Max = 100 };
+        private readonly GraphPlotter.GraphPlotterData _plotPacketLoss = new() { Max = 100 };
+        private long _lastPacketSent;
+        private long _lastPacketReceived;
+        private long _lastPacketLoss;
+        #endregion
+
+        #region Helper Properties
+        private int GraphPlottingRate
+        {
+            get => graphPlottingRate;
+            set 
+            {
+                graphPlottingRate = Mathf.Max(1, value);
+
+                if (!Application.isPlaying) 
+                    return;
+                
+                CancelInvoke(nameof(_UpdateGraphs));
+                InvokeRepeating(nameof(_UpdateGraphs), 0, 1f / graphPlottingRate);
+            }
+        }
+        
+        public bool PlotFPS
+        {
+            get => plotFPS;
+            set
+            {
+                plotFPS = value;
+                OnValidate();
+            }
+        }
+        
+        public bool PlotLatency
+        {
+            get => plotLatency;
+            set
+            {
+                plotLatency = value; 
+                OnValidate();
+            }
+        }
+        
+        public bool PlotPacketRate
+        {
+            get => plotPacketRate;
+            set
+            {
+                plotPacketRate = value;
+                OnValidate();
+            }
+        }
+        
+        public CurrentGraph CurrentGraphType
+        {
+            get => currentGraph;
+            set
+            {
+                currentGraph = value;
+                OnValidate();
+            }
+        }
+        #endregion
+
+        private void OnEnable()
+        {
+            _fpsData.Clear();
+            GraphPlottingRate = graphPlottingRate;
+        }
+
+        private void OnDisable()
+        {
+            CancelInvoke(nameof(_UpdateGraphs));
+        }
+
+        private void OnValidate()
+        {
+            GraphPlottingRate = graphPlottingRate;
+            
+            _fpsData.Clear();
+            _plotLatency.Clear();
+            _plotPacketSent.Clear();
+        }
+
+        private void _UpdateGraphs()
+        {
+            if (plotLatency)
+            {
+                var info = NetworkManager.Instance.ClientConnectionInfo;
+                _plotLatency.AddData(info?.Latency ?? 0);
+            }
+            
+            if (plotPacketRate)
+            {
+                var info = NetworkManager.Instance.ClientConnectionInfo;
+                
+                var packetSent = info?.PacketSent ?? 0;
+                var packetReceived = info?.PacketReceived ?? 0;
+                var packetLoss = info?.PacketLossPercentage ?? 0;
+                
+                _plotPacketSent.AddData(packetSent - _lastPacketSent, false);
+                _plotPacketReceived.AddData(packetReceived - _lastPacketReceived, false);
+                _plotPacketLoss.AddData(packetLoss - _lastPacketLoss, false);
+                
+                _lastPacketSent = packetSent;
+                _lastPacketReceived = packetReceived;
+                _lastPacketLoss = packetLoss;
+            }
+            
+            if (plotFPS)
+                _fpsData.AddData(1f / Time.deltaTime);
+        }
+
         private void OnGUI()
         {
             GUILayout.BeginArea(new Rect(10, 10, 200, 400));
@@ -85,6 +226,41 @@ namespace NetBuff
                 GUILayout.BeginArea(new Rect(220, 10, 350, 400));
                 DrawServerList();
                 GUILayout.EndArea();
+            }
+            
+            _DrawGraphs();
+        }
+        
+        private void _DrawGraphs()
+        {
+            var w = Screen.width;
+            var h = Screen.height;
+            
+            switch (currentGraph)
+            {
+                case CurrentGraph.FPS:
+                    GraphPlotter.DrawGraph(0, h, 2, Color.green, w, _fpsData.Data, _fpsData.Max, h/2f);
+                    break;
+                case CurrentGraph.Latency:
+                    if (NetworkManager.Instance.EndType == NetworkTransport.EndType.None)
+                        return;
+                    GraphPlotter.DrawGraph(0, h, 2, Color.red, w, _plotLatency.Data, _plotLatency.Max, h/2f);
+                    break;
+                case CurrentGraph.PacketSent:
+                    if (NetworkManager.Instance.EndType == NetworkTransport.EndType.None)
+                        return;
+                    GraphPlotter.DrawGraph(0, h, 2, Color.blue, w, _plotPacketSent.Data, _plotPacketSent.Max, h/2f);
+                    break;
+                case CurrentGraph.PacketReceived:
+                    if (NetworkManager.Instance.EndType == NetworkTransport.EndType.None)
+                        return;
+                    GraphPlotter.DrawGraph(0, h, 2, Color.yellow, w, _plotPacketReceived.Data, _plotPacketReceived.Max, h/2f);
+                    break;
+                case CurrentGraph.PacketLoss:
+                    if (NetworkManager.Instance.EndType == NetworkTransport.EndType.None)
+                        return;
+                    GraphPlotter.DrawGraph(0, h, 2, Color.magenta, w, _plotPacketLoss.Data, _plotPacketLoss.Max, h/2f);
+                    break;
             }
         }
 
