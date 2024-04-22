@@ -119,8 +119,18 @@ namespace NetBuff
             GraphPlottingRate = graphPlottingRate;
             
             _fpsData.Clear();
+            _fpsData.Max = 0;
+            
             _plotLatency.Clear();
+            
             _plotPacketSent.Clear();
+            _plotPacketSent.Max = 0;
+            
+            _plotPacketReceived.Clear();
+            _plotPacketReceived.Max = 0;
+            
+            _plotPacketLoss.Clear();
+            _plotPacketLoss.Max = 0;
         }
 
         private void _UpdateGraphs()

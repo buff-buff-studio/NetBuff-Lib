@@ -171,7 +171,7 @@ MonoBehaviour:
   plotFPS: 0
   plotLatency: 1
   plotPacketRate: 0
-  currentGraph: 3
+  currentGraph: 2
 --- !u!114 &1292922732
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -187,6 +187,7 @@ MonoBehaviour:
   versionMagicNumber: 0
   defaultTickRate: 50
   spawnsPlayer: 1
+  supportsSessionRestoration: 1
   transport: {fileID: 1292922730}
   prefabRegistry: {fileID: 11400000, guid: 8e0ca7e585cc7784ca7b13998a10c413, type: 2}
   playerPrefab: {fileID: 148450730213645687, guid: 1c2c96d693e388b459441e3f6ac71f13, type: 3}
@@ -198,6 +199,9 @@ MonoBehaviour:
   dirtyBehaviours: []
   endTypeAfterReload: 0
   isClientReloaded: 0
+  persistentSessionData:
+    _serializedList: []
+  persistentDisconnectedSessionData: []
 --- !u!4 &1292922733
 Transform:
   m_ObjectHideFlags: 0
