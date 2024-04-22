@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using NetBuff;
 using NetBuff.Packets;
@@ -15,7 +14,7 @@ namespace Samples.SessionDataTesting.Scripts
         public Toggle shouldBeAccepted;
 
         #region Session Establishing
-        public override NetworkSessionEstablishPacket OnCreateSessionEstablishPacket()
+        protected override NetworkSessionEstablishPacket OnCreateSessionEstablishPacket()
         {
             return new ExampleNetworkSessionEstablishPacket
             {
@@ -24,7 +23,7 @@ namespace Samples.SessionDataTesting.Scripts
             };
         }
 
-        public override SessionEstablishingResponse OnSessionEstablishingRequest(NetworkSessionEstablishPacket packet)
+        protected override SessionEstablishingResponse OnSessionEstablishingRequest(NetworkSessionEstablishPacket packet)
         {
             var examplePacket = (ExampleNetworkSessionEstablishPacket) packet;
             
@@ -63,7 +62,7 @@ namespace Samples.SessionDataTesting.Scripts
             };
         }
         
-        public override SessionData OnCreateEmptySessionData()
+        protected override SessionData OnCreateEmptySessionData()
         {
             return new ExampleSessionData();
         }
@@ -87,7 +86,7 @@ namespace Samples.SessionDataTesting.Scripts
         }
 
         //Client Side
-        public override void OnLocalSessionDataChanged(SessionData data)
+        protected override void OnLocalSessionDataChanged(SessionData data)
         {
             var exampleSessionData = GetLocalSessionData<ExampleSessionData>();
             //var exampleSessionData = (ExampleSessionData) data;

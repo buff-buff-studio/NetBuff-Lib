@@ -41,7 +41,7 @@ namespace NetBuff
         [SerializeField]
         protected bool spawnsPlayer = true;
         [SerializeField]
-        protected bool supportSessionRestoration = true;
+        protected bool supportsSessionRestoration = true;
         
         [Header("REFERENCES")]
         [SerializeField]
@@ -115,10 +115,10 @@ namespace NetBuff
             set => spawnsPlayer = value;
         }
         
-        public bool SupportSessionRestoration
+        public bool SupportsSessionRestoration
         {
-            get => supportSessionRestoration;
-            set => supportSessionRestoration = value;
+            get => supportsSessionRestoration;
+            set => supportsSessionRestoration = value;
         }
         
         public NetworkTransport Transport
@@ -267,7 +267,7 @@ namespace NetBuff
             sourceScene = gameObject.scene.name;
             loadedScenes.Add(sourceScene);
             
-            if(SupportSessionRestoration)
+            if(SupportsSessionRestoration)
                 _disconnectedSessionData.AddRange(_sessionData.Values);
             else
                 _disconnectedSessionData.Clear();
@@ -523,7 +523,7 @@ namespace NetBuff
                 DespawnNetworkObjectForClients(id.Id);
             
             var data = _sessionData.TryGetValue(clientId, out var d) ? d : null;
-            if(SupportSessionRestoration)
+            if(SupportsSessionRestoration)
                 _disconnectedSessionData.Add(data);
             _sessionData.Remove(clientId);
         }
@@ -578,7 +578,7 @@ namespace NetBuff
                         return;
                     }
                     
-                    var data = (SupportSessionRestoration ? OnRestoreSessionData(clientId, establishPacket) : null) ?? OnCreateNewSessionData(clientId, establishPacket);
+                    var data = (SupportsSessionRestoration ? OnRestoreSessionData(clientId, establishPacket) : null) ?? OnCreateNewSessionData(clientId, establishPacket);
                     _ClientIdField.SetValue(data, clientId);
 
                     if(data == null)
@@ -777,19 +777,19 @@ namespace NetBuff
             Destroy(o);
         }
         
-        public virtual SessionData OnCreateEmptySessionData()
+        protected virtual SessionData OnCreateEmptySessionData()
         {
             return new SessionData();
         }
 
         [ClientOnly]
-        public virtual NetworkSessionEstablishPacket OnCreateSessionEstablishPacket()
+        protected virtual NetworkSessionEstablishPacket OnCreateSessionEstablishPacket()
         {
             return new NetworkSessionEstablishPacket();
         }
 
         [ClientOnly]
-        public virtual void OnLocalSessionDataChanged(SessionData data)
+        protected virtual void OnLocalSessionDataChanged(SessionData data)
         {
         }
         
@@ -806,7 +806,7 @@ namespace NetBuff
         }
         
         [ServerOnly]
-        public virtual SessionEstablishingResponse OnSessionEstablishingRequest(NetworkSessionEstablishPacket packet)
+        protected virtual SessionEstablishingResponse OnSessionEstablishingRequest(NetworkSessionEstablishPacket packet)
         {
             return new SessionEstablishingResponse
             {
@@ -1295,6 +1295,15 @@ namespace NetBuff
                 throw new Exception("This method can only be called on the server");
             
             return _disconnectedSessionData.OfType<T>();
+        }
+        
+        [ServerOnly]
+        public void ClearAllDisconnectedSessionData()
+        {
+            if(!IsServerRunning)
+                throw new Exception("This method can only be called on the server");
+            
+            _disconnectedSessionData.Clear();
         }
         
         [ServerOnly]
