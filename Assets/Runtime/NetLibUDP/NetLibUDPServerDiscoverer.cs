@@ -1,19 +1,19 @@
-﻿using System;
-using System.IO;
+using System;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using LiteNetLib.Utils;
 using NetBuff.Discover;
 using NetBuff.Misc;
 
-namespace NetBuff.UDP
+namespace NetBuff.NetLibUDP
 {
     /// <summary>
     /// Used to find all available servers using UDP.
     /// Searches through all available network interfaces and sends a broadcast message to find servers.
     /// </summary>
-    public class UDPServerDiscoverer : ServerDiscoverer<UDPServerDiscoverer.UDPServerInfo>
+    public class NetLibUDPServerDiscoverer : ServerDiscoverer<NetLibUDPServerDiscoverer.UDPServerInfo>
     {
         /// <summary>
         /// Holds the information about a UDP server.
@@ -34,7 +34,7 @@ namespace NetBuff.UDP
             public override bool Join()
             {
                 var transport = NetworkManager.Instance.Transport;
-                var udp = transport as UDPNetworkTransport;
+                var udp = transport as NetLibUDPNetworkTransport;
                 if (udp == null)
                     throw new Exception("Transport is not NetLibUDP");
                 udp.Address = Address.ToString();
@@ -49,7 +49,7 @@ namespace NetBuff.UDP
         private int _searchId;
         #endregion
 
-        public UDPServerDiscoverer(int magicNumber, int port)
+        public NetLibUDPServerDiscoverer(int magicNumber, int port)
         {
             _magicNumber = magicNumber;
             _port = port;
@@ -92,27 +92,27 @@ namespace NetBuff.UDP
                                 udpClient.Client.Bind(new IPEndPoint(address, 0));
                                 udpClient.EnableBroadcast = true;
                                 udpClient.Client.ReceiveTimeout = 1000;
-                                var writer = new BinaryWriter(new MemoryStream());
-                                writer.Write((byte)8);
-                                writer.Write("server_search");
-                                writer.Write(_magicNumber);
-
-                                var data = ((MemoryStream)writer.BaseStream).ToArray();
+                                var writer = new NetDataWriter();
+                                writer.Put((byte)8);
+                                writer.Put("server_search");
+                                writer.Put(_magicNumber);
+                                var data = writer.CopyData();
                                 await udpClient.SendAsync(data, data.Length,
                                     new IPEndPoint(IPAddress.Broadcast, _port));
 
                                 var address2 = new IPEndPoint(IPAddress.Any, _port);
                                 var response = udpClient.Receive(ref address2);
                                 udpClient.Close();
-                                var reader = new BinaryReader(new MemoryStream(response));
-                                
-                                if (reader.ReadString() == "server_answer")
+                                var reader = new NetDataReader(response);
+                                reader.GetByte();
+
+                                if (reader.GetString(50) == "server_answer")
                                 {
-                                    var name = reader.ReadString();
-                                    var players = reader.ReadInt32();
-                                    var maxPlayers = reader.ReadInt32();
-                                    var platform = (Platform)reader.ReadInt32();
-                                    var hasPassword = reader.ReadBoolean();
+                                    var name = reader.GetString(50);
+                                    var players = reader.GetInt();
+                                    var maxPlayers = reader.GetInt();
+                                    var platform = (Platform)reader.GetInt();
+                                    var hasPassword = reader.GetBool();
 
                                     if (id != _searchId)
                                         return;
