@@ -615,7 +615,7 @@ namespace NetBuff
                 DespawnNetworkObjectForClients(id.Id);
 
             var data = _sessionData.TryGetValue(clientId, out var d) ? d : null;
-            if (SupportsSessionRestoration)
+            if (SupportsSessionRestoration && data != null) 
                 _disconnectedSessionData.Add(data);
             _sessionData.Remove(clientId);
         }
