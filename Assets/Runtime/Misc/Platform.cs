@@ -47,7 +47,7 @@ namespace NetBuff.Misc
         /// </summary>
         Unknown
     }
-
+    
     /// <summary>
     /// Utility class for platform related operations.
     /// </summary>

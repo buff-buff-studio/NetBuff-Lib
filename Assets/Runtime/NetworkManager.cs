@@ -537,11 +537,11 @@ namespace NetBuff
         /// </summary>
         protected virtual void OnServerStart()
         {
+            IsServerRunning = true;
+            
             foreach (var identity in networkObjects.Values)
                 foreach (var behaviour in identity.Behaviours)
                     behaviour.OnSpawned(false);
-
-            IsServerRunning = true;
         }
         
         /// <summary>

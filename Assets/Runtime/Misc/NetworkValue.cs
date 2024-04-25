@@ -124,6 +124,11 @@ namespace NetBuff.Misc
                 if (!CheckPermission())
                     throw new InvalidOperationException("You don't have permission to modify this value");
 
+                #if UNITY_EDITOR
+                if(@delegate == null)
+                    AttachedTo = attachedTo;
+                #endif
+                
                 SetValueCalling(value);
                 @delegate(this);
             }
