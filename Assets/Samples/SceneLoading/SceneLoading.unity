@@ -472,7 +472,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   address: 127.0.0.1
   port: 7777
-  password: a
+  password: 
   maxClients: 10
 --- !u!1 &1372201338
 GameObject:

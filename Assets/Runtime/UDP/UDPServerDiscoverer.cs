@@ -59,7 +59,7 @@ namespace NetBuff.UDP
                                 udpClient.EnableBroadcast = true;
                                 udpClient.Client.ReceiveTimeout = 1000;
                                 var writer = new BinaryWriter(new MemoryStream());
-                                writer.Write((byte)8);
+                                writer.Write((byte)7);
                                 writer.Write("server_search");
                                 writer.Write(_magicNumber);
 
