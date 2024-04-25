@@ -583,7 +583,7 @@ namespace NetBuff.UDP
                             case 5:
                                 if (peer != null)
                                 {
-                                    peer.latency = (short)peer.latencyStopwatch.ElapsedMilliseconds;
+                                    peer.latency = (short) (peer.latencyStopwatch.ElapsedMilliseconds / 2);
                                     peer.lastReceivedTicks = DateTime.Now.Ticks;
                                 }
 
@@ -632,8 +632,7 @@ namespace NetBuff.UDP
                                 {
                                     var seq2 = (threadBuffer[1] << 24) | (threadBuffer[2] << 16) |
                                                (threadBuffer[3] << 8) | threadBuffer[4];
-
-                                    //send ack
+                                    
                                     threadBuffer[0] = 14;
                                     _InternalSend(new UDPSpan(threadBuffer, 0, 5), remote);
 
