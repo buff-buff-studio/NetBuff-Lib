@@ -286,6 +286,8 @@ namespace NetBuff.UDP
             {
                 OnServerStop?.Invoke();
                 _server = null;
+                
+                OnServerError = null;
             };
 
             _server.onClientConnected += clientId =>
@@ -365,7 +367,6 @@ namespace NetBuff.UDP
             }
             catch(Exception e)
             {
-                UnityEngine.Debug.LogError(e.Message);
                 OnServerError?.Invoke(e.Message);
             }
         }
@@ -981,6 +982,7 @@ namespace NetBuff.UDP
             private int _nextSequenceNumber;
             private EndPoint _server;
             private Thread _thread;
+            private bool _isConnected;
 
             private int _waitingFragmentSince = -1;
             private int _waitingFragmentUntil = -1;
@@ -989,6 +991,7 @@ namespace NetBuff.UDP
             public int lostPacketCount;
             public int receivedPacketCount;
             public int sentPacketCount;
+            
 
             public void Connect(IPAddress address, int port, byte[] payload)
             {
@@ -1109,7 +1112,8 @@ namespace NetBuff.UDP
                 }
                 catch(Exception e)
                 {
-                    onError?.Invoke(e.Message);
+                    if(_isConnected)
+                        onError?.Invoke(e.Message);
                 }
 
                 // ReSharper disable once FunctionNeverReturns
@@ -1129,7 +1133,11 @@ namespace NetBuff.UDP
             {
                 var reasonBytes = Encoding.UTF8.GetBytes(reason);
                 SendPacketReliable(_PACKET_RELIABLE_DISCONNECT, new UDPSpan(reasonBytes));
-
+                
+                if (!_isConnected)
+                    return;
+                _isConnected = false;
+                
                 _actions.Enqueue(() => onDisconnected?.Invoke(reason));
             }
 
@@ -1301,10 +1309,15 @@ namespace NetBuff.UDP
                 {
                     case _PACKET_RELIABLE_CONNECTION_RESPONSE:
                         onConnected?.Invoke();
+                        _isConnected = true;
                         break;
 
                     case _PACKET_RELIABLE_DISCONNECT:
-                        onDisconnected?.Invoke(Encoding.UTF8.GetString(body.data));
+                        if (_isConnected)
+                        {
+                            _isConnected = false;
+                            onDisconnected?.Invoke(Encoding.UTF8.GetString(body.data));
+                        }
                         break;
 
                     default:

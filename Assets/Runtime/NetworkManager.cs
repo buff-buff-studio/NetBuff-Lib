@@ -300,6 +300,8 @@ namespace NetBuff
             transport.OnDisconnect += OnDisconnect;
             transport.OnServerStart += OnServerStart;
             transport.OnServerStop += OnServerStop;
+            transport.OnServerError += OnServerError;
+            transport.OnClientError += OnClientError;
 
             #if UNITY_EDITOR
             switch (environmentTypeAfterReload)
@@ -326,6 +328,10 @@ namespace NetBuff
                     }
 
                     break;
+                case NetworkTransport.EnvironmentType.Client:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
             environmentTypeAfterReload = NetworkTransport.EnvironmentType.None;
@@ -534,6 +540,24 @@ namespace NetBuff
         #endregion
 
         #region Virtual Methods
+        /// <summary>
+        /// Called when a error occurs on the server.
+        /// </summary>
+        /// <param name="error"></param>
+        protected virtual void OnServerError(string error)
+        {
+            Debug.LogError($"[Server] {error}");
+        }
+        
+        /// <summary>
+        /// Called when a error occurs on the client.
+        /// </summary>
+        /// <param name="error"></param>
+        protected virtual void OnClientError(string error)
+        {
+            Debug.LogError($"[Client] {error}");
+        }
+        
         /// <summary>
         ///     Called when the server starts.
         /// </summary>
