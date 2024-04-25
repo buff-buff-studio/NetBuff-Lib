@@ -24,12 +24,12 @@ namespace NetBuff.UDP
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/transports/#udp")]
     public class UDPNetworkTransport : NetworkTransport
     {
+        #region Const Fields
         private const int _MAX_PACKET_SIZE = 1010;
         private const int _TIMEOUT_TIME = 10 * 1_000 * 10_000;
         private const int _RESEND_TIME = 500 * 10_000;
         private const int _KEEP_ALIVE_TIME = 1 * 1_000 * 10_000;
-        private static readonly byte[] _FragmentUnitBuffer = new byte[65535];
-
+        
         private const byte _CHANNEL_UNRELIABLE = 1;
         private const byte _CHANNEL_RELIABLE = 2;
         private const byte _CHANNEL_RELIABLE_FRAGMENT_HEADER = 3;
@@ -41,11 +41,15 @@ namespace NetBuff.UDP
         private const byte _PACKET_RELIABLE_CONNECTION_RESPONSE = 2;
         private const byte _PACKET_RELIABLE_DISCONNECT = 3;
         private const byte _PACKET_RELIABLE_MESSAGE = 10;
+        #endregion
 
+        #region Buffers
+        private static readonly byte[] _FragmentUnitBuffer = new byte[65535];
         private static readonly byte[] _Buffer0 = new byte[65535];
         private static readonly byte[] _Buffer1 = new byte[65535];
         private static readonly BinaryWriter _Writer0 = new(new MemoryStream(_Buffer0));
         private static readonly BinaryWriter _Writer1 = new(new MemoryStream(_Buffer1));
+        #endregion
 
         #region Inspector Fields
         [Header("SETTINGS")]
@@ -143,19 +147,140 @@ namespace NetBuff.UDP
 
         public override void StartHost(int magicNumber)
         {
-            StartServer();
-            StartClient(magicNumber);
-            Type = EnvironmentType.Host;
+            _StartServer(true);
         }
 
         public override void StartServer()
+        {
+            _StartServer(false);
+        }
+
+        public override void StartClient(int magicNumber)
+        {
+            if (_client != null)
+                throw new Exception("Client already started");
+
+            _client = new UDPClient();
+
+            _client.onConnected += () =>
+            {
+                ClientConnectionInfo = new LocalUDPClientConnectionInfo(-1, _client);
+                OnConnect?.Invoke();
+            };
+
+            _client.onDisconnected += reason =>
+            {
+                OnDisconnect?.Invoke(reason);
+                _client = null;
+            };
+
+            _client.onPacketReceived += data =>
+            {
+                var binaryReader = new BinaryReader(new MemoryStream(data.data, data.offset, data.length));
+
+                while (binaryReader.BaseStream.Position < binaryReader.BaseStream.Length)
+                {
+                    var id = binaryReader.ReadInt32();
+                    var packet = PacketRegistry.CreatePacket(id);
+
+                    packet.Deserialize(binaryReader);
+                    OnClientPacketReceived?.Invoke(packet);
+                }
+            };
+
+            _client.onError += (reason) =>
+            {
+                OnClientError?.Invoke(reason);
+                _client = null;
+            };
+
+            var writer = new BinaryWriter(new MemoryStream());
+            writer.Write(password ?? "");
+            try
+            {
+                _client.Connect(IPAddress.Parse(address), port, ((MemoryStream)writer.BaseStream).ToArray());
+            }
+            catch (Exception e)
+            {
+                OnClientError?.Invoke(e.Message);
+            }
+            Type = Type == EnvironmentType.None ? EnvironmentType.Client : EnvironmentType.Host;
+        }
+
+        public override void Close()
+        {
+            _server?.Close();
+            _client?.Disconnect("disconnect");
+        }
+
+        public override IClientConnectionInfo GetClientInfo(int id)
+        {
+            return _clients[id];
+        }
+
+        public override int GetClientCount()
+        {
+            return _clients.Count;
+        }
+
+        public override IEnumerable<IClientConnectionInfo> GetClients()
+        {
+            return _clients.Values;
+        }
+
+        public override void ClientDisconnect(string reason)
+        {
+            _client?.Disconnect(reason);
+        }
+
+        public override void ServerDisconnect(int id, string reason)
+        {
+            _server?.DisconnectClient(id, reason);
+        }
+
+        public override void ClientSendPacket(IPacket packet, bool reliable = false)
+        {
+            if (reliable)
+                _clientQueueReliable.Enqueue(packet);
+            else
+                _clientQueueUnreliable.Enqueue(packet);
+        }
+
+        public override void ServerSendPacket(IPacket packet, int target = -1, bool reliable = false)
+        {
+            if (target == -1)
+            {
+                foreach (var client in _clients.Values)
+                    if (reliable)
+                        client.queueReliable.Enqueue(packet);
+                    else
+                        client.queueUnreliable.Enqueue(packet);
+            }
+            else
+            {
+                if (reliable)
+                    _clients[target].queueReliable.Enqueue(packet);
+                else
+                    _clients[target].queueUnreliable.Enqueue(packet);
+            }
+        }
+
+
+        #region Internal Methods
+        private void _StartServer(bool startClient)
         {
             if (_server != null)
                 throw new Exception("Server already started");
 
             _server = new UDPServer();
 
-            _server.onServerStarted += () => { OnServerStart?.Invoke(); };
+            _server.onServerStarted += () =>
+            {
+                OnServerStart?.Invoke();
+                
+                if (startClient)
+                    StartClient(NetworkManager.Instance.VersionMagicNumber);
+            };
 
             _server.onServerStopped += () =>
             {
@@ -226,109 +351,25 @@ namespace NetBuff.UDP
 
                 return ((MemoryStream)writer.BaseStream).ToArray();
             };
-
-            Type = Type == EnvironmentType.None ? EnvironmentType.Server : EnvironmentType.Host;
-
-            _server.Host(IPAddress.Parse(address), port);
-        }
-
-        public override void StartClient(int magicNumber)
-        {
-            if (_client != null)
-                throw new Exception("Client already started");
-
-            _client = new UDPClient();
-
-            _client.onConnected += () =>
+            
+            _server.onError += (reason) =>
             {
-                ClientConnectionInfo = new LocalUDPClientConnectionInfo(-1, _client);
-                OnConnect?.Invoke();
+                OnServerError?.Invoke(reason);
+                _server = null;
             };
-
-            _client.onDisconnected += reason =>
+            
+            try
             {
-                OnDisconnect?.Invoke(reason);
-                _client = null;
-            };
-
-            _client.onPacketReceived += data =>
-            {
-                var binaryReader = new BinaryReader(new MemoryStream(data.data, data.offset, data.length));
-
-                while (binaryReader.BaseStream.Position < binaryReader.BaseStream.Length)
-                {
-                    var id = binaryReader.ReadInt32();
-                    var packet = PacketRegistry.CreatePacket(id);
-
-                    packet.Deserialize(binaryReader);
-                    OnClientPacketReceived?.Invoke(packet);
-                }
-            };
-
-            var writer = new BinaryWriter(new MemoryStream());
-            writer.Write(password ?? "");
-            _client.Connect(IPAddress.Parse(address), port, ((MemoryStream)writer.BaseStream).ToArray());
-            Type = Type == EnvironmentType.None ? EnvironmentType.Client : EnvironmentType.Host;
-        }
-
-        public override void Close()
-        {
-            _server?.Close();
-            _client?.Disconnect("disconnect");
-        }
-
-        public override IClientConnectionInfo GetClientInfo(int id)
-        {
-            return _clients[id];
-        }
-
-        public override int GetClientCount()
-        {
-            return _clients.Count;
-        }
-
-        public override IEnumerable<IClientConnectionInfo> GetClients()
-        {
-            return _clients.Values;
-        }
-
-        public override void ClientDisconnect(string reason)
-        {
-            _client?.Disconnect(reason);
-        }
-
-        public override void ServerDisconnect(int id, string reason)
-        {
-            _server?.DisconnectClient(id, reason);
-        }
-
-        public override void ClientSendPacket(IPacket packet, bool reliable = false)
-        {
-            if (reliable)
-                _clientQueueReliable.Enqueue(packet);
-            else
-                _clientQueueUnreliable.Enqueue(packet);
-        }
-
-        public override void ServerSendPacket(IPacket packet, int target = -1, bool reliable = false)
-        {
-            if (target == -1)
-            {
-                foreach (var client in _clients.Values)
-                    if (reliable)
-                        client.queueReliable.Enqueue(packet);
-                    else
-                        client.queueUnreliable.Enqueue(packet);
+                _server.Host(IPAddress.Parse(address), port);
+                Type = Type == EnvironmentType.None ? EnvironmentType.Server : EnvironmentType.Host;
             }
-            else
+            catch(Exception e)
             {
-                if (reliable)
-                    _clients[target].queueReliable.Enqueue(packet);
-                else
-                    _clients[target].queueUnreliable.Enqueue(packet);
+                UnityEngine.Debug.LogError(e.Message);
+                OnServerError?.Invoke(e.Message);
             }
         }
-
+        
         private static IEnumerable<UDPSpan> _ProcessQueue(Queue<IPacket> queue, int maxSize)
         {
             if (queue.Count == 0)
@@ -373,6 +414,7 @@ namespace NetBuff.UDP
             if (end > 0)
                 yield return new UDPSpan(_Buffer0, 0, end);
         }
+        #endregion
 
         #region Types
         private class LocalUDPClientConnectionInfo : IClientConnectionInfo
@@ -652,9 +694,9 @@ namespace NetBuff.UDP
                         }
                     }
                 }
-                catch
+                catch(Exception e)
                 {
-                    // ignored
+                    onError?.Invoke(e.Message);
                 }
 
                 // ReSharper disable once FunctionNeverReturns
@@ -913,6 +955,7 @@ namespace NetBuff.UDP
             public Action<int> onClientConnected;
             public Action<int, string> onClientDisconnected;
             public Action<int, UDPSpan> onPacketReceived;
+            public Action<string> onError;
 
             public Func<int, byte[], ConnectionRequestAnswer> onReceiveConnectionRequest =
                 (_, _) => new ConnectionRequestAnswer { accepted = true };
@@ -1064,9 +1107,9 @@ namespace NetBuff.UDP
                         }
                     }
                 }
-                catch
+                catch(Exception e)
                 {
-                    // ignored
+                    onError?.Invoke(e.Message);
                 }
 
                 // ReSharper disable once FunctionNeverReturns
@@ -1274,6 +1317,7 @@ namespace NetBuff.UDP
             public Action onConnected;
             public Action<string> onDisconnected;
             public Action<UDPSpan> onPacketReceived;
+            public Action<string> onError;
             #endregion
         }
         #endregion
