@@ -5,47 +5,47 @@ using NetBuff.Components;
 namespace NetBuff.Misc
 {
     /// <summary>
-    /// Main class for network actions. Should be used to register and invoke network actions
+    ///     Main class for network actions. Should be used to register and invoke network actions
     /// </summary>
     public static class NetworkAction
     {
         /// <summary>
-        /// Called when a object is spawned
+        ///     Called when a object is spawned
         /// </summary>
         public static NetworkActionListener<NetworkId, NetworkIdentity> OnObjectSpawn { get; } = new();
-       
+
         /// <summary>
-        /// Called when a object is despawned
+        ///     Called when a object is despawned
         /// </summary>
         public static NetworkActionListener<NetworkId, NetworkIdentity> OnObjectDespawn { get; } = new();
-        
+
         /// <summary>
-        /// Called when a object owner is changed
+        ///     Called when a object owner is changed
         /// </summary>
         public static NetworkActionListener<NetworkId, NetworkIdentity> OnObjectChangeOwner { get; } = new();
-        
+
         /// <summary>
-        /// Called when a object active state is changed
+        ///     Called when a object active state is changed
         /// </summary>
         public static NetworkActionListener<NetworkId, NetworkIdentity> OnObjectChangeActive { get; } = new();
-        
+
         /// <summary>
-        /// Called when a object scene is changed
+        ///     Called when a object scene is changed
         /// </summary>
         public static NetworkActionListener<NetworkId, NetworkIdentity> OnObjectSceneChanged { get; } = new();
-        
+
         /// <summary>
-        /// Called when a scene is loaded
+        ///     Called when a scene is loaded
         /// </summary>
         public static NetworkActionListener<string, int> OnSceneLoaded { get; } = new();
-       
+
         /// <summary>
-        /// Called when a scene is unloaded
+        ///     Called when a scene is unloaded
         /// </summary>
         public static NetworkActionListener<string, int> OnSceneUnloaded { get; } = new();
-        
+
         /// <summary>
-        /// Clear all network actions
+        ///     Clear all network actions
         /// </summary>
         public static void ClearAll()
         {
@@ -58,16 +58,16 @@ namespace NetBuff.Misc
     }
 
     /// <summary>
-    /// Base class for network actions listeners
+    ///     Base class for network actions listeners
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="TR"></typeparam>
     public class NetworkActionListener<T, TR>
     {
-        private Dictionary<T, Action<TR>[]> _then = new();
+        private readonly Dictionary<T, Action<TR>[]> _then = new();
 
         /// <summary>
-        /// Register a network action
+        ///     Register a network action
         /// </summary>
         /// <param name="key"></param>
         /// <param name="action"></param>
@@ -82,9 +82,9 @@ namespace NetBuff.Misc
 
             value[temp ? 0 : 1] += action.Invoke;
         }
-        
+
         /// <summary>
-        /// Remove a network action
+        ///     Remove a network action
         /// </summary>
         /// <param name="key"></param>
         /// <param name="action"></param>
@@ -96,9 +96,9 @@ namespace NetBuff.Misc
                 _then[key][1] -= action.Invoke;
             }
         }
-        
+
         /// <summary>
-        /// Invoke all registered network action. Clears all temporary actions
+        ///     Invoke all registered network action. Clears all temporary actions
         /// </summary>
         /// <param name="key"></param>
         /// <param name="result"></param>
@@ -108,50 +108,50 @@ namespace NetBuff.Misc
             {
                 h[0]?.Invoke(result);
                 h[1]?.Invoke(result);
-                
+
                 h[0] = null;
             }
         }
-        
+
         /// <summary>
-        /// Clear all registred network actions
+        ///     Clear all registred network actions
         /// </summary>
         public void Clear()
         {
             _then.Clear();
         }
     }
-    
+
     /// <summary>
-    /// Used as callback for network actions
+    ///     Used as callback for network actions
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="TR"></typeparam>
     public class NetworkAction<T, TR>
     {
-        /// <summary>
-        /// Holds the value of the network action
-        /// </summary>
-        public T Value { get; private set; }
-        
         private Action<TR> _then;
 
         public NetworkAction(T value)
         {
             Value = value;
         }
-        
+
         /// <summary>
-        /// Set the callback for the network action
+        ///     Holds the value of the network action
+        /// </summary>
+        public T Value { get; private set; }
+
+        /// <summary>
+        ///     Set the callback for the network action
         /// </summary>
         /// <param name="then"></param>
         public void Then(Action<TR> then)
         {
             _then = then;
         }
-        
+
         /// <summary>
-        /// Invoke the network action
+        ///     Invoke the network action
         /// </summary>
         /// <param name="result"></param>
         public void Invoke(TR result)

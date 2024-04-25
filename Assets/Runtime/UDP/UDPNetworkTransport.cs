@@ -24,12 +24,164 @@ namespace NetBuff.UDP
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/transports/#udp")]
     public class UDPNetworkTransport : NetworkTransport
     {
+        #region Unity Callbacks
+        private void Update()
+        {
+            if (_client != null)
+            {
+                _client.PoolEvents();
+                foreach (var data in _ProcessQueue(_clientQueueReliable, -1))
+                    _client.SendPacketReliable(_PACKET_RELIABLE_MESSAGE, data);
+                foreach (var data in _ProcessQueue(_clientQueueUnreliable, _MAX_PACKET_SIZE))
+                    _client.SendPacketUnreliable(data);
+            }
+
+            if (_server != null)
+            {
+                _server.PoolEvents();
+                foreach (var client in _clients.Values)
+                {
+                    foreach (var data in _ProcessQueue(client.queueReliable, -1))
+                        _server.SendPacketReliable(_PACKET_RELIABLE_MESSAGE, data, client.Id);
+                    foreach (var data in _ProcessQueue(client.queueUnreliable, _MAX_PACKET_SIZE))
+                        _server.SendPacketUnreliable(data, client.Id);
+                }
+            }
+        }
+        #endregion
+
+        public override ServerDiscoverer GetServerDiscoverer()
+        {
+            return new UDPServerDiscoverer(NetworkManager.Instance.VersionMagicNumber, port);
+        }
+
+        public override void StartHost(int magicNumber)
+        {
+            _StartServer(true);
+        }
+
+        public override void StartServer()
+        {
+            _StartServer(false);
+        }
+
+        public override void StartClient(int magicNumber)
+        {
+            if (_client != null)
+                throw new Exception("Client already started");
+
+            _client = new UDPClient();
+
+            _client.onConnected += () =>
+            {
+                ClientConnectionInfo = new LocalUDPClientConnectionInfo(-1, _client);
+                OnConnect?.Invoke();
+            };
+
+            _client.onDisconnected += reason =>
+            {
+                OnDisconnect?.Invoke(reason);
+                _client = null;
+            };
+
+            _client.onPacketReceived += data =>
+            {
+                var binaryReader = new BinaryReader(new MemoryStream(data.data, data.offset, data.length));
+
+                while (binaryReader.BaseStream.Position < binaryReader.BaseStream.Length)
+                {
+                    var id = binaryReader.ReadInt32();
+                    var packet = PacketRegistry.CreatePacket(id);
+
+                    packet.Deserialize(binaryReader);
+                    OnClientPacketReceived?.Invoke(packet);
+                }
+            };
+
+            _client.onError += reason =>
+            {
+                OnClientError?.Invoke(reason);
+                _client = null;
+            };
+
+            var writer = new BinaryWriter(new MemoryStream());
+            writer.Write(password ?? "");
+            try
+            {
+                _client.Connect(IPAddress.Parse(address), port, ((MemoryStream)writer.BaseStream).ToArray());
+            }
+            catch (Exception e)
+            {
+                OnClientError?.Invoke(e.Message);
+            }
+
+            Type = Type == EnvironmentType.None ? EnvironmentType.Client : EnvironmentType.Host;
+        }
+
+        public override void Close()
+        {
+            _server?.Close();
+            _client?.Disconnect("disconnect");
+        }
+
+        public override IClientConnectionInfo GetClientInfo(int id)
+        {
+            return _clients[id];
+        }
+
+        public override int GetClientCount()
+        {
+            return _clients.Count;
+        }
+
+        public override IEnumerable<IClientConnectionInfo> GetClients()
+        {
+            return _clients.Values;
+        }
+
+        public override void ClientDisconnect(string reason)
+        {
+            _client?.Disconnect(reason);
+        }
+
+        public override void ServerDisconnect(int id, string reason)
+        {
+            _server?.DisconnectClient(id, reason);
+        }
+
+        public override void ClientSendPacket(IPacket packet, bool reliable = false)
+        {
+            if (reliable)
+                _clientQueueReliable.Enqueue(packet);
+            else
+                _clientQueueUnreliable.Enqueue(packet);
+        }
+
+        public override void ServerSendPacket(IPacket packet, int target = -1, bool reliable = false)
+        {
+            if (target == -1)
+            {
+                foreach (var client in _clients.Values)
+                    if (reliable)
+                        client.queueReliable.Enqueue(packet);
+                    else
+                        client.queueUnreliable.Enqueue(packet);
+            }
+            else
+            {
+                if (reliable)
+                    _clients[target].queueReliable.Enqueue(packet);
+                else
+                    _clients[target].queueUnreliable.Enqueue(packet);
+            }
+        }
+
         #region Const Fields
         private const int _MAX_PACKET_SIZE = 1010;
         private const int _TIMEOUT_TIME = 10 * 1_000 * 10_000;
         private const int _RESEND_TIME = 500 * 10_000;
         private const int _KEEP_ALIVE_TIME = 1 * 1_000 * 10_000;
-        
+
         private const byte _CHANNEL_UNRELIABLE = 1;
         private const byte _CHANNEL_RELIABLE = 2;
         private const byte _CHANNEL_RELIABLE_FRAGMENT_HEADER = 3;
@@ -114,157 +266,6 @@ namespace NetBuff.UDP
         }
         #endregion
 
-        #region Unity Callbacks
-        private void Update()
-        {
-            if (_client != null)
-            {
-                _client.PoolEvents();
-                foreach (var data in _ProcessQueue(_clientQueueReliable, -1))
-                    _client.SendPacketReliable(_PACKET_RELIABLE_MESSAGE, data);
-                foreach (var data in _ProcessQueue(_clientQueueUnreliable, _MAX_PACKET_SIZE))
-                    _client.SendPacketUnreliable(data);
-            }
-
-            if (_server != null)
-            {
-                _server.PoolEvents();
-                foreach (var client in _clients.Values)
-                {
-                    foreach (var data in _ProcessQueue(client.queueReliable, -1))
-                        _server.SendPacketReliable(_PACKET_RELIABLE_MESSAGE, data, client.Id);
-                    foreach (var data in _ProcessQueue(client.queueUnreliable, _MAX_PACKET_SIZE))
-                        _server.SendPacketUnreliable(data, client.Id);
-                }
-            }
-        }
-        #endregion
-
-        public override ServerDiscoverer GetServerDiscoverer()
-        {
-            return new UDPServerDiscoverer(NetworkManager.Instance.VersionMagicNumber, port);
-        }
-
-        public override void StartHost(int magicNumber)
-        {
-            _StartServer(true);
-        }
-
-        public override void StartServer()
-        {
-            _StartServer(false);
-        }
-
-        public override void StartClient(int magicNumber)
-        {
-            if (_client != null)
-                throw new Exception("Client already started");
-
-            _client = new UDPClient();
-
-            _client.onConnected += () =>
-            {
-                ClientConnectionInfo = new LocalUDPClientConnectionInfo(-1, _client);
-                OnConnect?.Invoke();
-            };
-
-            _client.onDisconnected += reason =>
-            {
-                OnDisconnect?.Invoke(reason);
-                _client = null;
-            };
-
-            _client.onPacketReceived += data =>
-            {
-                var binaryReader = new BinaryReader(new MemoryStream(data.data, data.offset, data.length));
-
-                while (binaryReader.BaseStream.Position < binaryReader.BaseStream.Length)
-                {
-                    var id = binaryReader.ReadInt32();
-                    var packet = PacketRegistry.CreatePacket(id);
-
-                    packet.Deserialize(binaryReader);
-                    OnClientPacketReceived?.Invoke(packet);
-                }
-            };
-
-            _client.onError += (reason) =>
-            {
-                OnClientError?.Invoke(reason);
-                _client = null;
-            };
-
-            var writer = new BinaryWriter(new MemoryStream());
-            writer.Write(password ?? "");
-            try
-            {
-                _client.Connect(IPAddress.Parse(address), port, ((MemoryStream)writer.BaseStream).ToArray());
-            }
-            catch (Exception e)
-            {
-                OnClientError?.Invoke(e.Message);
-            }
-            Type = Type == EnvironmentType.None ? EnvironmentType.Client : EnvironmentType.Host;
-        }
-
-        public override void Close()
-        {
-            _server?.Close();
-            _client?.Disconnect("disconnect");
-        }
-
-        public override IClientConnectionInfo GetClientInfo(int id)
-        {
-            return _clients[id];
-        }
-
-        public override int GetClientCount()
-        {
-            return _clients.Count;
-        }
-
-        public override IEnumerable<IClientConnectionInfo> GetClients()
-        {
-            return _clients.Values;
-        }
-
-        public override void ClientDisconnect(string reason)
-        {
-            _client?.Disconnect(reason);
-        }
-
-        public override void ServerDisconnect(int id, string reason)
-        {
-            _server?.DisconnectClient(id, reason);
-        }
-
-        public override void ClientSendPacket(IPacket packet, bool reliable = false)
-        {
-            if (reliable)
-                _clientQueueReliable.Enqueue(packet);
-            else
-                _clientQueueUnreliable.Enqueue(packet);
-        }
-
-        public override void ServerSendPacket(IPacket packet, int target = -1, bool reliable = false)
-        {
-            if (target == -1)
-            {
-                foreach (var client in _clients.Values)
-                    if (reliable)
-                        client.queueReliable.Enqueue(packet);
-                    else
-                        client.queueUnreliable.Enqueue(packet);
-            }
-            else
-            {
-                if (reliable)
-                    _clients[target].queueReliable.Enqueue(packet);
-                else
-                    _clients[target].queueUnreliable.Enqueue(packet);
-            }
-        }
-
 
         #region Internal Methods
         private void _StartServer(bool startClient)
@@ -277,7 +278,7 @@ namespace NetBuff.UDP
             _server.onServerStarted += () =>
             {
                 OnServerStart?.Invoke();
-                
+
                 if (startClient)
                     StartClient(NetworkManager.Instance.VersionMagicNumber);
             };
@@ -286,7 +287,7 @@ namespace NetBuff.UDP
             {
                 OnServerStop?.Invoke();
                 _server = null;
-                
+
                 OnServerError = null;
             };
 
@@ -353,24 +354,24 @@ namespace NetBuff.UDP
 
                 return ((MemoryStream)writer.BaseStream).ToArray();
             };
-            
-            _server.onError += (reason) =>
+
+            _server.onError += reason =>
             {
                 OnServerError?.Invoke(reason);
                 _server = null;
             };
-            
+
             try
             {
                 _server.Host(IPAddress.Parse(address), port);
                 Type = Type == EnvironmentType.None ? EnvironmentType.Server : EnvironmentType.Host;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 OnServerError?.Invoke(e.Message);
             }
         }
-        
+
         private static IEnumerable<UDPSpan> _ProcessQueue(Queue<IPacket> queue, int maxSize)
         {
             if (queue.Count == 0)
@@ -463,8 +464,8 @@ namespace NetBuff.UDP
 
         private class ReliableReceived
         {
-            public byte type;
             public byte[] data;
+            public byte type;
             public int waitingFragmentUntil = -1;
         }
 
@@ -645,38 +646,38 @@ namespace NetBuff.UDP
                                 break;
 
                             case _CHANNEL_RELIABLE:
+                            {
+                                var type = threadBuffer[1];
+                                var sequence = (threadBuffer[2] << 24) | (threadBuffer[3] << 16) |
+                                               (threadBuffer[4] << 8) | threadBuffer[5];
+
+                                //Send ACK
+                                threadBuffer[0] = _CHANNEL_ACK;
+                                threadBuffer[1] = threadBuffer[2];
+                                threadBuffer[2] = threadBuffer[3];
+                                threadBuffer[3] = threadBuffer[4];
+                                threadBuffer[4] = threadBuffer[5];
+                                _InternalSendSpan(new UDPSpan(threadBuffer, 0, 5), remote);
+
+                                if (peer == null)
                                 {
-                                    var type = threadBuffer[1];
-                                    var sequence = (threadBuffer[2] << 24) | (threadBuffer[3] << 16) |
-                                                   (threadBuffer[4] << 8) | threadBuffer[5];
-
-                                    //Send ACK
-                                    threadBuffer[0] = _CHANNEL_ACK;
-                                    threadBuffer[1] = threadBuffer[2];
-                                    threadBuffer[2] = threadBuffer[3];
-                                    threadBuffer[3] = threadBuffer[4];
-                                    threadBuffer[4] = threadBuffer[5];
-                                    _InternalSendSpan(new UDPSpan(threadBuffer, 0, 5), remote);
-
-                                    if (peer == null)
-                                    {
-                                        var id = _nextClientId++;
-                                        peer = new UDPPeer(id, remote);
-                                        _peers.Add(id, peer);
-                                        _peersByIp.Add(remote, peer);
-                                    }
-                                    
-                                    peer.lastReceivedTicks = DateTime.Now.Ticks;
-
-                                    if (!peer.receivedReliable.ContainsKey(sequence))
-                                    {
-                                        var b = new byte[received - 6];
-                                        Buffer.BlockCopy(threadBuffer, 6, b, 0, received - 6);
-
-                                        peer.receivedReliable.Add(sequence,
-                                            new ReliableReceived { data = b, type = type });
-                                    }
+                                    var id = _nextClientId++;
+                                    peer = new UDPPeer(id, remote);
+                                    _peers.Add(id, peer);
+                                    _peersByIp.Add(remote, peer);
                                 }
+
+                                peer.lastReceivedTicks = DateTime.Now.Ticks;
+
+                                if (!peer.receivedReliable.ContainsKey(sequence))
+                                {
+                                    var b = new byte[received - 6];
+                                    Buffer.BlockCopy(threadBuffer, 6, b, 0, received - 6);
+
+                                    peer.receivedReliable.Add(sequence,
+                                        new ReliableReceived { data = b, type = type });
+                                }
+                            }
                                 break;
 
                             case _CHANNEL_ACK:
@@ -695,7 +696,7 @@ namespace NetBuff.UDP
                         }
                     }
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     onError?.Invoke(e.Message);
                 }
@@ -710,7 +711,6 @@ namespace NetBuff.UDP
 
             private void _SendDisconnectRequest(string reason, int clientId)
             {
-
                 var reasonBytes = Encoding.UTF8.GetBytes(reason);
 
                 SendPacketReliable(_PACKET_RELIABLE_DISCONNECT, new UDPSpan(reasonBytes), clientId);
@@ -905,7 +905,7 @@ namespace NetBuff.UDP
                         else if (peer.expectedSequenceNumber == peer.waitingFragmentUntil)
                         {
                             var offset = 0;
-                            
+
                             for (var j = peer.waitingFragmentSince; j <= peer.waitingFragmentUntil; j++)
                             {
                                 var fragment = peer.receivedReliable[j].data;
@@ -914,8 +914,9 @@ namespace NetBuff.UDP
                                 peer.receivedReliable.Remove(j);
                             }
 
-                            peer.receivedPacketCount++; 
-                            _HandleReliablePacket(packet.type, new UDPSpan(_FragmentUnitBuffer, 0, offset - 2), peer.id);
+                            peer.receivedPacketCount++;
+                            _HandleReliablePacket(packet.type, new UDPSpan(_FragmentUnitBuffer, 0, offset - 2),
+                                peer.id);
                             peer.waitingFragmentUntil = -1;
                         }
 
@@ -923,7 +924,7 @@ namespace NetBuff.UDP
                     }
                 }
             }
-            
+
             private void _HandleReliablePacket(byte type, UDPSpan body, int clientId)
             {
                 switch (type)
@@ -936,7 +937,10 @@ namespace NetBuff.UDP
                             onClientConnected?.Invoke(clientId);
                         }
                         else
+                        {
                             _SendDisconnectRequest(answer.reason, clientId);
+                        }
+
                         break;
 
                     case _PACKET_RELIABLE_DISCONNECT:
@@ -977,12 +981,12 @@ namespace NetBuff.UDP
 
             private readonly Socket _socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             private int _expectedSequenceNumber;
+            private bool _isConnected;
             private int _lastLostSequence = -1;
             private long _lastReceivedTicks = DateTime.Now.Ticks;
             private int _nextSequenceNumber;
             private EndPoint _server;
             private Thread _thread;
-            private bool _isConnected;
 
             private int _waitingFragmentSince = -1;
             private int _waitingFragmentUntil = -1;
@@ -991,7 +995,7 @@ namespace NetBuff.UDP
             public int lostPacketCount;
             public int receivedPacketCount;
             public int sentPacketCount;
-            
+
 
             public void Connect(IPAddress address, int port, byte[] payload)
             {
@@ -1074,7 +1078,7 @@ namespace NetBuff.UDP
 
                                 //Add to Queue
                                 _lastReceivedTicks = DateTime.Now.Ticks;
-                                
+
                                 if (!_receivedReliable.ContainsKey(sequence))
                                 {
                                     var b = new byte[received - 6];
@@ -1106,13 +1110,12 @@ namespace NetBuff.UDP
                                 _InternalSendSpan(new UDPSpan(threadBuffer, 0, 3));
                             }
                                 break;
-
                         }
                     }
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
-                    if(_isConnected)
+                    if (_isConnected)
                         onError?.Invoke(e.Message);
                 }
 
@@ -1133,11 +1136,11 @@ namespace NetBuff.UDP
             {
                 var reasonBytes = Encoding.UTF8.GetBytes(reason);
                 SendPacketReliable(_PACKET_RELIABLE_DISCONNECT, new UDPSpan(reasonBytes));
-                
+
                 if (!_isConnected)
                     return;
                 _isConnected = false;
-                
+
                 _actions.Enqueue(() => onDisconnected?.Invoke(reason));
             }
 
@@ -1258,8 +1261,8 @@ namespace NetBuff.UDP
                 while (_receivedReliable.ContainsKey(_expectedSequenceNumber))
                 {
                     var packet = _receivedReliable[_expectedSequenceNumber];
-                    
-                   
+
+
                     if (packet.waitingFragmentUntil != -1)
                     {
                         _waitingFragmentSince = _expectedSequenceNumber;
@@ -1318,6 +1321,7 @@ namespace NetBuff.UDP
                             _isConnected = false;
                             onDisconnected?.Invoke(Encoding.UTF8.GetString(body.data));
                         }
+
                         break;
 
                     default:

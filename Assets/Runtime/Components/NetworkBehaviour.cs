@@ -771,7 +771,8 @@ namespace NetBuff.Components
         /// <param name="active"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position, Quaternion rotation, bool active)
+        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position,
+            Quaternion rotation, bool active)
         {
             return NetworkIdentity.Spawn(prefab, position, rotation, active);
         }
@@ -786,7 +787,8 @@ namespace NetBuff.Components
         /// <param name="owner"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position, Quaternion rotation, int owner)
+        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position,
+            Quaternion rotation, int owner)
         {
             return NetworkIdentity.Spawn(prefab, position, rotation, owner);
         }
@@ -800,7 +802,8 @@ namespace NetBuff.Components
         /// <param name="rotation"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position, Quaternion rotation)
+        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position,
+            Quaternion rotation)
         {
             return NetworkIdentity.Spawn(prefab, position, rotation);
         }
@@ -821,7 +824,8 @@ namespace NetBuff.Components
         /// <param name="scene"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position, Quaternion rotation, Vector3 scale,
+        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position,
+            Quaternion rotation, Vector3 scale,
             bool active, int owner = -1, int scene = -1)
         {
             return NetworkIdentity.Spawn(prefab, position, rotation, scale, active, owner, scene);
@@ -843,7 +847,8 @@ namespace NetBuff.Components
         /// <param name="scene"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(NetworkId prefabId, Vector3 position, Quaternion rotation, Vector3 scale,
+        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(NetworkId prefabId, Vector3 position,
+            Quaternion rotation, Vector3 scale,
             bool active, int owner = -1, int scene = -1)
         {
             return NetworkIdentity.Spawn(prefabId, position, rotation, scale, active, owner, scene);

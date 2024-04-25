@@ -236,7 +236,7 @@ namespace NetBuff.Components
                 ServerBroadcastPacket(new NetworkObjectDespawnPacket { Id = Id });
             else
                 ClientSendPacket(new NetworkObjectDespawnPacket { Id = Id });
-            
+
             var action = new NetworkAction<NetworkId, NetworkIdentity>(Id);
             NetworkAction.OnObjectDespawn.Register(Id, action, true);
             return action;
@@ -258,7 +258,7 @@ namespace NetBuff.Components
                 ServerBroadcastPacket(new NetworkObjectActivePacket { Id = Id, IsActive = active });
             else
                 ClientSendPacket(new NetworkObjectActivePacket { Id = Id, IsActive = active });
-            
+
             var action = new NetworkAction<NetworkId, NetworkIdentity>(Id);
             NetworkAction.OnObjectChangeActive.Register(Id, action, true);
             return action;
@@ -281,7 +281,7 @@ namespace NetBuff.Components
                 ServerBroadcastPacket(new NetworkObjectOwnerPacket { Id = Id, OwnerId = clientId });
             else
                 ClientSendPacket(new NetworkObjectOwnerPacket { Id = Id, OwnerId = clientId });
-            
+
             var action = new NetworkAction<NetworkId, NetworkIdentity>(Id);
             NetworkAction.OnObjectChangeOwner.Register(Id, action, true);
             return action;
@@ -499,7 +499,8 @@ namespace NetBuff.Components
         /// <param name="rotation"></param>
         /// <param name="active"></param>
         /// <returns></returns>
-        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position, Quaternion rotation, bool active)
+        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position,
+            Quaternion rotation, bool active)
         {
             return Spawn(prefab, position, rotation, Vector3.one, active);
         }
@@ -513,7 +514,8 @@ namespace NetBuff.Components
         /// <param name="rotation"></param>
         /// <param name="owner"></param>
         /// <returns></returns>
-        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position, Quaternion rotation, int owner)
+        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position,
+            Quaternion rotation, int owner)
         {
             return Spawn(prefab, position, rotation, Vector3.one, true, owner);
         }
@@ -526,7 +528,8 @@ namespace NetBuff.Components
         /// <param name="position"></param>
         /// <param name="rotation"></param>
         /// <returns></returns>
-        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position, Quaternion rotation)
+        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position,
+            Quaternion rotation)
         {
             return Spawn(prefab, position, rotation, Vector3.one, true);
         }
@@ -547,7 +550,8 @@ namespace NetBuff.Components
         /// <param name="scene"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position, Quaternion rotation, Vector3 scale,
+        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position,
+            Quaternion rotation, Vector3 scale,
             bool active, int owner = -1, int scene = -1)
         {
             var id = NetworkManager.Instance.PrefabRegistry.GetPrefabId(prefab);
@@ -573,7 +577,8 @@ namespace NetBuff.Components
         /// <param name="scene"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(NetworkId prefabId, Vector3 position, Quaternion rotation, Vector3 scale,
+        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(NetworkId prefabId, Vector3 position,
+            Quaternion rotation, Vector3 scale,
             bool active, int owner = -1, int scene = -1)
         {
             if (!NetworkManager.Instance.PrefabRegistry.IsPrefabValid(prefabId))
@@ -582,7 +587,8 @@ namespace NetBuff.Components
             return _InternalSpawn(prefabId, position, rotation, scale, active, owner, scene);
         }
 
-        private static NetworkAction<NetworkId, NetworkIdentity> _InternalSpawn(NetworkId prefabId, Vector3 position, Quaternion rotation,
+        private static NetworkAction<NetworkId, NetworkIdentity> _InternalSpawn(NetworkId prefabId, Vector3 position,
+            Quaternion rotation,
             Vector3 scale, bool active, int owner, int scene)
         {
             var packet = new NetworkObjectSpawnPacket

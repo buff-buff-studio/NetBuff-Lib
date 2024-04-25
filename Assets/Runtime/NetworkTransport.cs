@@ -102,12 +102,12 @@ namespace NetBuff
         ///     The callback that will be called when the server stops.
         /// </summary>
         public Action OnServerStop { get; set; }
-        
+
         /// <summary>
         ///     Called when some error happened on the server.
         /// </summary>
         public Action<string> OnServerError { get; set; }
-        
+
         /// <summary>
         ///     Called when some error happened on the client.
         /// </summary>
