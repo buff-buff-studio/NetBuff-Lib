@@ -273,6 +273,9 @@ namespace NetBuff
                 Destroy(gameObject);
                 return;
             }
+            
+            //Clears all the actions
+            NetworkAction.ClearAll();
 
             Instance = this;
             PacketRegistry.Clear();
@@ -597,6 +600,8 @@ namespace NetBuff
             foreach (var obj in networkObjects.Values)
                 foreach (var behaviour in obj.Behaviours)
                     behaviour.OnAnyObjectSpawned(identity, retroactive);
+            
+            NetworkAction.OnObjectSpawn.Invoke(identity.Id, identity);
         }
 
         /// <summary>
@@ -607,6 +612,8 @@ namespace NetBuff
         {
             foreach (var behaviour in identity.Behaviours)
                 behaviour.OnDespawned();
+            
+            NetworkAction.OnObjectDespawn.Invoke(identity.Id, identity);
         }
 
         /// <summary>
@@ -1108,6 +1115,8 @@ namespace NetBuff
 
             foreach (var behaviour in identity.Behaviours)
                 behaviour.OnActiveChanged(activePacket.IsActive);
+            
+            NetworkAction.OnObjectChangeActive.Invoke(identity.Id, identity);
         }
 
         private async void _HandlePreExistingInfoPacket(NetworkPreExistingInfoPacket preExistingInfoPacket)
@@ -1226,6 +1235,8 @@ namespace NetBuff
 
             foreach (var behaviour in identity.Behaviours)
                 behaviour.OnOwnershipChanged(oldOwner, packet.OwnerId);
+            
+            NetworkAction.OnObjectChangeOwner.Invoke(identity.Id, identity);
         }
 
         private void _HandleDespawnPacket(NetworkObjectDespawnPacket packet)
@@ -1236,7 +1247,9 @@ namespace NetBuff
             if (identity.PrefabId.IsEmpty)
                 removedPreExistingObjects.Add(packet.Id);
             networkObjects.Remove(packet.Id);
+            
             OnNetworkObjectDespawned(identity);
+           
             OnDespawnObject(identity.gameObject);
         }
 
@@ -1261,6 +1274,8 @@ namespace NetBuff
                 SceneManager.MoveGameObjectToScene(obj, SceneManager.GetSceneByName(scene));
             foreach (var behaviour in identity.Behaviours)
                 behaviour.OnSceneChanged(prevId, realId);
+            
+            NetworkAction.OnObjectSceneChanged.Invoke(identity.Id, identity);
         }
         #endregion
 
@@ -1505,9 +1520,10 @@ namespace NetBuff
         ///     Called only on the server.
         /// </summary>
         /// <param name="sceneName"></param>
+        /// <returns></returns>
         /// <exception cref="Exception"></exception>
         [ServerOnly]
-        public void LoadScene(string sceneName)
+        public NetworkAction<string, int> LoadScene(string sceneName)
         {
             if (!IsServerRunning)
                 throw new Exception("This method can only be called on the server");
@@ -1516,7 +1532,11 @@ namespace NetBuff
             {
                 SceneName = sceneName
             };
+            
             BroadcastServerPacket(packet, true);
+            var action = new NetworkAction<string, int>(sceneName);
+            NetworkAction.OnSceneLoaded.Register(sceneName, action, true);
+            return action;
         }
 
         /// <summary>
@@ -1526,7 +1546,7 @@ namespace NetBuff
         /// <param name="sceneName"></param>
         /// <exception cref="Exception"></exception>
         [ServerOnly]
-        public void UnloadScene(string sceneName)
+        public NetworkAction<string, int> UnloadScene(string sceneName)
         {
             if (!IsServerRunning)
                 throw new Exception("This method can only be called on the server");
@@ -1540,6 +1560,10 @@ namespace NetBuff
             };
 
             BroadcastServerPacket(packet, true);
+            
+            var action = new NetworkAction<string, int>(sceneName);
+            NetworkAction.OnSceneUnloaded.Register(sceneName, action, true);
+            return action;
         }
 
         /// <summary>
@@ -1584,6 +1608,8 @@ namespace NetBuff
             foreach (var identity in networkObjects.Values)
                 foreach (var behaviour in identity.Behaviours)
                     behaviour.OnSceneLoaded(sceneId);
+            
+            NetworkAction.OnSceneLoaded.Invoke(sceneName, sceneId);
         }
 
         private async void _UnloadSceneLocally(string sceneName)
@@ -1611,6 +1637,8 @@ namespace NetBuff
             foreach (var identity in networkObjects.Values)
                 foreach (var behaviour in identity.Behaviours)
                     behaviour.OnSceneUnloaded(sceneId);
+            
+            NetworkAction.OnSceneUnloaded.Invoke(sceneName, sceneId);
         }
         #endregion
 

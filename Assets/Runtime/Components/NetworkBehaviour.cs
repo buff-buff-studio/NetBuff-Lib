@@ -523,37 +523,40 @@ namespace NetBuff.Components
         ///     Despawns the object from the network.
         ///     Requires authority.
         /// </summary>
+        /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresAuthority]
-        public void Despawn()
+        public NetworkAction<NetworkId, NetworkIdentity> Despawn()
         {
-            Identity.Despawn();
+            return Identity.Despawn();
         }
 
         /// <summary>
         ///     Changes the active state of the object.
         ///     Requires authority.
         /// </summary>
+        /// <returns></returns>
         /// <param name="active"></param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresAuthority]
-        public void SetActive(bool active)
+        public NetworkAction<NetworkId, NetworkIdentity> SetActive(bool active)
         {
-            Identity.SetActive(active);
+            return Identity.SetActive(active);
         }
 
         /// <summary>
         ///     Sets the owner of the object.
         ///     Requires authority.
         /// </summary>
+        /// <returns></returns>
         /// <param name="clientId"></param>
         /// <exception cref="InvalidOperationException"></exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresAuthority]
-        public void SetOwner(int clientId)
+        public NetworkAction<NetworkId, NetworkIdentity> SetOwner(int clientId)
         {
-            Identity.SetOwner(clientId);
+            return Identity.SetOwner(clientId);
         }
 
         /// <summary>
@@ -689,12 +692,13 @@ namespace NetBuff.Components
         ///     Moves this object to a different scene.
         ///     Requires authority.
         /// </summary>
+        /// <returns></returns>
         /// <param name="sceneId"></param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresAuthority]
-        public void MoveToScene(int sceneId)
+        public NetworkAction<NetworkId, NetworkIdentity> MoveToScene(int sceneId)
         {
-            Identity.MoveToScene(sceneId);
+            return Identity.MoveToScene(sceneId);
         }
 
         /// <summary>
@@ -752,7 +756,7 @@ namespace NetBuff.Components
         /// <param name="prefab"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkId Spawn(GameObject prefab)
+        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab)
         {
             return NetworkIdentity.Spawn(prefab);
         }
@@ -767,7 +771,7 @@ namespace NetBuff.Components
         /// <param name="active"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation, bool active)
+        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position, Quaternion rotation, bool active)
         {
             return NetworkIdentity.Spawn(prefab, position, rotation, active);
         }
@@ -782,7 +786,7 @@ namespace NetBuff.Components
         /// <param name="owner"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation, int owner)
+        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position, Quaternion rotation, int owner)
         {
             return NetworkIdentity.Spawn(prefab, position, rotation, owner);
         }
@@ -796,7 +800,7 @@ namespace NetBuff.Components
         /// <param name="rotation"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation)
+        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position, Quaternion rotation)
         {
             return NetworkIdentity.Spawn(prefab, position, rotation);
         }
@@ -817,7 +821,7 @@ namespace NetBuff.Components
         /// <param name="scene"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation, Vector3 scale,
+        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position, Quaternion rotation, Vector3 scale,
             bool active, int owner = -1, int scene = -1)
         {
             return NetworkIdentity.Spawn(prefab, position, rotation, scale, active, owner, scene);
@@ -839,7 +843,7 @@ namespace NetBuff.Components
         /// <param name="scene"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkId Spawn(NetworkId prefabId, Vector3 position, Quaternion rotation, Vector3 scale,
+        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(NetworkId prefabId, Vector3 position, Quaternion rotation, Vector3 scale,
             bool active, int owner = -1, int scene = -1)
         {
             return NetworkIdentity.Spawn(prefabId, position, rotation, scale, active, owner, scene);
