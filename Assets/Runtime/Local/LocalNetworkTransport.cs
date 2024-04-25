@@ -8,29 +8,21 @@ using UnityEngine;
 namespace NetBuff.Local
 {
     /// <summary>
-    /// Used for local running, does not actually send packets over the network.
-    /// Can be used on Split Screen games or for testing.
+    ///     Used for local running, does not actually send packets over the network.
+    ///     Can be used on Split Screen games or for testing.
     /// </summary>
     [Icon("Assets/Editor/Icons/LocalNetworkTransport.png")]
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/transports/#local")]
     public class LocalNetworkTransport : NetworkTransport
     {
-        
         #region Inspector Fields
         [SerializeField]
         protected int clientCount = 1;
         #endregion
 
-        #region Internal Fields
-        private int _loadedClients;
-        private int _nextClientId;
-        private readonly Dictionary<int, LocalClientConnectionInfo> _clients = new();
-        private readonly Queue<Action> _dispatcher = new();
-        #endregion
-
         #region Helper Properties
         /// <summary>
-        /// The amount of clients that will be created when the host is started.
+        ///     The amount of clients that will be created when the host is started.
         /// </summary>
         /// <exception cref="Exception"></exception>
         public int ClientCount
@@ -179,5 +171,12 @@ namespace NetBuff.Local
 
             public int Id { get; }
         }
+
+        #region Internal Fields
+        private int _loadedClients;
+        private int _nextClientId;
+        private readonly Dictionary<int, LocalClientConnectionInfo> _clients = new();
+        private readonly Queue<Action> _dispatcher = new();
+        #endregion
     }
 }

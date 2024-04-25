@@ -6,78 +6,32 @@ using UnityEngine;
 namespace NetBuff.Packets
 {
     /// <summary>
-    /// Packet used to send information about pre-existing objects in the network.
+    ///     Packet used to send information about pre-existing objects in the network.
     /// </summary>
     public class NetworkPreExistingInfoPacket : IPacket
     {
         /// <summary>
-        /// Represents the state of a pre-existing object in the network.
-        /// </summary>
-        public class PreExistingState
-        {
-            /// <summary>
-            /// The id of the object.
-            /// </summary>
-            public NetworkId Id { get; set; }
-        
-            /// <summary>
-            /// The id of the prefab.
-            /// </summary>
-            public NetworkId PrefabId { get; set; }
-            
-            /// <summary>
-            /// The id of the owner of the object.
-            /// </summary>
-            public int OwnerId { get; set; }
-
-            /// <summary>
-            /// The position of the object.
-            /// </summary>
-            public Vector3 Position { get; set; }
-
-            /// <summary>
-            /// The rotation of the object.
-            /// </summary>
-            public Quaternion Rotation { get; set; }
-
-            /// <summary>
-            /// The scale of the object.
-            /// </summary>
-            public Vector3 Scale { get; set; }
-
-            /// <summary>
-            /// The state of the object.
-            /// </summary>
-            public bool IsActive { get; set; }
-
-            /// <summary>
-            /// The id of the scene where the object is.
-            /// </summary>
-            public int SceneId { get; set; }
-        }
-        
-        /// <summary>
-        /// The pre-existing objects in the network.
+        ///     The pre-existing objects in the network.
         /// </summary>
         public PreExistingState[] PreExistingObjects { get; set; }
 
         /// <summary>
-        /// The id of the pre-existing objects that were removed from the network.
+        ///     The id of the pre-existing objects that were removed from the network.
         /// </summary>
         public NetworkId[] RemovedObjects { get; set; }
 
         /// <summary>
-        /// The names of the scenes that are loaded in the network.
+        ///     The names of the scenes that are loaded in the network.
         /// </summary>
         public string[] SceneNames { get; set; }
-        
+
         /// <summary>
-        /// The spawned objects in the network.
+        ///     The spawned objects in the network.
         /// </summary>
         public NetworkObjectSpawnPacket[] SpawnedObjects { get; set; }
-        
+
         /// <summary>
-        /// The data of the network behaviours in the network.
+        ///     The data of the network behaviours in the network.
         /// </summary>
         public NetworkBehaviourDataPacket[] NetworkValues { get; set; }
 
@@ -190,6 +144,52 @@ namespace NetBuff.Packets
                     BehaviourId = reader.ReadByte(),
                     Payload = reader.ReadBytes(reader.ReadInt32())
                 };
+        }
+
+        /// <summary>
+        ///     Represents the state of a pre-existing object in the network.
+        /// </summary>
+        public class PreExistingState
+        {
+            /// <summary>
+            ///     The id of the object.
+            /// </summary>
+            public NetworkId Id { get; set; }
+
+            /// <summary>
+            ///     The id of the prefab.
+            /// </summary>
+            public NetworkId PrefabId { get; set; }
+
+            /// <summary>
+            ///     The id of the owner of the object.
+            /// </summary>
+            public int OwnerId { get; set; }
+
+            /// <summary>
+            ///     The position of the object.
+            /// </summary>
+            public Vector3 Position { get; set; }
+
+            /// <summary>
+            ///     The rotation of the object.
+            /// </summary>
+            public Quaternion Rotation { get; set; }
+
+            /// <summary>
+            ///     The scale of the object.
+            /// </summary>
+            public Vector3 Scale { get; set; }
+
+            /// <summary>
+            ///     The state of the object.
+            /// </summary>
+            public bool IsActive { get; set; }
+
+            /// <summary>
+            ///     The id of the scene where the object is.
+            /// </summary>
+            public int SceneId { get; set; }
         }
     }
 }

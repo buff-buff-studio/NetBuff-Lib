@@ -10,45 +10,11 @@ using NetBuff.Misc;
 namespace NetBuff.NetLibUDP
 {
     /// <summary>
-    /// Used to find all available servers using UDP.
-    /// Searches through all available network interfaces and sends a broadcast message to find servers.
+    ///     Used to find all available servers using UDP.
+    ///     Searches through all available network interfaces and sends a broadcast message to find servers.
     /// </summary>
     public class NetLibUDPServerDiscoverer : ServerDiscoverer<NetLibUDPServerDiscoverer.UDPServerInfo>
     {
-        /// <summary>
-        /// Holds the information about a UDP server.
-        /// </summary>
-        public class UDPServerInfo : ServerInfo
-        {
-            /// <summary>
-            /// The server's IP address.
-            /// </summary>
-            public IPAddress Address { get; set; }
-
-            public override string ToString()
-            {
-                return
-                    $"{Name}'s game ({Address}) - {Players}/{MaxPlayers} {Platform} {(HasPassword ? "[Password]" : "")}";
-            }
-
-            public override bool Join()
-            {
-                var transport = NetworkManager.Instance.Transport;
-                var udp = transport as NetLibUDPNetworkTransport;
-                if (udp == null)
-                    throw new Exception("Transport is not NetLibUDP");
-                udp.Address = Address.ToString();
-                NetworkManager.Instance.StartClient();
-                return true;
-            }
-        }
-
-        #region Internal Fields
-        private readonly int _magicNumber;
-        private readonly int _port;
-        private int _searchId;
-        #endregion
-
         public NetLibUDPServerDiscoverer(int magicNumber, int port)
         {
             _magicNumber = magicNumber;
@@ -150,5 +116,39 @@ namespace NetBuff.NetLibUDP
         {
             _searchId++;
         }
+
+        /// <summary>
+        ///     Holds the information about a UDP server.
+        /// </summary>
+        public class UDPServerInfo : ServerInfo
+        {
+            /// <summary>
+            ///     The server's IP address.
+            /// </summary>
+            public IPAddress Address { get; set; }
+
+            public override string ToString()
+            {
+                return
+                    $"{Name}'s game ({Address}) - {Players}/{MaxPlayers} {Platform} {(HasPassword ? "[Password]" : "")}";
+            }
+
+            public override bool Join()
+            {
+                var transport = NetworkManager.Instance.Transport;
+                var udp = transport as NetLibUDPNetworkTransport;
+                if (udp == null)
+                    throw new Exception("Transport is not NetLibUDP");
+                udp.Address = Address.ToString();
+                NetworkManager.Instance.StartClient();
+                return true;
+            }
+        }
+
+        #region Internal Fields
+        private readonly int _magicNumber;
+        private readonly int _port;
+        private int _searchId;
+        #endregion
     }
 }

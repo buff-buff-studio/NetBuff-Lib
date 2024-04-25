@@ -10,45 +10,11 @@ using NetBuff.Misc;
 namespace NetBuff.UDP
 {
     /// <summary>
-    /// Used to find all available servers using UDP.
-    /// Searches through all available network interfaces and sends a broadcast message to find servers.
+    ///     Used to find all available servers using UDP.
+    ///     Searches through all available network interfaces and sends a broadcast message to find servers.
     /// </summary>
     public class UDPServerDiscoverer : ServerDiscoverer<UDPServerDiscoverer.UDPServerInfo>
     {
-        /// <summary>
-        /// Holds the information about a UDP server.
-        /// </summary>
-        public class UDPServerInfo : ServerInfo
-        {
-            /// <summary>
-            /// The server's IP address.
-            /// </summary>
-            public IPAddress Address { get; set; }
-
-            public override string ToString()
-            {
-                return
-                    $"{Name}'s game ({Address}) - {Players}/{MaxPlayers} {Platform} {(HasPassword ? "[Password]" : "")}";
-            }
-
-            public override bool Join()
-            {
-                var transport = NetworkManager.Instance.Transport;
-                var udp = transport as UDPNetworkTransport;
-                if (udp == null)
-                    throw new Exception("Transport is not NetLibUDP");
-                udp.Address = Address.ToString();
-                NetworkManager.Instance.StartClient();
-                return true;
-            }
-        }
-
-        #region Internal Fields
-        private readonly int _magicNumber;
-        private readonly int _port;
-        private int _searchId;
-        #endregion
-
         public UDPServerDiscoverer(int magicNumber, int port)
         {
             _magicNumber = magicNumber;
@@ -105,7 +71,7 @@ namespace NetBuff.UDP
                                 var response = udpClient.Receive(ref address2);
                                 udpClient.Close();
                                 var reader = new BinaryReader(new MemoryStream(response));
-                                
+
                                 if (reader.ReadString() == "server_answer")
                                 {
                                     var name = reader.ReadString();
@@ -150,5 +116,39 @@ namespace NetBuff.UDP
         {
             _searchId++;
         }
+
+        /// <summary>
+        ///     Holds the information about a UDP server.
+        /// </summary>
+        public class UDPServerInfo : ServerInfo
+        {
+            /// <summary>
+            ///     The server's IP address.
+            /// </summary>
+            public IPAddress Address { get; set; }
+
+            public override string ToString()
+            {
+                return
+                    $"{Name}'s game ({Address}) - {Players}/{MaxPlayers} {Platform} {(HasPassword ? "[Password]" : "")}";
+            }
+
+            public override bool Join()
+            {
+                var transport = NetworkManager.Instance.Transport;
+                var udp = transport as UDPNetworkTransport;
+                if (udp == null)
+                    throw new Exception("Transport is not NetLibUDP");
+                udp.Address = Address.ToString();
+                NetworkManager.Instance.StartClient();
+                return true;
+            }
+        }
+
+        #region Internal Fields
+        private readonly int _magicNumber;
+        private readonly int _port;
+        private int _searchId;
+        #endregion
     }
 }

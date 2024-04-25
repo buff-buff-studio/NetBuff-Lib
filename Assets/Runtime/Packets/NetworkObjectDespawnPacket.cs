@@ -5,12 +5,12 @@ using NetBuff.Misc;
 namespace NetBuff.Packets
 {
     /// <summary>
-    /// Packet used to despawn a network object.
+    ///     Packet used to despawn a network object.
     /// </summary>
     public class NetworkObjectDespawnPacket : IPacket
     {
         /// <summary>
-        /// The network id of the network object.
+        ///     The network id of the network object.
         /// </summary>
         public NetworkId Id { get; set; }
 

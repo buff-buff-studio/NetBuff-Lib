@@ -7,8 +7,8 @@ using UnityEngine;
 namespace NetBuff
 {
     /// <summary>
-    /// Registry of prefabs that can be spawned by the network.
-    /// All the objects that are spawned at runtime by the network must be registered here.
+    ///     Registry of prefabs that can be spawned by the network.
+    ///     All the objects that are spawned at runtime by the network must be registered here.
     /// </summary>
     [CreateAssetMenu(fileName = "NetworkPrefabRegistry", menuName = "NetBuff/NetworkPrefabRegistry", order = 0)]
     [Icon("Assets/Editor/Icons/NetworkPrefabRegistry.png")]
@@ -16,14 +16,14 @@ namespace NetBuff
     {
         [SerializeField]
         private SerializedDictionary<NetworkId, GameObject> prefabs = new();
-        
+
         /// <summary>
-        /// Registry of prefabs that can be spawned by the network.
+        ///     Registry of prefabs that can be spawned by the network.
         /// </summary>
         public SerializedDictionary<NetworkId, GameObject> Prefabs => prefabs;
 
         /// <summary>
-        /// Check if a prefab id is valid.
+        ///     Check if a prefab id is valid.
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -31,9 +31,9 @@ namespace NetBuff
         {
             return prefabs.ContainsKey(id);
         }
-        
+
         /// <summary>
-        /// Check if a prefab is valid.
+        ///     Check if a prefab is valid.
         /// </summary>
         /// <param name="prefab"></param>
         /// <returns></returns>
@@ -41,9 +41,9 @@ namespace NetBuff
         {
             return prefab != null && prefabs.ContainsValue(prefab);
         }
-        
+
         /// <summary>
-        /// Returns the prefab id of a prefab.
+        ///     Returns the prefab id of a prefab.
         /// </summary>
         /// <param name="prefab"></param>
         /// <returns></returns>
@@ -52,9 +52,9 @@ namespace NetBuff
             var v = prefabs.FirstOrDefault(pair => pair.Value == prefab);
             return v.Value != null ? v.Key : NetworkId.Empty;
         }
-        
+
         /// <summary>
-        /// Returns the prefab of a prefab id.
+        ///     Returns the prefab of a prefab id.
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -62,9 +62,9 @@ namespace NetBuff
         {
             return prefabs.TryGetValue(id, out var prefab) ? prefab : null;
         }
-        
+
         /// <summary>
-        /// Returns all the prefabs.
+        ///     Returns all the prefabs.
         /// </summary>
         /// <returns></returns>
         public IEnumerable<GameObject> GetAllPrefabs()

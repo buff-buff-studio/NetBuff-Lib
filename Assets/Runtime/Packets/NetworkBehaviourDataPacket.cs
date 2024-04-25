@@ -5,22 +5,22 @@ using NetBuff.Misc;
 namespace NetBuff.Packets
 {
     /// <summary>
-    /// Packet used to synchronize data of a network behaviour.
+    ///     Packet used to synchronize data of a network behaviour.
     /// </summary>
     public class NetworkBehaviourDataPacket : IPacket
     {
         /// <summary>
-        /// The network id of the network object.
+        ///     The network id of the network object.
         /// </summary>
         public NetworkId Id { get; set; }
-        
+
         /// <summary>
-        /// The behaviour id of the network behaviour (index in the network object).
+        ///     The behaviour id of the network behaviour (index in the network object).
         /// </summary>
         public byte BehaviourId { get; set; }
-    
+
         /// <summary>
-        /// The payload of the network behaviour data.
+        ///     The payload of the network behaviour data.
         /// </summary>
         public byte[] Payload { get; set; }
 

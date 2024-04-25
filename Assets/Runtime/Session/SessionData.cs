@@ -1,27 +1,28 @@
 ﻿using System;
 using System.IO;
 using NetBuff.Misc;
+
 // ReSharper disable ConvertToAutoProperty
 
 namespace NetBuff.Session
 {
     /// <summary>
-    /// Base class for session data. Used to store data such as client score, team, etc.
-    /// Persistent in case of reconnection. Check Managing Sessions section in the documentation for more info.
+    ///     Base class for session data. Used to store data such as client score, team, etc.
+    ///     Persistent in case of reconnection. Check Managing Sessions section in the documentation for more info.
     /// </summary>
     public class SessionData
     {
-        
         private int _clientId;
+
         /// <summary>
-        /// Holds the client id that owns this session data.
+        ///     Holds the client id that owns this session data.
         /// </summary>
         public int ClientId => _clientId;
 
-        
+
         /// <summary>
-        /// Serializes data to byte array.
-        /// The parameter shouldSerializeEverything will only be true when the server is hot-reloading.
+        ///     Serializes data to byte array.
+        ///     The parameter shouldSerializeEverything will only be true when the server is hot-reloading.
         /// </summary>
         /// <param name="writer"></param>
         /// <param name="shouldSerializeEverything"></param>
@@ -30,8 +31,8 @@ namespace NetBuff.Session
         }
 
         /// <summary>
-        /// Deserializes data from byte array.
-        /// The parameter shouldDeserializeEverything will only be true when the server is hot-reloading.
+        ///     Deserializes data from byte array.
+        ///     The parameter shouldDeserializeEverything will only be true when the server is hot-reloading.
         /// </summary>
         /// <param name="reader"></param>
         /// <param name="shouldDeserializeEverything"></param>
@@ -40,7 +41,7 @@ namespace NetBuff.Session
         }
 
         /// <summary>
-        /// Used to re-sync data to the client.
+        ///     Used to re-sync data to the client.
         /// </summary>
         /// <exception cref="Exception"></exception>
         [ServerOnly]

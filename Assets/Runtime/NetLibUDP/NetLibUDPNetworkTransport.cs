@@ -15,9 +15,9 @@ using UnityEngine.Assertions;
 namespace NetBuff.NetLibUDP
 {
     /// <summary>
-    ///  Uses the UDP (User Datagram Protocol) protocol to manage the connection between the server and clients.
-    /// Responsible for internally managing the connection between the server and clients.
-    /// Holds the connection information of clients and provides methods for sending and receiving packets.
+    ///     Uses the UDP (User Datagram Protocol) protocol to manage the connection between the server and clients.
+    ///     Responsible for internally managing the connection between the server and clients.
+    ///     Holds the connection information of clients and provides methods for sending and receiving packets.
     /// </summary>
     public class NetLibUDPNetworkTransport : NetworkTransport
     {
@@ -26,65 +26,6 @@ namespace NetBuff.NetLibUDP
         private static readonly byte[] _Buffer1 = new byte[_BUFFER_SIZE];
         private static readonly BinaryWriter _Writer0 = new(new MemoryStream(_Buffer0));
         private static readonly BinaryWriter _Writer1 = new(new MemoryStream(_Buffer1));
-
-        #region Inspector Fields
-        [Header("SETTINGS")]
-        [SerializeField]
-        protected string address = "127.0.0.1";
-
-        [SerializeField]
-        protected int port = 7777;
-
-        [SerializeField]
-        protected string password = "";
-
-        [SerializeField]
-        protected int maxClients = 10;
-        #endregion
-
-        #region Internal Fields
-        private UDPClient _client;
-        private UDPServer _server;
-        #endregion
-
-        #region Helper Properties
-        /// <summary>
-        /// The address of the server.
-        /// </summary>
-        public string Address
-        {
-            get => address;
-            set => address = value;
-        }
-
-        /// <summary>
-        /// The port of the server / client connection.
-        /// </summary>
-        public int Port
-        {
-            get => port;
-            set => port = value;
-        }
-
-        /// <summary>
-        /// The password of the server.
-        /// The password that the client is using to connect to the server.
-        /// </summary>
-        public string Password
-        {
-            get => password;
-            set => password = value;
-        }
-        
-        /// <summary>
-        /// The maximum number of clients that can connect to the server at the same time.
-        /// </summary>
-        public int MaxClients
-        {
-            get => maxClients;
-            set => maxClients = value;
-        }
-        #endregion
 
         #region Unity Callbacks
         private void Update()
@@ -267,7 +208,8 @@ namespace NetBuff.NetLibUDP
             private readonly NetLibUDPNetworkTransport _transport;
             private NetManager _manager;
 
-            public UDPServer(string address, int port, NetLibUDPNetworkTransport transport, string password, string name,
+            public UDPServer(string address, int port, NetLibUDPNetworkTransport transport, string password,
+                string name,
                 int maxClients)
             {
                 _password = password;
@@ -332,7 +274,7 @@ namespace NetBuff.NetLibUDP
                     writer.Put(_maxClients);
                     writer.Put((int)PlatformExtensions.GetPlatform());
                     writer.Put(hasPassword);
-                    
+
                     _manager.SendUnconnectedMessage(writer, remoteEndPoint);
                 }
             }
@@ -444,7 +386,8 @@ namespace NetBuff.NetLibUDP
             private UDPClientConnectionInfo _clientConnectionInfo;
             private NetManager _manager;
 
-            public UDPClient(int magicNumber, string address, int port, NetLibUDPNetworkTransport transport, string password)
+            public UDPClient(int magicNumber, string address, int port, NetLibUDPNetworkTransport transport,
+                string password)
             {
                 _transport = transport;
                 _manager = new NetManager(this)
@@ -545,5 +488,64 @@ namespace NetBuff.NetLibUDP
                     _clientConnectionInfo.queueUnreliable.Enqueue(packet);
             }
         }
+
+        #region Inspector Fields
+        [Header("SETTINGS")]
+        [SerializeField]
+        protected string address = "127.0.0.1";
+
+        [SerializeField]
+        protected int port = 7777;
+
+        [SerializeField]
+        protected string password = "";
+
+        [SerializeField]
+        protected int maxClients = 10;
+        #endregion
+
+        #region Internal Fields
+        private UDPClient _client;
+        private UDPServer _server;
+        #endregion
+
+        #region Helper Properties
+        /// <summary>
+        ///     The address of the server.
+        /// </summary>
+        public string Address
+        {
+            get => address;
+            set => address = value;
+        }
+
+        /// <summary>
+        ///     The port of the server / client connection.
+        /// </summary>
+        public int Port
+        {
+            get => port;
+            set => port = value;
+        }
+
+        /// <summary>
+        ///     The password of the server.
+        ///     The password that the client is using to connect to the server.
+        /// </summary>
+        public string Password
+        {
+            get => password;
+            set => password = value;
+        }
+
+        /// <summary>
+        ///     The maximum number of clients that can connect to the server at the same time.
+        /// </summary>
+        public int MaxClients
+        {
+            get => maxClients;
+            set => maxClients = value;
+        }
+        #endregion
     }
 }
