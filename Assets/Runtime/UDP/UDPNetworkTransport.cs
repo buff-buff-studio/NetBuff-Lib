@@ -650,7 +650,7 @@ namespace NetBuff.UDP
                                 var sequence = (threadBuffer[2] << 24) | (threadBuffer[3] << 16) |
                                                (threadBuffer[4] << 8) | threadBuffer[5];
 
-                                //Send ACKw
+                                //Send ACK
                                 var ack = new byte[5];
                                 ack[0] = _CHANNEL_ACK;
                                 ack[1] = threadBuffer[2];
@@ -1074,8 +1074,6 @@ namespace NetBuff.UDP
                                 ack[4] = threadBuffer[5];
 
                                 _InternalSendSpan(new UDPSpan(ack));
-
-                                //Add to Queue
                                 _lastReceivedTicks = DateTime.Now.Ticks;
 
                                 if (!_receivedReliable.ContainsKey(sequence))
@@ -1232,8 +1230,6 @@ namespace NetBuff.UDP
                 while (_actions.Count > 0)
                     _actions.Dequeue().Invoke();
                 
-                
-
                 var now = DateTime.Now.Ticks;
 
                 //Process timeout
