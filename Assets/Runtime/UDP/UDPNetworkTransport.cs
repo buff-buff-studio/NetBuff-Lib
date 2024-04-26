@@ -121,11 +121,7 @@ namespace NetBuff.UDP
         {
             _server?.Close();
             _client?.Disconnect("disconnect");
-
             Type = EnvironmentType.None;
-
-            _server = null;
-            _client = null;
         }
 
         public override IClientConnectionInfo GetClientInfo(int id)
@@ -298,7 +294,6 @@ namespace NetBuff.UDP
             {
                 var peer = _server.GetPeer(clientId);
                 _clients.Add(clientId, new UDPClientConnectionInfo(clientId, peer));
-
                 OnClientConnected?.Invoke(clientId);
             };
 
@@ -363,7 +358,7 @@ namespace NetBuff.UDP
             _server.onError += reason =>
             {
                 OnServerError?.Invoke(reason);
-                _server = null;
+                Close();
             };
 
             try
@@ -703,7 +698,7 @@ namespace NetBuff.UDP
                 }
                 catch (Exception e)
                 {
-                    onError?.Invoke(e.Message);
+                    _actions.Enqueue(() => onError?.Invoke(e.Message));
                 }
 
                 // ReSharper disable once FunctionNeverReturns
@@ -1120,7 +1115,7 @@ namespace NetBuff.UDP
                 catch (Exception e)
                 {
                     if (_isConnected)
-                        onError?.Invoke(e.Message);
+                        _actions.Enqueue(() => onError?.Invoke(e.Message));
                 }
 
                 // ReSharper disable once FunctionNeverReturns

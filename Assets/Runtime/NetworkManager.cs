@@ -549,7 +549,7 @@ namespace NetBuff
         /// <param name="error"></param>
         protected virtual void OnServerError(string error)
         {
-            Debug.LogError($"[Server] {error}");
+            
         }
 
         /// <summary>
@@ -558,7 +558,7 @@ namespace NetBuff
         /// <param name="error"></param>
         protected virtual void OnClientError(string error)
         {
-            Debug.LogError($"[Client] {error}");
+            
         }
 
         /// <summary>
@@ -1155,7 +1155,8 @@ namespace NetBuff
             foreach (var valuesPacket in preExistingInfoPacket.NetworkValues)
                 _HandleNetworkBehaviourDataPacket(valuesPacket);
 
-            ClientSendPacket(new NetworkPreExistingResponsePacket(), true);
+            if(IsClientRunning)
+                ClientSendPacket(new NetworkPreExistingResponsePacket(), true);
         }
 
         private void _HandleNetworkClientIdPacket(NetworkClientIdPacket packet)
