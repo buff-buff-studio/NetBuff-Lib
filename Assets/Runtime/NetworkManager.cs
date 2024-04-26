@@ -303,8 +303,6 @@ namespace NetBuff
             transport.OnDisconnect += OnDisconnect;
             transport.OnServerStart += OnServerStart;
             transport.OnServerStop += OnServerStop;
-            transport.OnServerError += OnServerError;
-            transport.OnClientError += OnClientError;
 
             #if UNITY_EDITOR
             switch (environmentTypeAfterReload)
@@ -549,7 +547,7 @@ namespace NetBuff
         /// <param name="error"></param>
         protected virtual void OnServerError(string error)
         {
-            
+            Debug.LogError(error);
         }
 
         /// <summary>
@@ -558,7 +556,7 @@ namespace NetBuff
         /// <param name="error"></param>
         protected virtual void OnClientError(string error)
         {
-            
+            Debug.LogError(error);
         }
 
         /// <summary>
@@ -576,11 +574,13 @@ namespace NetBuff
         /// <summary>
         ///     Called when the server stops.
         /// </summary>
-        protected virtual void OnServerStop()
+        /// <param name="mode"></param>
+        /// <param name="cause"></param>
+        protected virtual void OnServerStop(NetworkTransport.ConnectionEndMode mode, string cause)
         {
             IsServerRunning = false;
             if (transport.Type is NetworkTransport.EnvironmentType.Server)
-                OnClearEnvironment();
+                OnClearEnvironment(mode, cause);
         }
 
         /// <summary>
@@ -684,9 +684,10 @@ namespace NetBuff
         ///     Called when the client disconnects from the server.
         ///     Only called on the client.
         /// </summary>
+        /// <param name="mode"></param>
         /// <param name="reason"></param>
         [ClientOnly]
-        protected virtual void OnDisconnect(string reason)
+        protected virtual void OnDisconnect(NetworkTransport.ConnectionEndMode mode, string reason)
         {
             IsClientRunning = false;
 
@@ -698,7 +699,7 @@ namespace NetBuff
                     foreach (var behaviour in identity.Behaviours)
                         behaviour.OnActiveChanged(false);
 
-                OnClearEnvironment();
+                OnClearEnvironment(mode, reason);
             }
         }
 
@@ -907,7 +908,9 @@ namespace NetBuff
         ///     Called when the network environment is cleared.
         ///     Occurs when the server stops or the client disconnects.
         /// </summary>
-        protected virtual void OnClearEnvironment()
+        /// <param name="mode"></param>
+        /// <param name="cause"></param>
+        protected virtual void OnClearEnvironment(NetworkTransport.ConnectionEndMode mode, string cause)
         {
             SceneManager.LoadScene(MainScene);
         }

@@ -98,14 +98,14 @@ namespace NetBuff.Local
             switch (Type)
             {
                 case EnvironmentType.Host:
-                    OnServerStop?.Invoke();
-                    OnDisconnect?.Invoke("disconnect");
+                    OnServerStop?.Invoke(ConnectionEndMode.Shutdown, "shutdown");
+                    OnDisconnect?.Invoke(ConnectionEndMode.Shutdown, "disconnect");
                     break;
                 case EnvironmentType.Server:
-                    OnDisconnect?.Invoke("disconnect");
+                    OnServerStop?.Invoke(ConnectionEndMode.Shutdown, "shutdown");
                     break;
                 case EnvironmentType.Client:
-                    OnDisconnect?.Invoke("disconnect");
+                    OnDisconnect?.Invoke(ConnectionEndMode.Shutdown, "disconnect");
                     break;
                 case EnvironmentType.None:
                     break;

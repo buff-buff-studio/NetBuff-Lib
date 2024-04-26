@@ -16,6 +16,22 @@ namespace NetBuff
     public abstract class NetworkTransport : MonoBehaviour
     {
         /// <summary>
+        /// Enum for the connection end mode.
+        /// </summary>
+        public enum ConnectionEndMode
+        {
+            /// <summary>
+            /// Connection end normally.
+            /// </summary>
+            Shutdown,
+            
+            /// <summary>
+            /// Connection end with error.
+            /// </summary>
+            Error,
+        }
+        
+        /// <summary>
         ///     Enum for the type of environment.
         /// </summary>
         public enum EnvironmentType
@@ -91,7 +107,7 @@ namespace NetBuff
         /// <summary>
         ///     The callback that will be called when the client disconnects from the server.
         /// </summary>
-        public Action<string> OnDisconnect { get; set; }
+        public Action<ConnectionEndMode, string> OnDisconnect { get; set; }
 
         /// <summary>
         ///     The callback that will be called when the server starts.
@@ -101,17 +117,7 @@ namespace NetBuff
         /// <summary>
         ///     The callback that will be called when the server stops.
         /// </summary>
-        public Action OnServerStop { get; set; }
-
-        /// <summary>
-        ///     Called when some error happened on the server.
-        /// </summary>
-        public Action<string> OnServerError { get; set; }
-
-        /// <summary>
-        ///     Called when some error happened on the client.
-        /// </summary>
-        public Action<string> OnClientError { get; set; }
+        public Action<ConnectionEndMode, string> OnServerStop { get; set; }
         #endregion
 
         #region Management Methods

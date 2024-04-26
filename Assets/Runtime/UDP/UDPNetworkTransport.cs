@@ -85,7 +85,7 @@ namespace NetBuff.UDP
 
             _client.onDisconnected += reason =>
             {
-                OnDisconnect?.Invoke(reason);
+                OnDisconnect?.Invoke(ConnectionEndMode.Shutdown, reason);
                 _client = null;
             };
 
@@ -105,8 +105,8 @@ namespace NetBuff.UDP
 
             _client.onError += reason =>
             {
-                OnClientError?.Invoke(reason);
-                Close();
+                OnDisconnect?.Invoke(ConnectionEndMode.Error, reason);
+                _client = null;
             };
 
             var writer = new BinaryWriter(new MemoryStream());
@@ -118,8 +118,8 @@ namespace NetBuff.UDP
             }
             catch (Exception e)
             {
-                OnClientError?.Invoke(e.Message);
-                Close();
+                OnDisconnect?.Invoke(ConnectionEndMode.Error, e.Message);
+                _client = null;
             }
         }
 
@@ -295,10 +295,8 @@ namespace NetBuff.UDP
 
             _server.onServerStopped += () =>
             {
-                OnServerStop?.Invoke();
-                
+                OnServerStop?.Invoke(ConnectionEndMode.Shutdown, "shutdown");
                 _server = null;
-                OnServerError = null;
             };
 
             _server.onClientConnected += clientId =>
@@ -366,10 +364,10 @@ namespace NetBuff.UDP
                 return ((MemoryStream)writer.BaseStream).ToArray();
             };
 
-            _server.onError += reason =>
+            _server.onError += (reason) =>
             {
-                OnServerError?.Invoke(reason);
-                Close();
+                OnServerStop?.Invoke(ConnectionEndMode.Error, reason);
+                _server = null;
             };
 
             try
@@ -379,8 +377,8 @@ namespace NetBuff.UDP
             }
             catch (Exception e)
             {
-                OnServerError?.Invoke(e.Message);
-                Close();
+                OnServerStop?.Invoke(ConnectionEndMode.Error, e.Message);
+                _server = null;
             }
         }
 
@@ -485,6 +483,14 @@ namespace NetBuff.UDP
         {
             public bool accepted;
             public string reason;
+        }
+
+        private enum Phase
+        {
+            Off,
+            Starting,
+            Running,
+            Stopping
         }
 
         private struct UDPSpan
@@ -725,7 +731,13 @@ namespace NetBuff.UDP
                 catch (Exception e)
                 {
                     if (_isRunning)
-                        _actions.Enqueue(() => onError?.Invoke(e.Message));
+                        _actions.Enqueue(() =>
+                        {
+                            onError?.Invoke(e.Message);
+                            _isRunning = false;
+                            _socket.Close();
+                            _thread = null;
+                        });
                 }
 
                 // ReSharper disable once FunctionNeverReturns
@@ -1013,7 +1025,7 @@ namespace NetBuff.UDP
 
             private readonly Socket _socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             private int _expectedSequenceNumber;
-            private bool _isConnected;
+    
             private long _lastReceivedTicks = DateTime.Now.Ticks;
             private int _nextSequenceNumber;
             private EndPoint _server;
@@ -1026,15 +1038,16 @@ namespace NetBuff.UDP
             public int lostPacketCount;
             public int receivedPacketCount;
             public int sentPacketCount;
-
+            private Phase _phase;
 
             public void Connect(IPAddress address, int port, byte[] payload)
             {
                 _server = new IPEndPoint(address, port);
-
-                _isConnected = true;
+                
+                _phase = Phase.Starting;
                 _socket.Connect(address, port);
                 _SendConnectionRequest(payload);
+                _phase = Phase.Running;
 
                 _thread = new Thread(_Loop);
                 _thread.Start();
@@ -1042,7 +1055,8 @@ namespace NetBuff.UDP
 
             public void Disconnect(string reason)
             {
-                _SendDisconnectRequest(reason);
+                if(_phase is Phase.Running)
+                    _SendDisconnectRequest(reason);
             }
 
             private void _Loop()
@@ -1153,8 +1167,14 @@ namespace NetBuff.UDP
                 }
                 catch (Exception e)
                 {
-                    if (_isConnected)
-                        _actions.Enqueue(() => onError?.Invoke(e.Message));
+                    if (_phase is Phase.Running or Phase.Starting)
+                        _actions.Enqueue(() =>
+                        {
+                            onError?.Invoke(e.Message);
+                            _phase = Phase.Off;
+                            _socket.Close();
+                            _thread = null;
+                        });
                 }
 
                 // ReSharper disable once FunctionNeverReturns
@@ -1175,10 +1195,13 @@ namespace NetBuff.UDP
                 var reasonBytes = Encoding.UTF8.GetBytes(reason);
                 SendPacketReliable(_PACKET_RELIABLE_DISCONNECT, new UDPSpan(reasonBytes));
 
-                if (!_isConnected)
+                if (_phase is not Phase.Running)
                     return;
-                _isConnected = false;
+                
+                _phase = Phase.Stopping;
                 onDisconnected?.Invoke(reason);
+                _socket.Close();
+                _phase = Phase.Off;
             }
 
             public void SendPacketUnreliable(UDPSpan span)
@@ -1353,10 +1376,12 @@ namespace NetBuff.UDP
                         break;
 
                     case _PACKET_RELIABLE_DISCONNECT:
-                        if (_isConnected)
+                        if (_phase is Phase.Running or Phase.Starting)
                         {
-                            _isConnected = false;
+                            _phase = Phase.Stopping;
                             onDisconnected?.Invoke(Encoding.UTF8.GetString(body.data));
+                            _socket.Close();
+                            _phase = Phase.Off;
                         }
 
                         break;
