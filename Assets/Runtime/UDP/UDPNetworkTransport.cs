@@ -100,7 +100,7 @@ namespace NetBuff.UDP
             _client.onError += reason =>
             {
                 OnClientError?.Invoke(reason);
-                _client = null;
+                Close();
             };
 
             var writer = new BinaryWriter(new MemoryStream());
@@ -121,6 +121,11 @@ namespace NetBuff.UDP
         {
             _server?.Close();
             _client?.Disconnect("disconnect");
+
+            Type = EnvironmentType.None;
+
+            _server = null;
+            _client = null;
         }
 
         public override IClientConnectionInfo GetClientInfo(int id)
@@ -177,7 +182,7 @@ namespace NetBuff.UDP
 
         #region Const Fields
         private const int _MAX_PACKET_SIZE = 1010;
-        private const int _TIMEOUT_TIME = 10 * 1_000 * 10_000;
+        private const int _TIMEOUT_TIME = 5 * 1_000 * 10_000;
         private const int _RESEND_TIME = 25 * 10_000;
         private const int _KEEP_ALIVE_TIME = 1 * 1_000 * 10_000;
 
@@ -979,7 +984,6 @@ namespace NetBuff.UDP
             private readonly Socket _socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             private int _expectedSequenceNumber;
             private bool _isConnected;
-            private int _lastLostSequence = -1;
             private long _lastReceivedTicks = DateTime.Now.Ticks;
             private int _nextSequenceNumber;
             private EndPoint _server;
@@ -998,6 +1002,7 @@ namespace NetBuff.UDP
             {
                 _server = new IPEndPoint(address, port);
 
+                _isConnected = true;
                 _socket.Connect(address, port);
                 _SendConnectionRequest(payload);
 
@@ -1231,11 +1236,14 @@ namespace NetBuff.UDP
                 //Actions
                 while (_actions.Count > 0)
                     _actions.Dequeue().Invoke();
+                
+                
 
                 var now = DateTime.Now.Ticks;
 
                 //Process timeout
-                if (now - _lastReceivedTicks > _TIMEOUT_TIME) _SendDisconnectRequest("timeout");
+                if (now - _lastReceivedTicks > _TIMEOUT_TIME)
+                    _SendDisconnectRequest("timeout");
 
                 //Process resend
                 for (var i = 0; i < _sentReliable.Count; i++)
@@ -1292,16 +1300,6 @@ namespace NetBuff.UDP
 
                     _expectedSequenceNumber++;
                 }
-
-                for (var i = 0; i < _receivedReliable.Count; i++)
-                {
-                    var k = _receivedReliable.ElementAt(i).Key;
-                    if (k > _expectedSequenceNumber && k > _lastLostSequence)
-                    {
-                        lostPacketCount += k - _expectedSequenceNumber;
-                        _lastLostSequence = k;
-                    }
-                }
             }
 
             private void _HandleReliablePacket(byte type, UDPSpan body)
@@ -1309,7 +1307,6 @@ namespace NetBuff.UDP
                 switch (type)
                 {
                     case _PACKET_RELIABLE_CONNECTION_RESPONSE:
-                        _isConnected = true;
                         onConnected?.Invoke();
                         break;
 
