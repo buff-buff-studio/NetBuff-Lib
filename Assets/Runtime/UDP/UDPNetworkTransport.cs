@@ -91,9 +91,9 @@ namespace NetBuff.UDP
                 {
                     var id = binaryReader.ReadInt32();
                     var packet = PacketRegistry.CreatePacket(id);
-                    
+
                     packet.Deserialize(binaryReader);
-                    OnClientPacketReceived?.Invoke(packet);                 
+                    OnClientPacketReceived?.Invoke(packet);
                 }
             };
 
@@ -293,7 +293,7 @@ namespace NetBuff.UDP
             {
                 var peer = _server.GetPeer(clientId);
                 _clients.Add(clientId, new UDPClientConnectionInfo(clientId, peer));
-                
+
                 OnClientConnected?.Invoke(clientId);
             };
 
@@ -311,7 +311,7 @@ namespace NetBuff.UDP
                 {
                     var id = binaryReader.ReadInt32();
                     var packet = PacketRegistry.CreatePacket(id);
-                    
+
                     packet.Deserialize(binaryReader);
                     OnServerPacketReceived?.Invoke(clientId, packet);
                 }
@@ -586,7 +586,7 @@ namespace NetBuff.UDP
 
                         var peer = _peersByIp.GetValueOrDefault(remote);
                         var channel = threadBuffer[0];
-                        
+
                         switch (channel)
                         {
                             case _CHANNEL_KEEP_ALIVE:
@@ -649,9 +649,9 @@ namespace NetBuff.UDP
                                 var type = threadBuffer[1];
                                 var sequence = (threadBuffer[2] << 24) | (threadBuffer[3] << 16) |
                                                (threadBuffer[4] << 8) | threadBuffer[5];
-                                
+
                                 //Send ACKw
-                                var ack = new byte[5]; 
+                                var ack = new byte[5];
                                 ack[0] = _CHANNEL_ACK;
                                 ack[1] = threadBuffer[2];
                                 ack[2] = threadBuffer[3];
@@ -685,9 +685,9 @@ namespace NetBuff.UDP
                                 {
                                     var sequence = (threadBuffer[1] << 24) | (threadBuffer[2] << 16) |
                                                    (threadBuffer[3] << 8) | threadBuffer[4];
-                                    
+
                                     if (peer.sentReliable.ContainsKey(sequence))
-                                       peer.sentReliable.Remove(sequence);
+                                        peer.sentReliable.Remove(sequence);
 
                                     peer.lastReceivedTicks = DateTime.Now.Ticks;
                                 }
@@ -750,7 +750,7 @@ namespace NetBuff.UDP
             public void SendPacketReliable(byte type, UDPSpan span, int clientId)
             {
                 var peer = _peers.GetValueOrDefault(clientId);
-                
+
                 if (span.length > _MAX_PACKET_SIZE)
                 {
                     var fragments = (int)Math.Ceiling((double)span.length / _MAX_PACKET_SIZE);
@@ -809,7 +809,7 @@ namespace NetBuff.UDP
                 buffer[3] = (byte)(id >> 16);
                 buffer[4] = (byte)(id >> 8);
                 buffer[5] = (byte)id;
-                
+
                 Buffer.BlockCopy(fragment.data, fragment.offset, buffer, 6, fragment.length);
 
                 peer.sentReliable.Add(id, new ReliableSent { sentTicks = DateTime.Now.Ticks, data = buffer });
@@ -918,7 +918,7 @@ namespace NetBuff.UDP
                         }
 
                         peer.expectedSequenceNumber++;
-                    }  
+                    }
                 }
             }
 
@@ -1064,7 +1064,7 @@ namespace NetBuff.UDP
                                 var type = threadBuffer[1];
                                 var sequence = (threadBuffer[2] << 24) | (threadBuffer[3] << 16) |
                                                (threadBuffer[4] << 8) | threadBuffer[5];
-                                               
+
                                 //Send ACK
                                 var ack = new byte[5];
                                 ack[0] = _CHANNEL_ACK;
@@ -1093,7 +1093,7 @@ namespace NetBuff.UDP
                             {
                                 var sequence = (threadBuffer[1] << 24) | (threadBuffer[2] << 16) |
                                                (threadBuffer[3] << 8) | threadBuffer[4];
-                                               
+
                                 if (_sentReliable.ContainsKey(sequence))
                                     _sentReliable.Remove(sequence);
 
@@ -1212,7 +1212,7 @@ namespace NetBuff.UDP
                 buffer[5] = (byte)id;
 
                 Buffer.BlockCopy(span.data, span.offset, buffer, 6, span.length);
-                
+
                 _sentReliable.Add(id, new ReliableSent { sentTicks = DateTime.Now.Ticks, data = buffer });
                 _InternalSendSpan(new UDPSpan(buffer));
             }
@@ -1243,7 +1243,7 @@ namespace NetBuff.UDP
                     var packet = _sentReliable.ElementAt(i).Value;
                     if (now - packet.sentTicks <= _RESEND_TIME)
                         continue;
-                   
+
                     _InternalSendSpan(new UDPSpan(packet.data));
                     packet.sentTicks = now;
                 }
@@ -1308,7 +1308,7 @@ namespace NetBuff.UDP
             {
                 switch (type)
                 {
-                    case _PACKET_RELIABLE_CONNECTION_RESPONSE: 
+                    case _PACKET_RELIABLE_CONNECTION_RESPONSE:
                         _isConnected = true;
                         onConnected?.Invoke();
                         break;
