@@ -11,7 +11,7 @@
     "dependencies": {
       "com.unity.textmeshpro": "3.0.0",
       "com.unity.editorcoroutines": "1.0.0",
-      "ayellowpaper.serialized-dictionary": "1.0.0"
+      "ayellowpaper.serialized-dictionary": "https://github.com/ayellowpaper/SerializedDictionary.git"
    },
    "keywords": [
       "network",
