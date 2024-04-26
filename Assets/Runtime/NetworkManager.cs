@@ -675,10 +675,9 @@ namespace NetBuff
         protected virtual void OnConnect()
         {
             IsClientRunning = true;
-
-
+            
             var packet = OnCreateSessionEstablishRequest();
-            ClientSendPacket(packet);
+            ClientSendPacket(packet, true);
         }
 
         /// <summary>
