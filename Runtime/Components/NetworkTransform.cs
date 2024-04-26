@@ -8,7 +8,7 @@ using UnityEngine;
 namespace NetBuff.Components
 {
     /// <summary>
-    /// Syncs the components of a transform over the network.
+    ///     Syncs the components of a transform over the network.
     /// </summary>
     [Icon("Assets/Editor/Icons/NetworkTransform.png")]
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-transform")]
@@ -19,57 +19,57 @@ namespace NetBuff.Components
         public enum SyncMode
         {
             /// <summary>
-            /// No components are synced.
+            ///     No components are synced.
             /// </summary>
             None = 0,
-            
+
             /// <summary>
-            /// The x position of the transform is synced.
+            ///     The x position of the transform is synced.
             /// </summary>
             PositionX = 1,
-            
+
             /// <summary>
-            /// The y position of the transform is synced.
+            ///     The y position of the transform is synced.
             /// </summary>
             PositionY = 2,
-            
+
             /// <summary>
-            /// The z position of the transform is synced.
+            ///     The z position of the transform is synced.
             /// </summary>
             PositionZ = 4,
-            
+
             /// <summary>
-            /// The x rotation of the transform is synced.
+            ///     The x rotation of the transform is synced.
             /// </summary>
             RotationX = 8,
-            
+
             /// <summary>
-            /// The y rotation of the transform is synced.
+            ///     The y rotation of the transform is synced.
             /// </summary>
             RotationY = 16,
-            
+
             /// <summary>
-            /// The z rotation of the transform is synced.
+            ///     The z rotation of the transform is synced.
             /// </summary>
             RotationZ = 32,
-            
+
             /// <summary>
-            /// The x scale of the transform is synced.
+            ///     The x scale of the transform is synced.
             /// </summary>
             ScaleX = 64,
-            
+
             /// <summary>
-            /// The y scale of the transform is synced.
+            ///     The y scale of the transform is synced.
             /// </summary>
             ScaleY = 128,
-            
+
             /// <summary>
-            /// The z scale of the transform is synced.
+            ///     The z scale of the transform is synced.
             /// </summary>
             ScaleZ = 256
         }
         #endregion
-        
+
         #region Inspector Fields
         [Header("SETTINGS")]
         [SerializeField]
@@ -99,7 +99,8 @@ namespace NetBuff.Components
 
         #region Helper Properties
         /// <summary>
-        /// Determines the tick rate of the NetworkAnimator. When set to -1, the default tick rate of the NetworkManager will be used.
+        ///     Determines the tick rate of the NetworkAnimator. When set to -1, the default tick rate of the NetworkManager will
+        ///     be used.
         /// </summary>
         public int TickRate
         {
@@ -108,7 +109,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Defines the threshold for the position to be considered changed.
+        ///     Defines the threshold for the position to be considered changed.
         /// </summary>
         public float PositionThreshold
         {
@@ -117,7 +118,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Defines the threshold for the rotation to be considered changed.
+        ///     Defines the threshold for the rotation to be considered changed.
         /// </summary>
         public float RotationThreshold
         {
@@ -126,7 +127,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Defines the threshold for the scale to be considered changed.
+        ///     Defines the threshold for the scale to be considered changed.
         /// </summary>
         public float ScaleThreshold
         {
@@ -135,11 +136,11 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Defines which components of the transform should be synced.
+        ///     Defines which components of the transform should be synced.
         /// </summary>
         public SyncMode SyncModeMask => syncMode;
         #endregion
-        
+
         #region Unity Callbacks
         protected virtual void OnEnable()
         {
@@ -189,7 +190,7 @@ namespace NetBuff.Components
                 SendPacket(packet);
         }
         #endregion
-        
+
         #region Network Callbacks
         public override void OnOwnershipChanged(int oldOwner, int newOwner)
         {
@@ -201,7 +202,8 @@ namespace NetBuff.Components
 
         public override void OnSpawned(bool isRetroactive)
         {
-            _Begin();
+            if (gameObject.activeInHierarchy && enabled)
+                _Begin();
         }
 
         public override void OnServerReceivePacket(IOwnedPacket packet, int clientId)
@@ -225,7 +227,7 @@ namespace NetBuff.Components
 
         #region Virtual Methods
         /// <summary>
-        /// Determines if the transform should be resent to the server.
+        ///     Determines if the transform should be resent to the server.
         /// </summary>
         /// <param name="packet"></param>
         /// <returns></returns>
@@ -283,7 +285,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Applies the transform components to the transform.
+        ///     Applies the transform components to the transform.
         /// </summary>
         /// <param name="packet"></param>
         protected virtual void ApplyTransformPacket(TransformPacket packet)
@@ -324,22 +326,22 @@ namespace NetBuff.Components
     }
 
     /// <summary>
-    /// Packet used to sync the transform components.
+    ///     Packet used to sync the transform components.
     /// </summary>
     public class TransformPacket : IOwnedPacket
     {
         /// <summary>
-        /// The components of the transform.
+        ///     The components of the transform.
         /// </summary>
         public float[] Components { get; set; }
-        
+
         /// <summary>
-        /// Determines which components have been changed.
+        ///     Determines which components have been changed.
         /// </summary>
         public short Flag { get; set; }
-        
+
         /// <summary>
-        /// The network id of the transform.
+        ///     The network id of the transform.
         /// </summary>
         public NetworkId Id { get; set; }
 

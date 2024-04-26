@@ -12,67 +12,31 @@ using UnityEditor;
 namespace NetBuff.Misc
 {
     /// <summary>
-    /// A unique identifier for a network object.
-    /// Represented as a 16-character hexadecimal string.
-    /// Internally, it is stored as two 32-bit integers.
-    /// There are 18,446,744,073,709,551,616 unique network IDs.
+    ///     A unique identifier for a network object.
+    ///     Represented as a 16-character hexadecimal string.
+    ///     Internally, it is stored as two 32-bit integers.
+    ///     There are 18,446,744,073,709,551,616 unique network IDs.
     /// </summary>
     [Serializable]
     public class NetworkId : IComparable
     {
-        #region Internal Fields
-        private static Random _random = new();
-
-        [SerializeField]
-        private int high;
-
-        [SerializeField]
-        private int low;
-        #endregion
-
-        #region Helper Properties
-        /// <summary>
-        /// A network ID with all bits set to 0.
-        /// </summary>
-        public static NetworkId Empty => new()
-        {
-            high = 0,
-            low = 0
-        };
-        
-        /// <summary>
-        /// Checks if the network ID is empty.
-        /// </summary>
-        public bool IsEmpty => low == 0 && high == 0;
-
-        /// <summary>
-        /// Returns the high 32 bits of the network ID.
-        /// </summary>
-        public int High => high;
-    
-        /// <summary>
-        /// Returns the low 32 bits of the network ID.
-        /// </summary>
-        public int Low => low;
-        #endregion
-
         private NetworkId()
         {
             low = _random.Next(-2147483648, 2147483647);
             high = _random.Next(-2147483648, 2147483647);
         }
-        
+
         public NetworkId(int high, int low)
         {
             this.high = high;
             this.low = low;
         }
-        
+
         /// <summary>
-        /// Compares two network IDs.
-        /// If they are equal, returns 0.
-        /// If this network ID is less than the other, returns -1.
-        /// If this network ID is greater than the other, returns 1.
+        ///     Compares two network IDs.
+        ///     If they are equal, returns 0.
+        ///     If this network ID is less than the other, returns -1.
+        ///     If this network ID is greater than the other, returns 1.
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
@@ -91,7 +55,7 @@ namespace NetBuff.Misc
         }
 
         /// <summary>
-        /// Creates a new random network ID.
+        ///     Creates a new random network ID.
         /// </summary>
         /// <returns></returns>
         public static NetworkId New()
@@ -102,9 +66,9 @@ namespace NetBuff.Misc
                 high = _random.Next(-2147483648, 2147483647)
             };
         }
-        
+
         /// <summary>
-        /// Reads a network ID from a binary reader.
+        ///     Reads a network ID from a binary reader.
         /// </summary>
         /// <param name="reader"></param>
         /// <returns></returns>
@@ -118,7 +82,7 @@ namespace NetBuff.Misc
         }
 
         /// <summary>
-        /// Compares two network IDs.
+        ///     Compares two network IDs.
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
@@ -133,7 +97,7 @@ namespace NetBuff.Misc
         }
 
         /// <summary>
-        /// Gets the hash code of the network ID.
+        ///     Gets the hash code of the network ID.
         /// </summary>
         /// <returns></returns>
         [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
@@ -141,9 +105,9 @@ namespace NetBuff.Misc
         {
             return low ^ high;
         }
-        
+
         /// <summary>
-        /// Serializes the network ID to a binary writer.
+        ///     Serializes the network ID to a binary writer.
         /// </summary>
         /// <param name="writer"></param>
         /// <returns></returns>
@@ -155,7 +119,7 @@ namespace NetBuff.Misc
         }
 
         /// <summary>
-        /// Deserializes the network ID from a binary reader.
+        ///     Deserializes the network ID from a binary reader.
         /// </summary>
         /// <param name="reader"></param>
         /// <returns></returns>
@@ -167,7 +131,7 @@ namespace NetBuff.Misc
         }
 
         /// <summary>
-        /// Converts the network ID to a 16-character hexadecimal string.
+        ///     Converts the network ID to a 16-character hexadecimal string.
         /// </summary>
         /// <returns></returns>
         public override string ToString()
@@ -179,7 +143,7 @@ namespace NetBuff.Misc
         }
 
         /// <summary>
-        /// Try to parse a network ID from a string.
+        ///     Try to parse a network ID from a string.
         /// </summary>
         /// <param name="input"></param>
         /// <param name="result"></param>
@@ -203,7 +167,7 @@ namespace NetBuff.Misc
         }
 
         /// <summary>
-        /// Compares the equality of two network IDs.
+        ///     Compares the equality of two network IDs.
         /// </summary>
         /// <param name="a"></param>
         /// <param name="b"></param>
@@ -216,7 +180,7 @@ namespace NetBuff.Misc
         }
 
         /// <summary>
-        /// Compares the inequality of two network IDs.
+        ///     Compares the inequality of two network IDs.
         /// </summary>
         /// <param name="a"></param>
         /// <param name="b"></param>
@@ -226,8 +190,44 @@ namespace NetBuff.Misc
             if (a is null || b is null) return a is not null || b is not null;
             return a.high != b.high || a.low != b.low;
         }
+
+        #region Internal Fields
+        private static Random _random = new();
+
+        [SerializeField]
+        private int high;
+
+        [SerializeField]
+        private int low;
+        #endregion
+
+        #region Helper Properties
+        /// <summary>
+        ///     A network ID with all bits set to 0.
+        /// </summary>
+        public static NetworkId Empty => new()
+        {
+            high = 0,
+            low = 0
+        };
+
+        /// <summary>
+        ///     Checks if the network ID is empty.
+        /// </summary>
+        public bool IsEmpty => low == 0 && high == 0;
+
+        /// <summary>
+        ///     Returns the high 32 bits of the network ID.
+        /// </summary>
+        public int High => high;
+
+        /// <summary>
+        ///     Returns the low 32 bits of the network ID.
+        /// </summary>
+        public int Low => low;
+        #endregion
     }
-    
+
     #if UNITY_EDITOR
     [CustomPropertyDrawer(typeof(NetworkId))]
     public class NetworkIdDrawer : PropertyDrawer

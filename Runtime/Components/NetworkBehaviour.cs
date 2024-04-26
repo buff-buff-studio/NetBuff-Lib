@@ -10,8 +10,8 @@ using UnityEngine;
 namespace NetBuff.Components
 {
     /// <summary>
-    /// Base class for all network behaviours.
-    /// NetworkBehaviours cannot be added / removed at runtime.
+    ///     Base class for all network behaviours.
+    ///     NetworkBehaviours cannot be added / removed at runtime.
     /// </summary>
     [RequireComponent(typeof(NetworkIdentity))]
     [Icon("Assets/Editor/Icons/NetworkBehaviour.png")]
@@ -27,37 +27,37 @@ namespace NetBuff.Components
 
         #region Helper Properties
         /// <summary>
-        /// The behaviour id of this behaviour (Relative to the identity).
+        ///     The behaviour id of this behaviour (Relative to the identity).
         /// </summary>
         public byte BehaviourId => (byte)Array.IndexOf(Identity.Behaviours, this);
-        
+
         /// <summary>
-        /// Whether this behaviour has any dirty values that needs to be synchronized.
+        ///     Whether this behaviour has any dirty values that needs to be synchronized.
         /// </summary>
         public bool IsDirty => NetworkManager.Instance.DirtyBehaviours.Contains(this);
-        
+
         /// <summary>
-        /// The values attached to this behaviour.
+        ///     The values attached to this behaviour.
         /// </summary>
         public ReadOnlySpan<NetworkValue> Values => new(_values);
-        
+
         /// <summary>
-        /// The network identity which this behaviour is attached to.
+        ///     The network identity which this behaviour is attached to.
         /// </summary>
         public NetworkIdentity Identity => _identity ??= GetComponent<NetworkIdentity>();
 
         /// <summary>
-        /// The network id of this behaviour identity.
+        ///     The network id of this behaviour identity.
         /// </summary>
         public NetworkId Id
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Identity.Id;
         }
-        
+
         /// <summary>
-        /// The owner id of this behaviour identity.
-        /// If the owner id is -1, the object is owned by the server.
+        ///     The owner id of this behaviour identity.
+        ///     If the owner id is -1, the object is owned by the server.
         /// </summary>
         public int OwnerId
         {
@@ -66,8 +66,8 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// The id of the prefab used to spawn this behaviour identity object.
-        /// If the prefab id is empty, the object was not spawned from a prefab at runtime.
+        ///     The id of the prefab used to spawn this behaviour identity object.
+        ///     If the prefab id is empty, the object was not spawned from a prefab at runtime.
         /// </summary>
         public NetworkId PrefabId
         {
@@ -76,7 +76,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Checks if the local environment has authority over this behaviour.
+        ///     Checks if the local environment has authority over this behaviour.
         /// </summary>
         public bool HasAuthority
         {
@@ -85,16 +85,16 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Checks if this behaviour identity is owned by any client.
+        ///     Checks if this behaviour identity is owned by any client.
         /// </summary>
         public bool IsOwnedByClient
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Identity.IsOwnedByClient;
         }
-    
+
         /// <summary>
-        /// The if of the scene this behaviour identity is in.
+        ///     The if of the scene this behaviour identity is in.
         /// </summary>
         public int SceneId
         {
@@ -103,7 +103,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Checks if the local environment is the server.
+        ///     Checks if the local environment is the server.
         /// </summary>
         public static bool IsServer
         {
@@ -112,25 +112,25 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// The number of currently loaded scenes on the network.
+        ///     The number of currently loaded scenes on the network.
         /// </summary>
         public static int LoadedSceneCount
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => NetworkIdentity.LoadedSceneCount;
         }
-        
+
         /// <summary>
-        /// The name of the scene where the NetworkManager is currently in.
+        ///     The name of the scene where the NetworkManager is currently in.
         /// </summary>
         public static string MainScene
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => NetworkIdentity.MainScene;
         }
-    
+
         /// <summary>
-        /// The name of the currently last loaded scene.
+        ///     The name of the currently last loaded scene.
         /// </summary>
         public static string LastLoadedScene
         {
@@ -141,7 +141,7 @@ namespace NetBuff.Components
 
         #region Listeners
         /// <summary>
-        /// Called when the server receives a packet owned by this object from a client 
+        ///     Called when the server receives a packet owned by this object from a client
         /// </summary>
         /// <param name="packet"></param>
         /// <param name="clientId"></param>
@@ -149,28 +149,28 @@ namespace NetBuff.Components
         public virtual void OnServerReceivePacket(IOwnedPacket packet, int clientId)
         {
         }
-        
+
         /// <summary>
-        /// Called when the clients receive a packet owned by this object from the server.
+        ///     Called when the clients receive a packet owned by this object from the server.
         /// </summary>
         /// <param name="packet"></param>
         [ClientOnly]
         public virtual void OnClientReceivePacket(IOwnedPacket packet)
         {
         }
-    
+
         /// <summary>
-        /// Called when this object is spawned on the network.
-        /// Called when the network environment initializes if the object already exists.
-        /// The isRetroactive parameter is true if the client is joining the server after the object is already spawned.
+        ///     Called when this object is spawned on the network.
+        ///     Called when the network environment initializes if the object already exists.
+        ///     The isRetroactive parameter is true if the client is joining the server after the object is already spawned.
         /// </summary>
         /// <param name="isRetroactive"></param>
         public virtual void OnSpawned(bool isRetroactive)
         {
         }
-        
+
         /// <summary>
-        /// Called when this object is moved to another scene.
+        ///     Called when this object is moved to another scene.
         /// </summary>
         /// <param name="fromScene"></param>
         /// <param name="toScene"></param>
@@ -179,7 +179,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Called when a new client connects to the server.
+        ///     Called when a new client connects to the server.
         /// </summary>
         /// <param name="clientId"></param>
         [ServerOnly]
@@ -188,7 +188,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Called when a client disconnects from the server.
+        ///     Called when a client disconnects from the server.
         /// </summary>
         /// <param name="clientId"></param>
         [ServerOnly]
@@ -197,40 +197,40 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Called when this object is despawned from the network.
+        ///     Called when this object is despawned from the network.
         /// </summary>
         public virtual void OnDespawned()
         {
         }
 
         /// <summary>
-        /// Called when the active state of this object changes.
-        /// Called when the object is spawned as well.
+        ///     Called when the active state of this object changes.
+        ///     Called when the object is spawned as well.
         /// </summary>
         /// <param name="active"></param>
         public virtual void OnActiveChanged(bool active)
         {
         }
-    
+
         /// <summary>
-        /// Called when the owner of this object changes.
+        ///     Called when the owner of this object changes.
         /// </summary>
         /// <param name="oldOwner"></param>
         /// <param name="newOwner"></param>
         public virtual void OnOwnershipChanged(int oldOwner, int newOwner)
         {
         }
-        
+
         /// <summary>
-        /// Called when a new scene is loaded.
+        ///     Called when a new scene is loaded.
         /// </summary>
         /// <param name="sceneId"></param>
         public virtual void OnSceneLoaded(int sceneId)
         {
         }
-        
+
         /// <summary>
-        /// Called when a loaded scene is unloaded.
+        ///     Called when a loaded scene is unloaded.
         /// </summary>
         /// <param name="sceneId"></param>
         public virtual void OnSceneUnloaded(int sceneId)
@@ -238,8 +238,8 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Called when a new object is spawned on the network.
-        /// The isRetroactive parameter is true if the client is joining the server after the object is already spawned.
+        ///     Called when a new object is spawned on the network.
+        ///     The isRetroactive parameter is true if the client is joining the server after the object is already spawned.
         /// </summary>
         /// <param name="identity"></param>
         /// <param name="isRetroactive"></param>
@@ -250,8 +250,8 @@ namespace NetBuff.Components
 
         #region Value Methods
         /// <summary>
-        /// Attaches the given values to this behaviour.
-        /// Shall not be called after the behaviour is spawned.
+        ///     Attaches the given values to this behaviour.
+        ///     Shall not be called after the behaviour is spawned.
         /// </summary>
         /// <param name="values"></param>
         public void WithValues(params NetworkValue[] values)
@@ -261,18 +261,19 @@ namespace NetBuff.Components
 
             _values = values;
         }
-        
+
+        // ReSharper disable once UnusedMember.Local
         private void _MarkValueDirty(NetworkValue value)
         {
             if (_values == null)
                 return;
-            
+
             var index = Array.IndexOf(_values, value);
 
             if (index == -1)
                 throw new InvalidOperationException("The value is not attached to this behaviour");
-            
-            _dirtyValues.Enqueue((byte) index);
+
+            _dirtyValues.Enqueue((byte)index);
 
             if (IsDirty)
                 return;
@@ -281,8 +282,8 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Marks the serializer of this behaviour as dirty, so it will be synchronized through the network.
-        /// Only call this method if the behaviour implements INetworkBehaviourSerializer.
+        ///     Marks the serializer of this behaviour as dirty, so it will be synchronized through the network.
+        ///     Only call this method if the behaviour implements INetworkBehaviourSerializer.
         /// </summary>
         /// <exception cref="InvalidOperationException"></exception>
         public void MarkSerializerDirty()
@@ -296,9 +297,9 @@ namespace NetBuff.Components
             _serializerDirty = true;
             NetworkManager.Instance.DirtyBehaviours.Add(this);
         }
-        
+
         /// <summary>
-        /// Synchronizes the dirty values of this behaviour through the network.
+        ///     Synchronizes the dirty values of this behaviour through the network.
         /// </summary>
         public void UpdateDirtyValues()
         {
@@ -337,10 +338,10 @@ namespace NetBuff.Components
                 ClientSendPacket(packet, true);
             }
         }
-        
+
         /// <summary>
-        /// Synchronizes all data of this behaviour through the network.
-        /// Used to synchronize the current server state to a new client.
+        ///     Synchronizes all data of this behaviour through the network.
+        ///     Used to synchronize the current server state to a new client.
         /// </summary>
         /// <param name="clientId"></param>
         /// <exception cref="Exception"></exception>
@@ -356,8 +357,8 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Creates a packet containing all data of this behaviour.
-        /// Used to synchronize the current server state to a new client.
+        ///     Creates a packet containing all data of this behaviour.
+        ///     Used to synchronize the current server state to a new client.
         /// </summary>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
@@ -409,8 +410,8 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Applies the given payload to the values of this behaviour.
-        /// used to synchronize the values of this behaviour from the network.
+        ///     Applies the given payload to the values of this behaviour.
+        ///     used to synchronize the values of this behaviour from the network.
         /// </summary>
         /// <param name="payload"></param>
         public void ApplyDirtyValues(byte[] payload)
@@ -430,10 +431,10 @@ namespace NetBuff.Components
 
         #region Packet Methods
         /// <summary>
-        /// Broadcasts a packet to all clients.
-        /// You can choose if the packet should be reliable or not.
-        /// Reliable packets are guaranteed to be delivered, but they are a little slower.
-        /// Non-reliable packets are faster, but they are not guaranteed to be delivered.
+        ///     Broadcasts a packet to all clients.
+        ///     You can choose if the packet should be reliable or not.
+        ///     Reliable packets are guaranteed to be delivered, but they are a little slower.
+        ///     Non-reliable packets are faster, but they are not guaranteed to be delivered.
         /// </summary>
         /// <param name="packet"></param>
         /// <param name="reliable"></param>
@@ -445,10 +446,10 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Broadcasts a packet to all clients except for the given client.
-        /// You can choose if the packet should be reliable or not.
-        /// Reliable packets are guaranteed to be delivered, but they are a little slower.
-        /// Non-reliable packets are faster, but they are not guaranteed to be delivered.
+        ///     Broadcasts a packet to all clients except for the given client.
+        ///     You can choose if the packet should be reliable or not.
+        ///     Reliable packets are guaranteed to be delivered, but they are a little slower.
+        ///     Non-reliable packets are faster, but they are not guaranteed to be delivered.
         /// </summary>
         /// <param name="packet"></param>
         /// <param name="except"></param>
@@ -461,10 +462,10 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Sends a packet to the given client.
-        /// You can choose if the packet should be reliable or not.
-        /// Reliable packets are guaranteed to be delivered, but they are a little slower.
-        /// Non-reliable packets are faster, but they are not guaranteed to be delivered. 
+        ///     Sends a packet to the given client.
+        ///     You can choose if the packet should be reliable or not.
+        ///     Reliable packets are guaranteed to be delivered, but they are a little slower.
+        ///     Non-reliable packets are faster, but they are not guaranteed to be delivered.
         /// </summary>
         /// <param name="packet"></param>
         /// <param name="clientId"></param>
@@ -475,12 +476,12 @@ namespace NetBuff.Components
         {
             NetworkIdentity.ServerSendPacket(packet, clientId, reliable);
         }
-        
+
         /// <summary>
-        /// Sends a packet to the server.
-        /// You can choose if the packet should be reliable or not.
-        /// Reliable packets are guaranteed to be delivered, but they are a little slower.
-        /// Non-reliable packets are faster, but they are not guaranteed to be delivered. 
+        ///     Sends a packet to the server.
+        ///     You can choose if the packet should be reliable or not.
+        ///     Reliable packets are guaranteed to be delivered, but they are a little slower.
+        ///     Non-reliable packets are faster, but they are not guaranteed to be delivered.
         /// </summary>
         /// <param name="packet"></param>
         /// <param name="reliable"></param>
@@ -492,10 +493,10 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Sends a packet through the network, automatically choosing the correct method.
-        /// You can choose if the packet should be reliable or not.
-        /// Reliable packets are guaranteed to be delivered, but they are a little slower.
-        /// Non-reliable packets are faster, but they are not guaranteed to be delivered. 
+        ///     Sends a packet through the network, automatically choosing the correct method.
+        ///     You can choose if the packet should be reliable or not.
+        ///     Reliable packets are guaranteed to be delivered, but they are a little slower.
+        ///     Non-reliable packets are faster, but they are not guaranteed to be delivered.
         /// </summary>
         /// <param name="packet"></param>
         /// <param name="reliable"></param>
@@ -504,10 +505,10 @@ namespace NetBuff.Components
         {
             Identity.SendPacket(packet, reliable);
         }
-        
+
         /// <summary>
-        /// Gets the packet listener for the given packet type, so you can listen to packets of that type.
-        /// Does not work for IOwnedPacket types.
+        ///     Gets the packet listener for the given packet type, so you can listen to packets of that type.
+        ///     Does not work for IOwnedPacket types.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
@@ -520,46 +521,49 @@ namespace NetBuff.Components
 
         #region Object Methods
         /// <summary>
-        /// Despawns the object from the network.
-        /// Requires authority.
+        ///     Despawns the object from the network.
+        ///     Requires authority.
         /// </summary>
+        /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresAuthority]
-        public void Despawn()
+        public NetworkAction<NetworkId, NetworkIdentity> Despawn()
         {
-            Identity.Despawn();
-        }
-    
-        /// <summary>
-        /// Changes the active state of the object.
-        /// Requires authority.
-        /// </summary>
-        /// <param name="active"></param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [RequiresAuthority]
-        public void SetActive(bool active)
-        {
-            Identity.SetActive(active);
+            return Identity.Despawn();
         }
 
         /// <summary>
-        /// Sets the owner of the object.
-        /// Requires authority.
+        ///     Changes the active state of the object.
+        ///     Requires authority.
         /// </summary>
+        /// <returns></returns>
+        /// <param name="active"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [RequiresAuthority]
+        public NetworkAction<NetworkId, NetworkIdentity> SetActive(bool active)
+        {
+            return Identity.SetActive(active);
+        }
+
+        /// <summary>
+        ///     Sets the owner of the object.
+        ///     Requires authority.
+        /// </summary>
+        /// <returns></returns>
         /// <param name="clientId"></param>
         /// <exception cref="InvalidOperationException"></exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresAuthority]
-        public void SetOwner(int clientId)
+        public NetworkAction<NetworkId, NetworkIdentity> SetOwner(int clientId)
         {
-            Identity.SetOwner(clientId);
+            return Identity.SetOwner(clientId);
         }
-        
+
         /// <summary>
-        /// Forces the transfer of ownership of the object.
-        /// Can be called by the server only.
-        /// Useful for preventing the despawn of object when the owner disconnects.
+        ///     Forces the transfer of ownership of the object.
+        ///     Can be called by the server only.
+        ///     Useful for preventing the despawn of object when the owner disconnects.
         /// </summary>
         /// <param name="clientId"></param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -570,7 +574,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Returns the network identity object with the given id.
+        ///     Returns the network identity object with the given id.
         /// </summary>
         /// <param name="objectId"></param>
         /// <returns></returns>
@@ -581,7 +585,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Returns all the network identity objects.
+        ///     Returns all the network identity objects.
         /// </summary>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -591,7 +595,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Returns the number of network identity objects.
+        ///     Returns the number of network identity objects.
         /// </summary>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -601,8 +605,8 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Returns all the network identity objects owned by the given client.
-        /// If the client id is -1, it returns all the objects owned by the server.
+        ///     Returns all the network identity objects owned by the given client.
+        ///     If the client id is -1, it returns all the objects owned by the server.
         /// </summary>
         /// <param name="clientId"></param>
         /// <returns></returns>
@@ -615,7 +619,7 @@ namespace NetBuff.Components
 
         #region Client Methods
         /// <summary>
-        /// Returns the index of the local client with the given id.
+        ///     Returns the index of the local client with the given id.
         /// </summary>
         /// <param name="clientId"></param>
         /// <returns></returns>
@@ -625,9 +629,9 @@ namespace NetBuff.Components
         {
             return Identity.GetLocalClientIndex(clientId);
         }
-        
+
         /// <summary>
-        /// Returns the number of local clients.
+        ///     Returns the number of local clients.
         /// </summary>
         /// <returns></returns>
         [ClientOnly]
@@ -638,7 +642,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// returns the client id of all local clients.
+        ///     returns the client id of all local clients.
         /// </summary>
         /// <returns></returns>
         [ClientOnly]
@@ -651,7 +655,7 @@ namespace NetBuff.Components
 
         #region Prefabs
         /// <summary>
-        /// Returns the prefab object registered with the given id.
+        ///     Returns the prefab object registered with the given id.
         /// </summary>
         /// <param name="prefab"></param>
         /// <returns></returns>
@@ -660,9 +664,9 @@ namespace NetBuff.Components
         {
             return NetworkIdentity.GetPrefabById(prefab);
         }
-        
+
         /// <summary>
-        /// Returns the id of a registered prefab.
+        ///     Returns the id of a registered prefab.
         /// </summary>
         /// <param name="prefab"></param>
         /// <returns></returns>
@@ -673,7 +677,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Checks if the prefab is registered.
+        ///     Checks if the prefab is registered.
         /// </summary>
         /// <param name="prefab"></param>
         /// <returns></returns>
@@ -686,20 +690,21 @@ namespace NetBuff.Components
 
         #region Scene Moving
         /// <summary>
-        /// Moves this object to a different scene.
-        /// Requires authority.
+        ///     Moves this object to a different scene.
+        ///     Requires authority.
         /// </summary>
+        /// <returns></returns>
         /// <param name="sceneId"></param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [RequiresAuthority]
-        public void MoveToScene(int sceneId)
+        public NetworkAction<NetworkId, NetworkIdentity> MoveToScene(int sceneId)
         {
-            Identity.MoveToScene(sceneId);
+            return Identity.MoveToScene(sceneId);
         }
 
         /// <summary>
-        /// Moves this object to a different scene.
-        /// Requires authority.
+        ///     Moves this object to a different scene.
+        ///     Requires authority.
         /// </summary>
         /// <param name="sceneName"></param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -712,7 +717,7 @@ namespace NetBuff.Components
 
         #region Scene Utils
         /// <summary>
-        /// Returns the name of all the scenes loaded on the network.
+        ///     Returns the name of all the scenes loaded on the network.
         /// </summary>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -722,7 +727,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Returns the id of the scene with the given name.
+        ///     Returns the id of the scene with the given name.
         /// </summary>
         /// <param name="sceneName"></param>
         /// <returns></returns>
@@ -733,7 +738,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Returns the name of the scene with the given id.
+        ///     Returns the name of the scene with the given id.
         /// </summary>
         /// <param name="sceneId"></param>
         /// <returns></returns>
@@ -746,20 +751,20 @@ namespace NetBuff.Components
 
         #region Spawning
         /// <summary>
-        /// Spawns a prefab object on the network.
-        /// If the object does not have a NetworkIdentity component, the NetworkId will be discarded.
+        ///     Spawns a prefab object on the network.
+        ///     If the object does not have a NetworkIdentity component, the NetworkId will be discarded.
         /// </summary>
         /// <param name="prefab"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkId Spawn(GameObject prefab)
+        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab)
         {
             return NetworkIdentity.Spawn(prefab);
         }
 
         /// <summary>
-        /// Spawns a prefab object on the network.
-        /// If the object does not have a NetworkIdentity component, the NetworkId will be discarded.
+        ///     Spawns a prefab object on the network.
+        ///     If the object does not have a NetworkIdentity component, the NetworkId will be discarded.
         /// </summary>
         /// <param name="prefab"></param>
         /// <param name="position"></param>
@@ -767,14 +772,15 @@ namespace NetBuff.Components
         /// <param name="active"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation, bool active)
+        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position,
+            Quaternion rotation, bool active)
         {
             return NetworkIdentity.Spawn(prefab, position, rotation, active);
         }
 
         /// <summary>
-        /// Spawns a prefab object on the network.
-        /// If the object does not have a NetworkIdentity component, the NetworkId will be discarded.
+        ///     Spawns a prefab object on the network.
+        ///     If the object does not have a NetworkIdentity component, the NetworkId will be discarded.
         /// </summary>
         /// <param name="prefab"></param>
         /// <param name="position"></param>
@@ -782,31 +788,33 @@ namespace NetBuff.Components
         /// <param name="owner"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation, int owner)
+        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position,
+            Quaternion rotation, int owner)
         {
             return NetworkIdentity.Spawn(prefab, position, rotation, owner);
         }
 
         /// <summary>
-        /// Spawns a prefab object on the network.
-        /// If the object does not have a NetworkIdentity component, the NetworkId will be discarded.
+        ///     Spawns a prefab object on the network.
+        ///     If the object does not have a NetworkIdentity component, the NetworkId will be discarded.
         /// </summary>
         /// <param name="prefab"></param>
         /// <param name="position"></param>
         /// <param name="rotation"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation)
+        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position,
+            Quaternion rotation)
         {
             return NetworkIdentity.Spawn(prefab, position, rotation);
         }
 
         /// <summary>
-        /// Spawns a prefab object on the network.
-        /// If the object does not have a NetworkIdentity component, the NetworkId will be discarded.
-        /// If the scene id is 0, the object will be spawned in the main scene.
-        /// If the scene id is -1, the object will be spawned in the last loaded scene.
-        /// If the owner id is -1, the object will be owned by the server.
+        ///     Spawns a prefab object on the network.
+        ///     If the object does not have a NetworkIdentity component, the NetworkId will be discarded.
+        ///     If the scene id is 0, the object will be spawned in the main scene.
+        ///     If the scene id is -1, the object will be spawned in the last loaded scene.
+        ///     If the owner id is -1, the object will be owned by the server.
         /// </summary>
         /// <param name="prefab"></param>
         /// <param name="position"></param>
@@ -817,18 +825,19 @@ namespace NetBuff.Components
         /// <param name="scene"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkId Spawn(GameObject prefab, Vector3 position, Quaternion rotation, Vector3 scale,
+        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(GameObject prefab, Vector3 position,
+            Quaternion rotation, Vector3 scale,
             bool active, int owner = -1, int scene = -1)
         {
             return NetworkIdentity.Spawn(prefab, position, rotation, scale, active, owner, scene);
         }
 
         /// <summary>
-        /// Spawns a prefab object on the network.
-        /// If the object does not have a NetworkIdentity component, the NetworkId will be discarded.
-        /// If the scene id is 0, the object will be spawned in the main scene.
-        /// If the scene id is -1, the object will be spawned in the last loaded scene.
-        /// If the owner id is -1, the object will be owned by the server.
+        ///     Spawns a prefab object on the network.
+        ///     If the object does not have a NetworkIdentity component, the NetworkId will be discarded.
+        ///     If the scene id is 0, the object will be spawned in the main scene.
+        ///     If the scene id is -1, the object will be spawned in the last loaded scene.
+        ///     If the owner id is -1, the object will be owned by the server.
         /// </summary>
         /// <param name="prefabId"></param>
         /// <param name="position"></param>
@@ -839,7 +848,8 @@ namespace NetBuff.Components
         /// <param name="scene"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NetworkId Spawn(NetworkId prefabId, Vector3 position, Quaternion rotation, Vector3 scale,
+        public static NetworkAction<NetworkId, NetworkIdentity> Spawn(NetworkId prefabId, Vector3 position,
+            Quaternion rotation, Vector3 scale,
             bool active, int owner = -1, int scene = -1)
         {
             return NetworkIdentity.Spawn(prefabId, position, rotation, scale, active, owner, scene);

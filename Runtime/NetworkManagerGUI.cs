@@ -8,11 +8,11 @@ using UnityEngine;
 namespace NetBuff
 {
     /// <summary>
-    /// NetworkManagerGUI is a simple GUI for NetworkManager.
-    /// Provides a simple way to start a server, client, or host.
-    /// Also provides a way to see the server list and connect to them.
-    /// Can plot graphs for FPS, Latency, Packet Sent, Packet Received, and Packet Loss.
-    /// Displays the current status of the server and client.
+    ///     NetworkManagerGUI is a simple GUI for NetworkManager.
+    ///     Provides a simple way to start a server, client, or host.
+    ///     Also provides a way to see the server list and connect to them.
+    ///     Can plot graphs for FPS, Latency, Packet Sent, Packet Received, and Packet Loss.
+    ///     Displays the current status of the server and client.
     /// </summary>
     [RequireComponent(typeof(NetworkManager))]
     [Icon("Assets/Editor/Icons/NetworkManagerGUI.png")]
@@ -20,41 +20,41 @@ namespace NetBuff
     public class NetworkManagerGUI : MonoBehaviour
     {
         /// <summary>
-        /// Used to choose the current rendered graph type.
+        ///     Used to choose the current rendered graph type.
         /// </summary>
         public enum CurrentGraph
         {
             /// <summary>
-            /// No graph is rendered.
+            ///     No graph is rendered.
             /// </summary>
             None,
-            
+
             /// <summary>
-            /// A graph for FPS is rendered.
+            ///     A graph for FPS is rendered.
             /// </summary>
             FPS,
-            
+
             /// <summary>
-            /// A graph for Latency is rendered.
+            ///     A graph for Latency is rendered.
             /// </summary>
             Latency,
-            
+
             /// <summary>
-            /// A graph for Packet Sent is rendered.
+            ///     A graph for Packet Sent is rendered.
             /// </summary>
             PacketSent,
-            
+
             /// <summary>
-            /// A graph for Packet Received is rendered.
+            ///     A graph for Packet Received is rendered.
             /// </summary>
             PacketReceived,
-            
+
             /// <summary>
-            /// A graph for Packet Loss is rendered.
+            ///     A graph for Packet Loss is rendered.
             /// </summary>
             PacketLoss
         }
-        
+
         #region Inspector Fields
         [SerializeField]
         private int graphPlottingRate = 10;
@@ -86,7 +86,7 @@ namespace NetBuff
 
         #region Helper Properties
         /// <summary>
-        /// Determines the rate at which the graphs are plotted.
+        ///     Determines the rate at which the graphs are plotted.
         /// </summary>
         private int GraphPlottingRate
         {
@@ -104,7 +104,7 @@ namespace NetBuff
         }
 
         /// <summary>
-        /// Determines whether the FPS graph is plotted.
+        ///     Determines whether the FPS graph is plotted.
         /// </summary>
         public bool PlotFPS
         {
@@ -115,9 +115,9 @@ namespace NetBuff
                 OnValidate();
             }
         }
-        
+
         /// <summary>
-        /// Determines whether the Latency graph is plotted.
+        ///     Determines whether the Latency graph is plotted.
         /// </summary>
         public bool PlotLatency
         {
@@ -128,9 +128,9 @@ namespace NetBuff
                 OnValidate();
             }
         }
-    
+
         /// <summary>
-        /// Determines whether the Packet Rate graph is plotted.
+        ///     Determines whether the Packet Rate graph is plotted.
         /// </summary>
         public bool PlotPacketRate
         {
@@ -141,9 +141,9 @@ namespace NetBuff
                 OnValidate();
             }
         }
-    
+
         /// <summary>
-        /// Determines the current rendered graph type.
+        ///     Determines the current rendered graph type.
         /// </summary>
         public CurrentGraph CurrentGraphType
         {

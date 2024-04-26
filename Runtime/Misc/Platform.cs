@@ -3,58 +3,58 @@
 namespace NetBuff.Misc
 {
     /// <summary>
-    /// Represents the platform the application is running on.
+    ///     Represents the platform the application is running on.
     /// </summary>
     public enum Platform
     {
         /// <summary>
-        /// A generic desktop platform.
+        ///     A generic desktop platform.
         /// </summary>
         Desktop,
-        
+
         /// <summary>
-        /// The Windows platform (editor or player).
+        ///     The Windows platform (editor or player).
         /// </summary>
         Windows,
-        
+
         /// <summary>
-        /// The Linux platform.
+        ///     The Linux platform.
         /// </summary>
         Linux,
-        
+
         /// <summary>
-        /// The MacOS platform (editor or player).
+        ///     The MacOS platform (editor or player).
         /// </summary>
         MacOS,
-        
+
         /// <summary>
-        /// A generic mobile platform.
+        ///     A generic mobile platform.
         /// </summary>
         Mobile,
-        
+
         /// <summary>
-        /// Android platform.
+        ///     Android platform.
         /// </summary>
         Android,
-        
+
         /// <summary>
-        /// iOS platform.
+        ///     iOS platform.
         /// </summary>
         IOS,
 
         /// <summary>
-        /// Unknown platform.
+        ///     Unknown platform.
         /// </summary>
         Unknown
     }
 
     /// <summary>
-    /// Utility class for platform related operations.
+    ///     Utility class for platform related operations.
     /// </summary>
     public static class PlatformExtensions
     {
         /// <summary>
-        /// Returns the platform the application is running on.
+        ///     Returns the platform the application is running on.
         /// </summary>
         /// <returns></returns>
         public static Platform GetPlatform()

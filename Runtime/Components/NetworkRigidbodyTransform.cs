@@ -4,7 +4,7 @@
 namespace NetBuff.Components
 {
     /// <summary>
-    /// Syncs the components of a transform over the network, along with the velocity and angular velocity of a Rigidbody.
+    ///     Syncs the components of a transform over the network, along with the velocity and angular velocity of a Rigidbody.
     /// </summary>
     [RequireComponent(typeof(Rigidbody))]
     [Icon("Assets/Editor/Icons/NetworkRigidbodyTransform.png")]
@@ -40,12 +40,12 @@ namespace NetBuff.Components
 
         #region Helper Properties
         /// <summary>
-        /// The Rigidbody component to sync.
+        ///     The Rigidbody component to sync.
         /// </summary>
         public Rigidbody Rigidbody => rigidbody;
 
         /// <summary>
-        /// Defines whether the velocity should be synced.
+        ///     Defines whether the velocity should be synced.
         /// </summary>
         public bool SyncVelocity
         {
@@ -54,7 +54,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Defines the threshold for the velocity to be considered changed.
+        ///     Defines the threshold for the velocity to be considered changed.
         /// </summary>
         public float VelocityThreshold
         {
@@ -63,7 +63,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Defines whether the angular velocity should be synced.
+        ///     Defines whether the angular velocity should be synced.
         /// </summary>
         public bool SyncAngularVelocity
         {
@@ -72,7 +72,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Defines the threshold for the angular velocity to be considered changed.
+        ///     Defines the threshold for the angular velocity to be considered changed.
         /// </summary>
         public float AngularVelocityThreshold
         {
@@ -81,7 +81,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Defines whether the isKinematic property should be synced.
+        ///     Defines whether the isKinematic property should be synced.
         /// </summary>
         public bool SyncIsKinematic
         {
@@ -93,6 +93,7 @@ namespace NetBuff.Components
         protected override void OnEnable()
         {
             base.OnEnable();
+
             if (rigidbody == null)
                 if (TryGetComponent(out Rigidbody rb))
                 {

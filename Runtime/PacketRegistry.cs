@@ -4,8 +4,8 @@ using NetBuff.Interface;
 namespace NetBuff
 {
     /// <summary>
-    /// A registry for packet types.
-    /// Allows for easy creation of packets by ID.
+    ///     A registry for packet types.
+    ///     Allows for easy creation of packets by ID.
     /// </summary>
     public static class PacketRegistry
     {
@@ -13,7 +13,7 @@ namespace NetBuff
         private static Type[] _packets = new Type[8];
 
         /// <summary>
-        /// Registers a packet type.
+        ///     Registers a packet type.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         public static void RegisterPacket<T>() where T : IPacket, new()
@@ -30,7 +30,7 @@ namespace NetBuff
         }
 
         /// <summary>
-        /// Registers a packet type.
+        ///     Registers a packet type.
         /// </summary>
         /// <param name="type"></param>
         /// <exception cref="ArgumentException"></exception>
@@ -51,7 +51,7 @@ namespace NetBuff
         }
 
         /// <summary>
-        /// Clears the registry.
+        ///     Clears the registry.
         /// </summary>
         public static void Clear()
         {
@@ -60,7 +60,7 @@ namespace NetBuff
         }
 
         /// <summary>
-        /// Returns the id of a packet type.
+        ///     Returns the id of a packet type.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
@@ -68,9 +68,9 @@ namespace NetBuff
         {
             return Array.IndexOf(_packets, typeof(T));
         }
-        
+
         /// <summary>
-        /// Returns the id of a packet.
+        ///     Returns the id of a packet.
         /// </summary>
         /// <param name="packet"></param>
         /// <returns></returns>
@@ -80,7 +80,7 @@ namespace NetBuff
         }
 
         /// <summary>
-        /// Creates a packet by its id.
+        ///     Creates a packet by its id.
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>

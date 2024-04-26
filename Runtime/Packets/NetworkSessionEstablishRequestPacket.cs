@@ -4,7 +4,7 @@ using NetBuff.Interface;
 namespace NetBuff.Packets
 {
     /// <summary>
-    /// Base packet for all session establish request packets.
+    ///     Base packet for all session establish request packets.
     /// </summary>
     public class NetworkSessionEstablishRequestPacket : IPacket
     {

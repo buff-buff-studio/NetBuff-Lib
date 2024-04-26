@@ -10,7 +10,7 @@ using UnityEngine;
 namespace NetBuff.Components
 {
     /// <summary>
-    /// Syncs the state of an Animator component over the network, including parameters, layers, speed and time
+    ///     Syncs the state of an Animator component over the network, including parameters, layers, speed and time
     /// </summary>
     [SuppressMessage("ReSharper", "ParameterHidesMember")]
     [Icon("Assets/Editor/Icons/NetworkAnimator.png")]
@@ -43,7 +43,8 @@ namespace NetBuff.Components
 
         #region Helper Properties
         /// <summary>
-        /// Determines the tick rate of the NetworkAnimator. When set to -1, the default tick rate of the NetworkManager will be used.
+        ///     Determines the tick rate of the NetworkAnimator. When set to -1, the default tick rate of the NetworkManager will
+        ///     be used.
         /// </summary>
         public int TickRate
         {
@@ -52,7 +53,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// The Animator component to sync.
+        ///     The Animator component to sync.
         /// </summary>
         public Animator Animator => animator;
         #endregion
@@ -311,7 +312,7 @@ namespace NetBuff.Components
 
         #region Animator Helpers
         /// <summary>
-        /// Sets a trigger on the Animator component.
+        ///     Sets a trigger on the Animator component.
         /// </summary>
         /// <param name="triggerHash"></param>
         public void SetTrigger(int triggerHash)
@@ -325,7 +326,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Sets a trigger on the Animator component.
+        ///     Sets a trigger on the Animator component.
         /// </summary>
         /// <param name="triggerName"></param>
         public void SetTrigger(string triggerName)
@@ -335,7 +336,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Gets the value of the specified parameter.
+        ///     Gets the value of the specified parameter.
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
@@ -345,7 +346,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Sets the value of the specified parameter.
+        ///     Sets the value of the specified parameter.
         /// </summary>
         /// <param name="name"></param>
         /// <param name="value"></param>
@@ -355,7 +356,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Gets the value of the specified parameter.
+        ///     Gets the value of the specified parameter.
         /// </summary>
         /// <param name="nameHash"></param>
         /// <returns></returns>
@@ -365,7 +366,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Sets the value of the specified parameter.
+        ///     Sets the value of the specified parameter.
         /// </summary>
         /// <param name="nameHash"></param>
         /// <param name="value"></param>
@@ -375,7 +376,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Gets the value of the specified parameter.
+        ///     Gets the value of the specified parameter.
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
@@ -385,7 +386,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Sets the value of the specified parameter.
+        ///     Sets the value of the specified parameter.
         /// </summary>
         /// <param name="name"></param>
         /// <param name="value"></param>
@@ -395,7 +396,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Gets the value of the specified parameter.
+        ///     Gets the value of the specified parameter.
         /// </summary>
         /// <param name="nameHash"></param>
         /// <returns></returns>
@@ -405,7 +406,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Sets the value of the specified parameter.
+        ///     Sets the value of the specified parameter.
         /// </summary>
         /// <param name="nameHash"></param>
         /// <param name="value"></param>
@@ -413,9 +414,9 @@ namespace NetBuff.Components
         {
             animator.SetBool(nameHash, value);
         }
-        
+
         /// <summary>
-        /// Gets the value of the specified parameter.
+        ///     Gets the value of the specified parameter.
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
@@ -425,7 +426,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Sets the value of the specified parameter.
+        ///     Sets the value of the specified parameter.
         /// </summary>
         /// <param name="name"></param>
         /// <param name="value"></param>
@@ -435,7 +436,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Gets the value of the specified parameter.  
+        ///     Gets the value of the specified parameter.
         /// </summary>
         /// <param name="nameHash"></param>
         /// <returns></returns>
@@ -445,7 +446,7 @@ namespace NetBuff.Components
         }
 
         /// <summary>
-        /// Sets the value of the specified parameter.
+        ///     Sets the value of the specified parameter.
         /// </summary>
         /// <param name="nameHash"></param>
         /// <param name="value"></param>
@@ -458,7 +459,8 @@ namespace NetBuff.Components
         #region Network Callbacks
         public override void OnSpawned(bool isRetroactive)
         {
-            _Begin();
+            if (gameObject.activeInHierarchy && enabled)
+                _Begin();
         }
 
         public override void OnServerReceivePacket(IOwnedPacket packet, int clientId)
@@ -591,66 +593,66 @@ namespace NetBuff.Components
         }
         #endregion
     }
-    
+
     /// <summary>
-    /// Packet used to sync the state of an Animator component.
+    ///     Packet used to sync the state of an Animator component.
     /// </summary>
     public class AnimatorSyncPacket : IOwnedPacket
     {
         /// <summary>
-        /// Represents the changes that have been made to the Animator.
+        ///     Represents the changes that have been made to the Animator.
         /// </summary>
         [Flags]
         public enum Changes
         {
             /// <summary>
-            /// No changes have been made.
+            ///     No changes have been made.
             /// </summary>
             None = 0,
-            
+
             /// <summary>
-            /// At least one layer have been changed.
+            ///     At least one layer have been changed.
             /// </summary>
             Layers = 1,
-            
+
             /// <summary>
-            /// At least one parameter have been changed.
+            ///     At least one parameter have been changed.
             /// </summary>
             Parameters = 2,
-            
+
             /// <summary>
-            /// The speed of the Animator has been changed.
+            ///     The speed of the Animator has been changed.
             /// </summary>
             Speed = 4
         }
 
         /// <summary>
-        /// Represents the changes that have been made to the Animator.
+        ///     Represents the changes that have been made to the Animator.
         /// </summary>
         public Changes Change { get; set; } = Changes.None;
 
         /// <summary>
-        /// Holds information about the layers that have been changed.
+        ///     Holds information about the layers that have been changed.
         /// </summary>
         public LayerInfo[] Layers { get; set; }
 
         /// <summary>
-        /// The speed of the Animator.
+        ///     The speed of the Animator.
         /// </summary>
         public float Speed { get; set; }
 
         /// <summary>
-        /// The amount of parameters that have been changed.
+        ///     The amount of parameters that have been changed.
         /// </summary>
         public byte ChangedParameters { get; set; }
 
         /// <summary>
-        /// Holds the data of the parameters that have been changed.
+        ///     Holds the data of the parameters that have been changed.
         /// </summary>
         public byte[] ParameterData { get; set; }
 
         /// <summary>
-        /// Holds the id of the object.
+        ///     Holds the id of the object.
         /// </summary>
         public NetworkId Id { get; set; }
 
@@ -711,46 +713,46 @@ namespace NetBuff.Components
                 ParameterData = reader.ReadBytes(count);
             }
         }
-        
+
         /// <summary>
-        /// Holds information about a layer.
+        ///     Holds information about a layer.
         /// </summary>
         public class LayerInfo
         {
             /// <summary>
-            /// The index of the layer.
+            ///     The index of the layer.
             /// </summary>
             public byte LayerIndex { get; set; }
-            
+
             /// <summary>
-            /// The hash of the current Animator state.
+            ///     The hash of the current Animator state.
             /// </summary>
             public int StateHash { get; set; }
-            
+
             /// <summary>
-            /// The normalized time of the current Animator state.
+            ///     The normalized time of the current Animator state.
             /// </summary>
             public float NormalizedTime { get; set; }
 
             /// <summary>
-            /// The weight of the layer.
+            ///     The weight of the layer.
             /// </summary>
             public float LayerWeight { get; set; }
         }
     }
 
     /// <summary>
-    /// Packet used to trigger an Animator trigger.
+    ///     Packet used to trigger an Animator trigger.
     /// </summary>
     public class AnimatorTriggerPacket : IOwnedPacket
     {
         /// <summary>
-        /// The hash of the trigger.
+        ///     The hash of the trigger.
         /// </summary>
         public int TriggerHash { get; set; }
-        
+
         /// <summary>
-        /// The id of the object.
+        ///     The id of the object.
         /// </summary>
         public NetworkId Id { get; set; }
 
