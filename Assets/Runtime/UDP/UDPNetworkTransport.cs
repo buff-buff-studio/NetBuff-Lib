@@ -29,21 +29,27 @@ namespace NetBuff.UDP
             if (_client != null)
             {
                 _client.PoolEvents();
-                foreach (var data in _ProcessQueue(_clientQueueReliable, -1))
-                    _client.SendPacketReliable(_PACKET_RELIABLE_MESSAGE, data);
-                foreach (var data in _ProcessQueue(_clientQueueUnreliable, _MAX_PACKET_SIZE))
-                    _client.SendPacketUnreliable(data);
+                if(_client != null)
+                {
+                    foreach (var data in _ProcessQueue(_clientQueueReliable, -1))
+                        _client.SendPacketReliable(_PACKET_RELIABLE_MESSAGE, data);
+                    foreach (var data in _ProcessQueue(_clientQueueUnreliable, _MAX_PACKET_SIZE))
+                        _client.SendPacketUnreliable(data); 
+                }
             }
 
-            if (_server != null)
+            if (_server == null) return;
             {
                 _server.PoolEvents();
-                foreach (var client in _clients.Values)
+                if (_server != null)
                 {
-                    foreach (var data in _ProcessQueue(client.queueReliable, -1))
-                        _server.SendPacketReliable(_PACKET_RELIABLE_MESSAGE, data, client.Id);
-                    foreach (var data in _ProcessQueue(client.queueUnreliable, _MAX_PACKET_SIZE))
-                        _server.SendPacketUnreliable(data, client.Id);
+                    foreach (var client in _clients.Values)
+                    {
+                        foreach (var data in _ProcessQueue(client.queueReliable, -1))
+                            _server.SendPacketReliable(_PACKET_RELIABLE_MESSAGE, data, client.Id);
+                        foreach (var data in _ProcessQueue(client.queueUnreliable, _MAX_PACKET_SIZE))
+                            _server.SendPacketUnreliable(data, client.Id);
+                    }
                 }
             }
         }
@@ -108,20 +114,24 @@ namespace NetBuff.UDP
             try
             {
                 _client.Connect(IPAddress.Parse(address), port, ((MemoryStream)writer.BaseStream).ToArray());
+                Type = Type == EnvironmentType.None ? EnvironmentType.Client : EnvironmentType.Host;
             }
             catch (Exception e)
             {
                 OnClientError?.Invoke(e.Message);
+                Close();
             }
-
-            Type = Type == EnvironmentType.None ? EnvironmentType.Client : EnvironmentType.Host;
         }
 
         public override void Close()
         {
             _server?.Close();
             _client?.Disconnect("disconnect");
+            
             Type = EnvironmentType.None;
+            
+            _server = null;
+            _client = null;
         }
 
         public override IClientConnectionInfo GetClientInfo(int id)
@@ -180,7 +190,8 @@ namespace NetBuff.UDP
         private const int _MAX_PACKET_SIZE = 1010;
         private const int _TIMEOUT_TIME = 5 * 1_000 * 10_000;
         private const int _RESEND_TIME = 25 * 10_000;
-        private const int _KEEP_ALIVE_TIME = 1 * 1_000 * 10_000;
+        private const int _RESEND_MAX_PER_FRAME = 5;
+        private const int _KEEP_ALIVE_TIME = 500 * 10_000;
 
         private const byte _CHANNEL_UNRELIABLE = 1;
         private const byte _CHANNEL_RELIABLE = 2;
@@ -285,8 +296,8 @@ namespace NetBuff.UDP
             _server.onServerStopped += () =>
             {
                 OnServerStop?.Invoke();
+                
                 _server = null;
-
                 OnServerError = null;
             };
 
@@ -369,6 +380,7 @@ namespace NetBuff.UDP
             catch (Exception e)
             {
                 OnServerError?.Invoke(e.Message);
+                Close();
             }
         }
 
@@ -501,10 +513,10 @@ namespace NetBuff.UDP
             public readonly EndPoint endPoint;
             public readonly int id;
 
-            public readonly Dictionary<int, ReliableReceived> receivedReliable = new();
+            public readonly Dictionary<int, ReliableReceived> receivedReliable = new(32);
             public readonly Queue<byte[]> receivedUnreliable = new();
 
-            public readonly Dictionary<int, ReliableSent> sentReliable = new();
+            public readonly Dictionary<int, ReliableSent> sentReliable = new(32);
             public int expectedSequenceNumber;
 
             public long lastKeepAlive;
@@ -541,18 +553,23 @@ namespace NetBuff.UDP
             private readonly Socket _socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             private int _nextClientId;
             private Thread _thread;
+            private bool _isRunning;
 
             public void Host(IPAddress address, int port)
             {
                 _socket.Bind(new IPEndPoint(address, port));
                 onServerStarted?.Invoke();
 
+                _isRunning = true;
                 _thread = new Thread(_Loop);
                 _thread.Start();
             }
 
             public void Close()
             {
+                if (!_isRunning)
+                    return;
+                
                 for (var i = 0; i < _peers.Count; i++)
                 {
                     var peer = _peers.ElementAt(i).Value;
@@ -562,6 +579,7 @@ namespace NetBuff.UDP
 
                 _socket.Close();
                 onServerStopped?.Invoke();
+                _isRunning = false;
             }
 
             public void DisconnectClient(int clientId, string reason)
@@ -585,15 +603,16 @@ namespace NetBuff.UDP
                         var received = _socket.ReceiveFrom(threadBuffer, ref remote);
 
                         var peer = _peersByIp.GetValueOrDefault(remote);
-                        var channel = threadBuffer[0];
-
+                        var channel = threadBuffer[0];  
+                        var now = DateTime.Now.Ticks;
+                        
                         switch (channel)
                         {
                             case _CHANNEL_KEEP_ALIVE:
                                 if (peer != null)
                                 {
                                     var nowRemote = BitConverter.ToInt64(threadBuffer, 3);
-                                    var now = DateTime.Now.Ticks;
+                                    
                                     peer.latency = (short)((now - nowRemote) / 20_000);
                                     peer.lastReceivedTicks = now;
                                 }
@@ -610,6 +629,8 @@ namespace NetBuff.UDP
                                 {
                                     var b = new byte[received - 1];
                                     Buffer.BlockCopy(threadBuffer, 1, b, 0, received - 1);
+                                    
+                                    peer.lastReceivedTicks = now;
                                     peer.receivedUnreliable.Enqueue(b);
                                 }
 
@@ -630,6 +651,7 @@ namespace NetBuff.UDP
                                 ack[4] = threadBuffer[5];
 
                                 _InternalSendSpan(new UDPSpan(ack), remote);
+                                peer.lastReceivedTicks = now;
 
                                 if (!peer.receivedReliable.ContainsKey(sequence))
                                 {
@@ -657,6 +679,7 @@ namespace NetBuff.UDP
                                 ack[2] = threadBuffer[3];
                                 ack[3] = threadBuffer[4];
                                 ack[4] = threadBuffer[5];
+                                
                                 _InternalSendSpan(new UDPSpan(ack), remote);
 
                                 if (peer == null)
@@ -667,7 +690,7 @@ namespace NetBuff.UDP
                                     _peersByIp.Add(remote, peer);
                                 }
 
-                                peer.lastReceivedTicks = DateTime.Now.Ticks;
+                                peer.lastReceivedTicks = now;
 
                                 if (!peer.receivedReliable.ContainsKey(sequence))
                                 {
@@ -685,11 +708,14 @@ namespace NetBuff.UDP
                                 {
                                     var sequence = (threadBuffer[1] << 24) | (threadBuffer[2] << 16) |
                                                    (threadBuffer[3] << 8) | threadBuffer[4];
-
-                                    if (peer.sentReliable.ContainsKey(sequence))
-                                        peer.sentReliable.Remove(sequence);
-
-                                    peer.lastReceivedTicks = DateTime.Now.Ticks;
+                                    
+                                    lock (peer.sentReliable)
+                                    {
+                                        if (peer.sentReliable.ContainsKey(sequence))
+                                            peer.sentReliable.Remove(sequence);
+                                    }
+                                        
+                                    peer.lastReceivedTicks = now;
                                 }
 
                                 break;
@@ -698,7 +724,8 @@ namespace NetBuff.UDP
                 }
                 catch (Exception e)
                 {
-                    _actions.Enqueue(() => onError?.Invoke(e.Message));
+                    if (_isRunning)
+                        _actions.Enqueue(() => onError?.Invoke(e.Message));
                 }
 
                 // ReSharper disable once FunctionNeverReturns
@@ -732,9 +759,7 @@ namespace NetBuff.UDP
 
                 _peers.Remove(peer.id);
                 _peersByIp.Remove(peer.endPoint);
-                _actions.Enqueue(() => onClientDisconnected?.Invoke(peer.id, reason));
-
-                onClientDisconnected?.Invoke(clientId, reason);
+                onClientDisconnected?.Invoke(peer.id, reason);
             }
 
             public void SendPacketUnreliable(UDPSpan span, int clientId)
@@ -789,9 +814,11 @@ namespace NetBuff.UDP
                 buffer[6] = count;
 
                 Buffer.BlockCopy(fragment.data, fragment.offset, buffer, 7, fragment.length);
-
-                peer.sentReliable.Add(id, new ReliableSent { sentTicks = DateTime.Now.Ticks, data = buffer });
-
+                
+                lock(peer.sentReliable) 
+                {
+                    peer.sentReliable.Add(id, new ReliableSent { sentTicks = DateTime.Now.Ticks, data = buffer });
+                }
                 _InternalSendSpan(new UDPSpan(buffer), peer.endPoint);
             }
 
@@ -812,7 +839,11 @@ namespace NetBuff.UDP
 
                 Buffer.BlockCopy(fragment.data, fragment.offset, buffer, 6, fragment.length);
 
-                peer.sentReliable.Add(id, new ReliableSent { sentTicks = DateTime.Now.Ticks, data = buffer });
+                lock (peer.sentReliable)
+                {
+                    peer.sentReliable.Add(id, new ReliableSent { sentTicks = DateTime.Now.Ticks, data = buffer });
+                }
+
                 _InternalSendSpan(new UDPSpan(buffer), peer.endPoint);
             }
 
@@ -863,14 +894,18 @@ namespace NetBuff.UDP
                     }
 
                     //Process resend
-                    for (var j = 0; j < peer.sentReliable.Count; j++)
+                    lock (peer.sentReliable)
                     {
-                        var packet = peer.sentReliable.ElementAt(j).Value;
-                        if (now - packet.sentTicks <= _RESEND_TIME)
-                            continue;
+                        var c = Mathf.Min(peer.sentReliable.Count, _RESEND_MAX_PER_FRAME);
+                        for (var j = 0; j < c; j++)
+                        {
+                            var packet = peer.sentReliable.ElementAt(j).Value;
+                            if (now - packet.sentTicks <= _RESEND_TIME)
+                                continue;
 
-                        _InternalSendSpan(new UDPSpan(packet.data), peer.endPoint);
-                        packet.sentTicks = now;
+                            _InternalSendSpan(new UDPSpan(packet.data), peer.endPoint);
+                            packet.sentTicks = now;
+                        }
                     }
 
                     //Process received unreliable
@@ -971,10 +1006,10 @@ namespace NetBuff.UDP
             private readonly Queue<Action> _actions = new();
 
             private readonly byte[] _mainThreadBuffer = new byte[1024];
-            private readonly Dictionary<int, ReliableReceived> _receivedReliable = new();
+            private readonly Dictionary<int, ReliableReceived> _receivedReliable = new(32);
             private readonly Queue<byte[]> _receivedUnreliable = new();
 
-            private readonly Dictionary<int, ReliableSent> _sentReliable = new();
+            private readonly Dictionary<int, ReliableSent> _sentReliable = new(32);
 
             private readonly Socket _socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             private int _expectedSequenceNumber;
@@ -1019,6 +1054,7 @@ namespace NetBuff.UDP
                     {
                         var received = _socket.Receive(threadBuffer);
                         var channel = threadBuffer[0];
+                        var now = DateTime.Now.Ticks;
 
                         switch (channel)
                         {
@@ -1026,6 +1062,8 @@ namespace NetBuff.UDP
                             {
                                 var b = new byte[received - 1];
                                 Buffer.BlockCopy(threadBuffer, 1, b, 0, received - 1);
+                                
+                                _lastReceivedTicks = now;
                                 _receivedUnreliable.Enqueue(b);
                             }
                                 break;
@@ -1044,6 +1082,7 @@ namespace NetBuff.UDP
                                 ack[3] = threadBuffer[4];
                                 ack[4] = threadBuffer[5];
 
+                                _lastReceivedTicks = now;
                                 _InternalSendSpan(new UDPSpan(ack));
 
                                 if (!_receivedReliable.ContainsKey(sequence))
@@ -1073,8 +1112,8 @@ namespace NetBuff.UDP
                                 ack[3] = threadBuffer[4];
                                 ack[4] = threadBuffer[5];
 
+                                _lastReceivedTicks = now;
                                 _InternalSendSpan(new UDPSpan(ack));
-                                _lastReceivedTicks = DateTime.Now.Ticks;
 
                                 if (!_receivedReliable.ContainsKey(sequence))
                                 {
@@ -1091,19 +1130,21 @@ namespace NetBuff.UDP
                             {
                                 var sequence = (threadBuffer[1] << 24) | (threadBuffer[2] << 16) |
                                                (threadBuffer[3] << 8) | threadBuffer[4];
-
-                                if (_sentReliable.ContainsKey(sequence))
-                                    _sentReliable.Remove(sequence);
-
-                                _lastReceivedTicks = DateTime.Now.Ticks;
+                                
+                                _lastReceivedTicks = now;
+                                
+                                lock (_sentReliable)
+                                {
+                                    if (_sentReliable.ContainsKey(sequence))
+                                        _sentReliable.Remove(sequence);
+                                }
                             }
                                 break;
-
 
                             case _CHANNEL_KEEP_ALIVE:
                             {
                                 latency = (threadBuffer[1] << 8) | threadBuffer[2];
-                                _lastReceivedTicks = DateTime.Now.Ticks;
+                                _lastReceivedTicks = now;
                                 _InternalSendSpan(new UDPSpan(threadBuffer, 0, 11));
                             }
                                 break;
@@ -1137,8 +1178,7 @@ namespace NetBuff.UDP
                 if (!_isConnected)
                     return;
                 _isConnected = false;
-
-                _actions.Enqueue(() => onDisconnected?.Invoke(reason));
+                onDisconnected?.Invoke(reason);
             }
 
             public void SendPacketUnreliable(UDPSpan span)
@@ -1189,7 +1229,10 @@ namespace NetBuff.UDP
 
                 Buffer.BlockCopy(fragment.data, fragment.offset, buffer, 7, fragment.length);
 
-                _sentReliable.Add(id, new ReliableSent { sentTicks = DateTime.Now.Ticks, data = buffer });
+                lock (_sentReliable)
+                {
+                    _sentReliable.Add(id, new ReliableSent { sentTicks = DateTime.Now.Ticks, data = buffer });
+                }
 
                 _InternalSendSpan(new UDPSpan(buffer));
             }
@@ -1211,7 +1254,11 @@ namespace NetBuff.UDP
 
                 Buffer.BlockCopy(span.data, span.offset, buffer, 6, span.length);
 
-                _sentReliable.Add(id, new ReliableSent { sentTicks = DateTime.Now.Ticks, data = buffer });
+                lock (_sentReliable)
+                {
+                    _sentReliable.Add(id, new ReliableSent { sentTicks = DateTime.Now.Ticks, data = buffer });
+                }
+
                 _InternalSendSpan(new UDPSpan(buffer));
             }
 
@@ -1237,14 +1284,18 @@ namespace NetBuff.UDP
                     _SendDisconnectRequest("timeout");
 
                 //Process resend
-                for (var i = 0; i < _sentReliable.Count; i++)
+                lock (_sentReliable)
                 {
-                    var packet = _sentReliable.ElementAt(i).Value;
-                    if (now - packet.sentTicks <= _RESEND_TIME)
-                        continue;
+                    var c = Mathf.Min(_sentReliable.Count, _RESEND_MAX_PER_FRAME);
+                    for (var i = 0; i < c; i++)
+                    {
+                        var packet = _sentReliable.ElementAt(i).Value;
+                        if (now - packet.sentTicks <= _RESEND_TIME)
+                            continue;
 
-                    _InternalSendSpan(new UDPSpan(packet.data));
-                    packet.sentTicks = now;
+                        _InternalSendSpan(new UDPSpan(packet.data));
+                        packet.sentTicks = now;
+                    }
                 }
 
                 //Process received unreliable
