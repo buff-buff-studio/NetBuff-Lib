@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -179,7 +178,7 @@ namespace NetBuff.UDP
         #region Const Fields
         private const int _MAX_PACKET_SIZE = 1010;
         private const int _TIMEOUT_TIME = 10 * 1_000 * 10_000;
-        private const int _RESEND_TIME = 500 * 10_000;
+        private const int _RESEND_TIME = 25 * 10_000;
         private const int _KEEP_ALIVE_TIME = 1 * 1_000 * 10_000;
 
         private const byte _CHANNEL_UNRELIABLE = 1;
@@ -586,9 +585,7 @@ namespace NetBuff.UDP
 
                         var peer = _peersByIp.GetValueOrDefault(remote);
                         var channel = threadBuffer[0];
-
-                        Console.WriteLine($"Received packet from {remote} with channel {channel}");
-
+                        
                         switch (channel)
                         {
                             case _CHANNEL_KEEP_ALIVE:
@@ -854,13 +851,14 @@ namespace NetBuff.UDP
                         now = DateTime.Now.Ticks;
 
                         var bytes = BitConverter.GetBytes(now);
-                        _mainThreadBuffer[0] = _CHANNEL_KEEP_ALIVE;
-                        _mainThreadBuffer[1] = (byte)(peer.latency >> 8);
-                        _mainThreadBuffer[2] = (byte)peer.latency;
-                        Buffer.BlockCopy(bytes, 0, _mainThreadBuffer, 3, 8);
+                        var keepAlive = new byte[11];
+                        keepAlive[0] = _CHANNEL_KEEP_ALIVE;
+                        keepAlive[1] = (byte)(peer.latency >> 8);
+                        keepAlive[2] = (byte)peer.latency;
+                        Buffer.BlockCopy(bytes, 0, keepAlive, 3, 8);
 
                         //Keep alive
-                        _InternalSendSpan(new UDPSpan(_mainThreadBuffer, 0, 11), peer.endPoint);
+                        _InternalSendSpan(new UDPSpan(keepAlive, 0, 11), peer.endPoint);
                         peer.lastKeepAlive = now;
                     }
 
