@@ -24,13 +24,13 @@ namespace NetBuff
             /// Connection end normally.
             /// </summary>
             Shutdown,
-            
+
             /// <summary>
             /// Connection end with error.
             /// </summary>
             InternalError,
         }
-        
+
         /// <summary>
         ///     Enum for the type of environment.
         /// </summary>

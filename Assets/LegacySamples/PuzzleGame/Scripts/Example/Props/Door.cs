@@ -1,6 +1,4 @@
-﻿using System.IO;
-using NetBuff.Interface;
-using NetBuff.Misc;
+﻿using NetBuff.Misc;
 using UnityEngine;
 
 namespace ExamplePlatformer.Props

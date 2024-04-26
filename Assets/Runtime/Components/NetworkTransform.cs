@@ -202,7 +202,7 @@ namespace NetBuff.Components
 
         public override void OnSpawned(bool isRetroactive)
         {
-            if(gameObject.activeInHierarchy && enabled)
+            if (gameObject.activeInHierarchy && enabled)
                 _Begin();
         }
 

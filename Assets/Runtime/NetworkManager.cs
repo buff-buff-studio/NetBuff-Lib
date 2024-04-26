@@ -1158,7 +1158,7 @@ namespace NetBuff
             foreach (var valuesPacket in preExistingInfoPacket.NetworkValues)
                 _HandleNetworkBehaviourDataPacket(valuesPacket);
 
-            if(IsClientRunning)
+            if (IsClientRunning)
                 ClientSendPacket(new NetworkPreExistingResponsePacket(), true);
         }
 
@@ -1172,7 +1172,7 @@ namespace NetBuff
         {
             if (!IsClientRunning)
                 return;
-            
+
             var reader = new BinaryReader(new MemoryStream(packet.Data.Array!));
 
             if (_localSessionData.TryGetValue(packet.ClientId, out var data))

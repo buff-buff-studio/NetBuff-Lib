@@ -262,6 +262,7 @@ namespace NetBuff.Components
             _values = values;
         }
 
+        // ReSharper disable once UnusedMember.Local
         private void _MarkValueDirty(NetworkValue value)
         {
             if (_values == null)
