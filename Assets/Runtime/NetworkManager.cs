@@ -1167,6 +1167,9 @@ namespace NetBuff
 
         private void _HandleNetworkSessionDataPacket(NetworkSessionDataPacket packet)
         {
+            if (!IsClientRunning)
+                return;
+            
             var reader = new BinaryReader(new MemoryStream(packet.Data.Array!));
 
             if (_localSessionData.TryGetValue(packet.ClientId, out var data))

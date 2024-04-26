@@ -698,7 +698,7 @@ GameObject:
   - component: {fileID: 1292922733}
   - component: {fileID: 1292922734}
   - component: {fileID: 1292922731}
-  - component: {fileID: 1292922730}
+  - component: {fileID: 1292922735}
   m_Layer: 0
   m_Name: Network Manager
   m_TagString: Untagged
@@ -706,23 +706,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1292922730
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1292922729}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5b23075050df442d8bd5d7cb60e79d25, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  name: server
-  address: 127.0.0.1
-  port: 7777
-  password: 
-  maxClients: 10
 --- !u!114 &1292922731
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -767,26 +750,43 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 445534025aa44b70a78c42a54c2b475c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  name: server
   versionMagicNumber: 0
   defaultTickRate: 50
   spawnsPlayer: 0
-  supportSessionRestoration: 1
-  transport: {fileID: 1292922730}
+  supportsSessionRestoration: 1
+  transport: {fileID: 1292922735}
   prefabRegistry: {fileID: 11400000, guid: f4663dbe773c60940ac1b4e65f0aa97a, type: 2}
   playerPrefab: {fileID: 0}
   loadedScenes: []
-  sourceScene: 
+  mainScene: 
   networkObjects:
     _serializedList: []
   removedPreExistingObjects: []
   dirtyBehaviours: []
-  endTypeAfterReload: 0
+  environmentTypeAfterReload: 0
   isClientReloaded: 0
   persistentSessionData:
     _serializedList: []
   persistentDisconnectedSessionData: []
   nicknameInput: {fileID: 497890450}
   shouldBeAccepted: {fileID: 951311170}
+--- !u!114 &1292922735
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1292922729}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c32e2d299fb740d3be7fba85db17d4e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  address: 127.0.0.1
+  port: 7777
+  password: 
+  maxClients: 10
 --- !u!1 &1318128798
 GameObject:
   m_ObjectHideFlags: 0
