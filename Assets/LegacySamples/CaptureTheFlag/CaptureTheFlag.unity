@@ -852,20 +852,20 @@ MonoBehaviour:
   flagRed: {fileID: 1156904637}
   flagBlue: {fileID: 1788689440}
   flagRedCarrier:
-    _value: -1
-    _type: 0
+    value: -1
+    type: 0
   flagBlueCarrier:
-    _value: -1
-    _type: 0
+    value: -1
+    type: 0
   redScore:
-    _value: 0
-    _type: 0
+    value: 0
+    type: 0
   blueScore:
-    _value: 0
-    _type: 0
+    value: 0
+    type: 0
   time:
-    _value: 0
-    _type: 0
+    value: 0
+    type: 0
   canvas: {fileID: 896114573}
   labelRedScore: {fileID: 1818191502}
   labelBlueScore: {fileID: 1950997423}
@@ -1207,12 +1207,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 803496987}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5b23075050df442d8bd5d7cb60e79d25, type: 3}
+  m_Script: {fileID: 11500000, guid: c32e2d299fb740d3be7fba85db17d4e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   address: 127.0.0.1
   port: 7777
   password: 
+  maxClients: 10
 --- !u!114 &803496989
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1225,6 +1226,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f50078f9f0a4835ae0368ca65528c5a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  graphPlottingRate: 10
+  plotFPS: 0
+  plotLatency: 0
+  plotPacketRate: 0
+  currentGraph: 0
 --- !u!114 &803496990
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1237,16 +1243,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 334fcbbd77286b240919f74ed5158faf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  name: server
+  versionMagicNumber: 0
   defaultTickRate: 50
   spawnsPlayer: 1
+  supportsSessionRestoration: 1
   transport: {fileID: 803496988}
   prefabRegistry: {fileID: 11400000, guid: 66a90ca12016c7249939541e0ae1203a, type: 2}
   playerPrefab: {fileID: 7162629033397157818, guid: cfd413496b5960142a8f908db381d006, type: 3}
-  endTypeAfterReload: 0
-  isClientReloaded: 0
+  loadedScenes: []
+  mainScene: 
   networkObjects:
     _serializedList: []
+  removedPreExistingObjects: []
   dirtyBehaviours: []
+  environmentTypeAfterReload: 0
+  isClientReloaded: 0
+  persistentSessionData:
+    _serializedList: []
+  persistentDisconnectedSessionData: []
 --- !u!4 &803496991
 Transform:
   m_ObjectHideFlags: 0

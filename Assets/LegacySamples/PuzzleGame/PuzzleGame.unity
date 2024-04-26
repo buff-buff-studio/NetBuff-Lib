@@ -2934,6 +2934,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f50078f9f0a4835ae0368ca65528c5a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  graphPlottingRate: 10
+  plotFPS: 0
+  plotLatency: 0
+  plotPacketRate: 0
+  currentGraph: 0
 --- !u!114 &374060619
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2946,15 +2951,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 334fcbbd77286b240919f74ed5158faf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  name: server
+  versionMagicNumber: 0
   defaultTickRate: 50
+  spawnsPlayer: 1
+  supportsSessionRestoration: 1
   transport: {fileID: 374060621}
   prefabRegistry: {fileID: 11400000, guid: 6bb19a97970ff80469e8bcb73875ac11, type: 2}
   playerPrefab: {fileID: 7281657615167336157, guid: edf6b891879c5144ca3b27df112bccdd, type: 3}
-  endTypeAfterReload: 0
-  isClientReloaded: 0
+  loadedScenes: []
+  mainScene: 
   networkObjects:
     _serializedList: []
+  removedPreExistingObjects: []
   dirtyBehaviours: []
+  environmentTypeAfterReload: 0
+  isClientReloaded: 0
+  persistentSessionData:
+    _serializedList: []
+  persistentDisconnectedSessionData: []
 --- !u!4 &374060620
 Transform:
   m_ObjectHideFlags: 0
@@ -2979,12 +2994,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 374060616}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5b23075050df442d8bd5d7cb60e79d25, type: 3}
+  m_Script: {fileID: 11500000, guid: c32e2d299fb740d3be7fba85db17d4e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   address: 127.0.0.1
   port: 7777
   password: 
+  maxClients: 1
 --- !u!1001 &406979969
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -14322,8 +14338,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isOpen:
-    _value: 0
-    _type: 0
+    value: 0
+    type: 0
   open: {fileID: 5792153579373452618}
   closed: {fileID: 5057285609649334979}
 --- !u!1001 &6865357141311694862
@@ -14551,8 +14567,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isOn:
-    _value: 0
-    _type: 0
+    value: 0
+    type: 0
   radius: 2
   handle: {fileID: 3795257717656203394}
   angle: 60

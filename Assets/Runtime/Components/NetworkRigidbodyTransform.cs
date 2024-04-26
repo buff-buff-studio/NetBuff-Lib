@@ -93,6 +93,7 @@ namespace NetBuff.Components
         protected override void OnEnable()
         {
             base.OnEnable();
+
             if (rigidbody == null)
                 if (TryGetComponent(out Rigidbody rb))
                 {

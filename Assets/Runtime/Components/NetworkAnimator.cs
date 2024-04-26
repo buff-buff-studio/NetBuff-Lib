@@ -459,7 +459,8 @@ namespace NetBuff.Components
         #region Network Callbacks
         public override void OnSpawned(bool isRetroactive)
         {
-            _Begin();
+            if(gameObject.activeInHierarchy && enabled)
+                _Begin();
         }
 
         public override void OnServerReceivePacket(IOwnedPacket packet, int clientId)

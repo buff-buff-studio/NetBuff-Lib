@@ -105,7 +105,7 @@ namespace NetBuff.UDP
 
             _client.onError += reason =>
             {
-                OnDisconnect?.Invoke(ConnectionEndMode.Error, reason);
+                OnDisconnect?.Invoke(ConnectionEndMode.InternalError, reason);
                 _client = null;
             };
 
@@ -118,7 +118,7 @@ namespace NetBuff.UDP
             }
             catch (Exception e)
             {
-                OnDisconnect?.Invoke(ConnectionEndMode.Error, e.Message);
+                OnDisconnect?.Invoke(ConnectionEndMode.InternalError, e.Message);
                 _client = null;
             }
         }
@@ -366,7 +366,7 @@ namespace NetBuff.UDP
 
             _server.onError += (reason) =>
             {
-                OnServerStop?.Invoke(ConnectionEndMode.Error, reason);
+                OnServerStop?.Invoke(ConnectionEndMode.InternalError, reason);
                 _server = null;
             };
 
@@ -377,7 +377,7 @@ namespace NetBuff.UDP
             }
             catch (Exception e)
             {
-                OnServerStop?.Invoke(ConnectionEndMode.Error, e.Message);
+                OnServerStop?.Invoke(ConnectionEndMode.InternalError, e.Message);
                 _server = null;
             }
         }

@@ -28,7 +28,7 @@ namespace NetBuff
             /// <summary>
             /// Connection end with error.
             /// </summary>
-            Error,
+            InternalError,
         }
         
         /// <summary>
