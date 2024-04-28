@@ -505,18 +505,6 @@ namespace NetBuff.Components
         {
             Identity.SendPacket(packet, reliable);
         }
-
-        /// <summary>
-        ///     Gets the packet listener for the given packet type, so you can listen to packets of that type.
-        ///     Does not work for IOwnedPacket types.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static PacketListener<T> GetPacketListener<T>() where T : IPacket
-        {
-            return NetworkIdentity.GetPacketListener<T>();
-        }
         #endregion
 
         #region Object Methods

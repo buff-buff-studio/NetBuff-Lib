@@ -15,13 +15,14 @@ namespace ExamplePlatformer.Props
         {
             WithValues(isOn);
             handle.localEulerAngles = new Vector3(isOn.Value ? angle : 0, -90f, 0);
+            
             //Needs to listen to a specific packet type
-            GetPacketListener<PlayerPunchActionPacket>().OnServerReceive += OnPlayerPunch;
+            PacketListener.GetPacketListener<PlayerPunchActionPacket>().AddServerListener(OnPlayerPunch);
         }
 
         private void OnDisable()
         {
-            GetPacketListener<PlayerPunchActionPacket>().OnServerReceive -= OnPlayerPunch;
+            PacketListener.GetPacketListener<PlayerPunchActionPacket>().RemoveServerListener(OnPlayerPunch);
         }
 
         private void Update()
@@ -29,15 +30,16 @@ namespace ExamplePlatformer.Props
             handle.localEulerAngles = new Vector3(Mathf.Lerp(handle.localEulerAngles.x, isOn.Value ? angle : 0, Time.deltaTime * 10), -90f, 0);
         }
 
-        private void OnPlayerPunch(PlayerPunchActionPacket obj, int client)
+        private bool OnPlayerPunch(PlayerPunchActionPacket obj, int client)
         {
             var o = GetNetworkObject(obj.Id);
             var dist = Vector3.Distance(o.transform.position, transform.position);
 
             if (dist > radius)
-                return;
+                return false;
 
             isOn.Value = !isOn.Value;
+            return true;
         }
         public override bool GetInputValue()
         {

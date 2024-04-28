@@ -1,4 +1,5 @@
 ﻿using NetBuff.Components;
+using NetBuff.Misc;
 using UnityEngine;
 
 namespace ExamplePlatformer.Props
@@ -8,23 +9,24 @@ namespace ExamplePlatformer.Props
         public float radius = 2f;
         private void OnEnable()
         {
-            GetPacketListener<PlayerPunchActionPacket>().OnServerReceive += OnPlayerPunch;
+            PacketListener.GetPacketListener<PlayerPunchActionPacket>().AddServerListener(OnPlayerPunch);
         }
 
         private void OnDisable()
         {
-            GetPacketListener<PlayerPunchActionPacket>().OnServerReceive -= OnPlayerPunch;
+            PacketListener.GetPacketListener<PlayerPunchActionPacket>().RemoveServerListener(OnPlayerPunch);
         }
         
-        private void OnPlayerPunch(PlayerPunchActionPacket obj, int client)
+        private bool OnPlayerPunch(PlayerPunchActionPacket obj, int client)
         {
             var o = GetNetworkObject(obj.Id);
             var dist = Vector3.Distance(o.transform.position, transform.position);
             
             if (dist > radius)
-                return;
+                return false;
             
             LevelManager.Instance.ChangeLevel(LevelManager.Instance.levelIndex + 1);
+            return true;
         }
         
     }

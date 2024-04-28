@@ -79,9 +79,7 @@ namespace NetBuff
         [SerializeField]
         [HideInInspector]
         private string mainScene;
-
-        private readonly Dictionary<Type, PacketListener> _packetListeners = new();
-
+        
         [SerializeField]
         [HideInInspector]
         private SerializedDictionary<NetworkId, NetworkIdentity> networkObjects = new();
@@ -465,40 +463,6 @@ namespace NetBuff
         }
         #endregion
 
-        #region Listeners
-        /// <summary>
-        ///     Returns the packet listener for the given packet type.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public PacketListener<T> GetPacketListener<T>() where T : IPacket
-        {
-            if (_packetListeners.TryGetValue(typeof(T), out var listener))
-                return (PacketListener<T>)listener;
-
-            listener = new PacketListener<T>();
-            _packetListeners.Add(typeof(T), listener);
-
-            return (PacketListener<T>)listener;
-        }
-
-        /// <summary>
-        ///     Returns the packet listener for the given packet type.
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public PacketListener GetPacketListener(Type type)
-        {
-            if (_packetListeners.TryGetValue(type, out var listener))
-                return listener;
-
-            listener = (PacketListener)Activator.CreateInstance(typeof(PacketListener<>).MakeGenericType(type));
-            _packetListeners.Add(type, listener);
-
-            return listener;
-        }
-        #endregion
-
         #region Network Object Methods
         /// <summary>
         ///     Returns the network identity object with the given id.
@@ -832,7 +796,7 @@ namespace NetBuff
                 }
             }
 
-            GetPacketListener(packet.GetType()).CallOnServerReceive(packet, clientId);
+            PacketListener.GetPacketListener(packet.GetType()).CallOnServerReceive(packet, clientId);
         }
 
         /// <summary>
@@ -901,7 +865,7 @@ namespace NetBuff
                 }
             }
 
-            GetPacketListener(packet.GetType()).CallOnClientReceive(packet);
+            PacketListener.GetPacketListener(packet.GetType()).CallOnClientReceive(packet);
         }
 
         /// <summary>
