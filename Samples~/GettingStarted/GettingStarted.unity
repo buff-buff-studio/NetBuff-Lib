@@ -147,10 +147,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1292922729}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5b23075050df442d8bd5d7cb60e79d25, type: 3}
+  m_Script: {fileID: 11500000, guid: c32e2d299fb740d3be7fba85db17d4e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  name: server
   address: 127.0.0.1
   port: 7777
   password: 
@@ -184,6 +183,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 334fcbbd77286b240919f74ed5158faf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  name: server
   versionMagicNumber: 0
   defaultTickRate: 50
   spawnsPlayer: 1
@@ -192,12 +192,12 @@ MonoBehaviour:
   prefabRegistry: {fileID: 11400000, guid: 8e0ca7e585cc7784ca7b13998a10c413, type: 2}
   playerPrefab: {fileID: 148450730213645687, guid: 1c2c96d693e388b459441e3f6ac71f13, type: 3}
   loadedScenes: []
-  sourceScene: 
+  mainScene: 
   networkObjects:
     _serializedList: []
   removedPreExistingObjects: []
   dirtyBehaviours: []
-  endTypeAfterReload: 0
+  environmentTypeAfterReload: 0
   isClientReloaded: 0
   persistentSessionData:
     _serializedList: []
