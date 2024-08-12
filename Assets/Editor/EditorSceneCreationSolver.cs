@@ -1,7 +1,7 @@
-﻿
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using NetBuff.Misc;
 using UnityEngine;
+
 #if UNITY_EDITOR
 using System.Collections;
 using System.IO;

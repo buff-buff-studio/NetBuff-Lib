@@ -370,7 +370,8 @@ namespace NetBuff
             #endif
 
             mainScene = gameObject.scene.name;
-            loadedScenes.Add(mainScene);
+            if (!loadedScenes.Contains(mainScene))
+                loadedScenes.Add(mainScene);
 
             if (SupportsSessionRestoration)
                 _disconnectedSessionData.AddRange(_sessionData.Values);
@@ -1096,7 +1097,10 @@ namespace NetBuff
                     continue;
 
                 var obj = networkObjects[preExistingObject.Id].gameObject;
-                obj.transform.localScale = preExistingObject.Scale;
+                var t = obj.transform;
+                t.position = preExistingObject.Position;
+                t.rotation = preExistingObject.Rotation;
+                t.localScale = preExistingObject.Scale;
                 var identity = obj.GetComponent<NetworkIdentity>();
                 _OwnerIdField.SetValue(identity, preExistingObject.OwnerId);
                 _PrefabIdField.SetValue(identity, preExistingObject.PrefabId);

@@ -8,6 +8,9 @@ onBoardingDoNotAskAgain = true
 showPackageIndexes = false
 showStatusBar = false
 scopes = {
+	"last_search.8DF93126" = ""
+	"OpenInspectorPreview.8DF93126" = "0"
+	"currentGroup.8DF93126" = null
 }
 providers = {
 	performance = {
