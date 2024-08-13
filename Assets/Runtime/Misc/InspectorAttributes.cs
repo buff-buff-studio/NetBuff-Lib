@@ -8,15 +8,39 @@ namespace NetBuff.Misc
     /// </summary>
     public enum InspectorMode
     {
+        /// <summary>
+        /// Default mode. Represents the standard inspector mode.
+        /// </summary>
         Standard,
         
+        /// <summary>
+        /// Represents the field or property as a reference to an object.
+        /// </summary>
         Object,
+        
+        /// <summary>
+        /// Represents the field or property as a reference to a prefab.
+        /// </summary>
         Prefab,
         
+        /// <summary>
+        /// Represents the field or property as a reference to a behaviour.
+        /// </summary>
         Behaviour,
+        
+        /// <summary>
+        /// Represents the field or property as a reference to a network end.
+        /// </summary>
         Owner,
+        
+        /// <summary>
+        /// Represents the field or property as a reference to a loaded scene.
+        /// </summary>
         Scene,
         
+        /// <summary>
+        /// Represents an array as hex values.
+        /// </summary>
         Data
     }
     
