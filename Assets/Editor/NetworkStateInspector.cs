@@ -2,6 +2,7 @@
 using System;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Serialization;
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using AYellowpaper.SerializedCollections;
@@ -40,12 +41,21 @@ namespace NetBuff.Editor
         public class Filter
         {
             public string search;
-            public List<Type> Components = new();
+            public List<string> components = new();
+
+            [NonSerialized]
+            public List<Type> BakedComponents = new();
             
+            public void BakeComponents()
+            {
+                BakedComponents = components.Select(Type.GetType).ToList();
+            }
+
             public void Clear()
             {
                 search = "";
-                Components.Clear();
+                components.Clear();
+                BakedComponents.Clear();
             }
         }
 
@@ -55,10 +65,12 @@ namespace NetBuff.Editor
 
         public Vector2 scrollMainPanel;
         public Vector2 scrollObjectsPanel;
+        public Vector2 scrollFilter;
+
         public EditorGUISplitView verticalSplitView = new(EditorGUISplitView.Direction.Vertical);
         public SerializedDictionary<string, bool> foldoutsScenes = new();
         public Filter filter = new();
-
+       
         [MenuItem("NetBuff/Network State Inspector")]
         [MenuItem("Window/Network/State Inspector")]
         public static void ShowWindow()
@@ -132,7 +144,14 @@ namespace NetBuff.Editor
             
             _DrawFilter();
             
+            EditorGUILayout.LabelField("Objects", EditorStyles.boldLabel);
+            
+            filter.BakeComponents();
             var objects = _ApplyFilter(manager.GetNetworkObjects());
+            
+            // ReSharper disable once PossibleMultipleEnumeration
+            if(!objects.Any())
+                EditorGUILayout.HelpBox("No objects found!", MessageType.Info);
             
             foreach (var (scene, sceneObjects) in _SeparateByScenes(manager, objects))
             {
@@ -193,15 +212,75 @@ namespace NetBuff.Editor
 
         private void _DrawFilter()
         {
+            EditorGUILayout.LabelField("Filter", EditorStyles.boldLabel);
+            
             EditorGUILayout.BeginHorizontal();
             filter.search = EditorGUILayout.TextField("Search", filter.search);
             if (GUILayout.Button("X", GUILayout.Width(20)))
             {
                 Undo.RecordObject(this, "Clear Search");
-                filter.search = "";
+                filter.Clear();
                 Repaint();
             }
             EditorGUILayout.EndHorizontal();
+            
+            bool DrawBadge(string typeName)
+            {
+                var type = Type.GetType(typeName);
+                var needWidth = EditorStyles.helpBox.CalcSize(new GUIContent(type.Name)).x + 20;
+                EditorGUILayout.LabelField(type.Name, EditorStyles.helpBox, GUILayout.Width(needWidth));
+                var lastRect = GUILayoutUtility.GetLastRect();
+                var rect = new Rect(lastRect.x + needWidth - 20, lastRect.y, 20, lastRect.height);
+                
+                if (GUI.Button(rect, "X"))
+                {
+                    Undo.RecordObject(this, "Remove Component");
+                    filter.components.Remove(type.AssemblyQualifiedName);
+                    Repaint();
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Components");
+            if (GUILayout.Button("+", GUILayout.Width(20)))
+            {
+                var menu = new GenericMenu();
+                
+                var types = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes().Where(t => t.IsSubclassOf(typeof(NetworkBehaviour))));
+
+                foreach (var type in types)
+                {
+                    var type1 = type;
+                    menu.AddItem(new GUIContent(type.Name), false, () =>
+                    {
+                        Undo.RecordObject(this, "Add Component");
+                        filter.components.Add(type1.AssemblyQualifiedName);
+                        Repaint();
+                    });
+                }
+                menu.ShowAsContext();
+            }
+            EditorGUILayout.EndHorizontal();
+
+            if (filter.components.Count > 0)
+            {
+                scrollFilter = EditorGUILayout.BeginScrollView(scrollFilter,true, false, GUI.skin.horizontalScrollbar, GUI.skin.verticalScrollbar, GUI.skin.scrollView, GUILayout.Height(40));
+                scrollFilter.y = 0;
+                
+                EditorGUILayout.BeginHorizontal();
+                foreach (var type in filter.components)
+                    if (!DrawBadge(type))
+                        break;
+
+                GUILayout.FlexibleSpace();
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.EndScrollView();
+            }
+            
+            GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(1));
         }
 
         private IEnumerable<NetworkIdentity> _ApplyFilter(IEnumerable<NetworkIdentity> objects)
@@ -220,10 +299,10 @@ namespace NetBuff.Editor
                 if (filterById)
                     return o.Id == filterId;
                 
-                if (filter.Components.Count > 0)
+                if (filter.BakedComponents.Count > 0)
                 {
                     var behaviours = o.Behaviours.Select(b => b.GetType()).ToList();
-                    if (filter.Components.Any(c => !behaviours.Contains(c)))
+                    if (filter.BakedComponents.Any(c => !behaviours.Contains(c)))
                         return false;
                 }
                 
@@ -444,18 +523,22 @@ namespace NetBuff.Editor
             
             if (canSelect)
             {
-                var selectRect = new Rect(rect.x + rect.width - 100, rect.y, 100, EditorGUIUtility.singleLineHeight);
-
+                var selectRect = new Rect(rect.x + rect.width - 100, rect.y, 50, EditorGUIUtility.singleLineHeight);
+                var filterRect = new Rect(rect.x + rect.width - 50, rect.y, 50, EditorGUIUtility.singleLineHeight);
+                
                 if (GUI.Button(selectRect, "Select"))
                 {
                     var gameObject = ((NetworkIdentity)selectable).gameObject;
                     Selection.activeObject = gameObject;
                     EditorGUIUtility.PingObject(gameObject);
-                    
+                }
+                
+                if (GUI.Button(filterRect, "Filter"))
+                {
                     Undo.RecordObject(this, "Select Object");
                     filter.Clear();
                     filter.search = ((NetworkIdentity)selectable).Id.ToString();
-                    
+
                     Repaint();
                 }
             }
