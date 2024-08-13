@@ -2,7 +2,6 @@
 using System;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Serialization;
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using AYellowpaper.SerializedCollections;
@@ -13,7 +12,7 @@ using NetBuff.Session;
 using UnityEditor;
 #endif
 
-namespace NetBuff.Editor
+namespace NetBuff.Editor.Windows
 {
     #if UNITY_EDITOR
     public class NetworkStateInspector : EditorWindow
@@ -44,18 +43,18 @@ namespace NetBuff.Editor
             public List<string> components = new();
 
             [NonSerialized]
-            public List<Type> BakedComponents = new();
+            public List<Type> bakedComponents = new();
             
             public void BakeComponents()
             {
-                BakedComponents = components.Select(Type.GetType).ToList();
+                bakedComponents = components.Select(Type.GetType).ToList();
             }
 
             public void Clear()
             {
                 search = "";
                 components.Clear();
-                BakedComponents.Clear();
+                bakedComponents.Clear();
             }
         }
 
@@ -135,7 +134,6 @@ namespace NetBuff.Editor
             verticalSplitView.Split();
 
             #region Objects
-
             scrollObjectsPanel = EditorGUILayout.BeginScrollView(scrollObjectsPanel);
             
             GUILayout.BeginVertical("Box");
@@ -144,7 +142,7 @@ namespace NetBuff.Editor
             
             _DrawFilter();
             
-            EditorGUILayout.LabelField("Objects", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Scenes", EditorStyles.boldLabel);
             
             filter.BakeComponents();
             var objects = _ApplyFilter(manager.GetNetworkObjects());
@@ -153,6 +151,7 @@ namespace NetBuff.Editor
             if(!objects.Any())
                 EditorGUILayout.HelpBox("No objects found!", MessageType.Info);
             
+            // ReSharper disable once PossibleMultipleEnumeration
             foreach (var (scene, sceneObjects) in _SeparateByScenes(manager, objects))
             {
                 var networkIdentities = sceneObjects as NetworkIdentity[] ?? sceneObjects.ToArray();
@@ -227,6 +226,8 @@ namespace NetBuff.Editor
             bool DrawBadge(string typeName)
             {
                 var type = Type.GetType(typeName);
+                if (type == null)
+                    return true;
                 var needWidth = EditorStyles.helpBox.CalcSize(new GUIContent(type.Name)).x + 20;
                 EditorGUILayout.LabelField(type.Name, EditorStyles.helpBox, GUILayout.Width(needWidth));
                 var lastRect = GUILayoutUtility.GetLastRect();
@@ -249,10 +250,13 @@ namespace NetBuff.Editor
             {
                 var menu = new GenericMenu();
                 
-                var types = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes().Where(t => t.IsSubclassOf(typeof(NetworkBehaviour))));
+                var types = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes().Where(t => t.IsSubclassOf(typeof(NetworkBehaviour)) && !t.IsAbstract));
 
                 foreach (var type in types)
                 {
+                    if (filter.components.Contains(type.AssemblyQualifiedName))
+                        continue;
+                    
                     var type1 = type;
                     menu.AddItem(new GUIContent(type.Name), false, () =>
                     {
@@ -299,10 +303,10 @@ namespace NetBuff.Editor
                 if (filterById)
                     return o.Id == filterId;
                 
-                if (filter.BakedComponents.Count > 0)
+                if (filter.bakedComponents.Count > 0)
                 {
                     var behaviours = o.Behaviours.Select(b => b.GetType()).ToList();
-                    if (filter.BakedComponents.Any(c => !behaviours.Contains(c)))
+                    if (filter.bakedComponents.Any(c => !behaviours.Contains(c)))
                         return false;
                 }
                 
