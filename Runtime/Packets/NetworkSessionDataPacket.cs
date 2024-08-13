@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using NetBuff.Interface;
+using NetBuff.Misc;
 
 namespace NetBuff.Packets
 {
@@ -17,6 +18,7 @@ namespace NetBuff.Packets
         /// <summary>
         ///     The data of the session.
         /// </summary>
+        [InspectorMode(InspectorMode.Data)]
         public ArraySegment<byte> Data { get; set; }
 
         public void Serialize(BinaryWriter writer)

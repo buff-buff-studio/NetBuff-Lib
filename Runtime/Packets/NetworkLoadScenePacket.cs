@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using NetBuff.Interface;
+using NetBuff.Misc;
 
 namespace NetBuff.Packets
 {

@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using AYellowpaper.SerializedCollections;
-using NetBuff.Components;
 using NetBuff.Interface;
-using NetBuff.Misc;
 using UnityEditor;
 using UnityEngine;
 
@@ -42,15 +38,13 @@ namespace NetBuff.Editor.Windows
         public Vector2 scrollFilter;
         public Vector2 scrollPackets;
         public int limit = 100;
-        public PacketTabs tab = PacketTabs.Client;
+        public PacketTabs tab = PacketTabs.Server;
         
         public List<PacketData> serverReceivedPackets = new();
         public List<PacketData> clientReceivedPackets = new();
         public bool recording;
-        public SerializedDictionary<int, bool> foldouts = new();
-        private int _currentFoldout = -1;
-
-
+        public InspectorUtilities.FoldStateHolder foldouts = new();
+    
         [MenuItem("NetBuff/Network Packet Inspector")]
         [MenuItem("Window/Network/Packet Inspector")]
         public static void ShowWindow()
@@ -187,8 +181,7 @@ namespace NetBuff.Editor.Windows
             EditorGUILayout.BeginHorizontal();
             tab = (PacketTabs)GUILayout.Toolbar((int)tab, Enum.GetNames(typeof(PacketTabs)));
             EditorGUILayout.EndHorizontal();
-
-            _currentFoldout = 0;
+            
             if (tab == PacketTabs.Client)
                 _DrawPacketList(clientReceivedPackets, true);
             else
@@ -210,15 +203,16 @@ namespace NetBuff.Editor.Windows
                 EditorGUILayout.EndScrollView();
                 return;
             }
-            
+
+            var i = 0;
             foreach (var t in packets)
-                _DrawPacket(t, hideOrigin);
+                _DrawPacket(t, hideOrigin, i++);
 
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
         }
 
-        private void _DrawPacket(PacketData data, bool hideOrigin)
+        private void _DrawPacket(PacketData data, bool hideOrigin, int index)
         {
             if (!hideOrigin && filter.recordServerSideFilter != -1 && data.client != filter.recordServerSideFilter)
                 return;
@@ -234,17 +228,7 @@ namespace NetBuff.Editor.Windows
             
             var label = hideOrigin ? data.packet.GetType().Name : $"{data.packet.GetType().Name} (From: {data.client})";
             
-            EditorGUILayout.BeginHorizontal();
-            data.foldout = EditorGUILayout.BeginFoldoutHeaderGroup(data.foldout, label);
-            EditorGUILayout.EndFoldoutHeaderGroup();
-            EditorGUILayout.EndHorizontal();
-
-            if (data.foldout)
-            {
-                EditorGUILayout.BeginVertical("box");
-                _DrawObjectReadOnly(data.packet);
-                EditorGUILayout.EndVertical();
-            }
+            InspectorUtilities.DrawObject($"{index}", label, data.packet, foldouts);
         }
 
         private void _Update()
@@ -272,19 +256,6 @@ namespace NetBuff.Editor.Windows
         {
             if (recording)
                 return;
-
-            var manager = NetworkManager.Instance;
-            if (manager == null)
-            {
-                EditorUtility.DisplayDialog("Error", "Network Manager not found", "Ok");
-                return;
-            }
-            
-            if (manager.Transport == null)
-            {
-                EditorUtility.DisplayDialog("Error", "Transport not found", "Ok");
-                return;
-            }
             
             recording = true;
             Repaint();
@@ -347,162 +318,6 @@ namespace NetBuff.Editor.Windows
         private bool ApplyTypeFilterForPacket(IPacket packet)
         {
             return filter.types.Count == 0 || filter.types.Contains(packet.GetType().AssemblyQualifiedName);
-        }
-        
-        private void _DrawObjectReadOnly(object o)
-        {
-            EditorGUI.BeginDisabledGroup(true);
-            var properties = o.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            
-            if (properties.Length == 0)
-            {
-                EditorGUILayout.LabelField("No Properties", EditorStyles.centeredGreyMiniLabel);
-                EditorGUI.EndDisabledGroup();
-                return;
-            }
-            
-            foreach (var property in properties)
-            {
-                if (property.GetIndexParameters().Length > 0)
-                    continue;
-               
-                _DrawObjectField(property.Name, property.GetValue(o));
-            }
-            EditorGUI.EndDisabledGroup();
-        }
-        
-        private void _DrawObjectField(string label, object value)
-        {
-            switch (value)
-            {
-                case string s:
-                    EditorGUILayout.TextField(label, s);
-                    break;
-                case int i:
-                    EditorGUILayout.IntField(label, i);
-                    break;
-                case short s:
-                    EditorGUILayout.IntField(label, s);
-                    break;
-                case byte b:
-                    EditorGUILayout.IntField(label, b);
-                    break;
-                case long l:
-                    EditorGUILayout.LongField(label, l);
-                    break;
-                case float f:
-                    EditorGUILayout.FloatField(label, f);
-                    break;
-                case double d:
-                    EditorGUILayout.DoubleField(label, d);
-                    break;
-                case bool b:
-                    EditorGUILayout.Toggle(label, b);
-                    break;
-                case Enum e:
-                    EditorGUILayout.EnumPopup(label, e);
-                    break;
-                case null:
-                    EditorGUILayout.TextField(label, "null");
-                    break;
-                case Vector2 v2:
-                    EditorGUILayout.Vector2Field(label, v2);
-                    break;
-                case Vector3 v3:
-                    EditorGUILayout.Vector3Field(label, v3);
-                    break;
-                case Vector4 v4:
-                    EditorGUILayout.Vector4Field(label, v4);
-                    break;
-                case Quaternion q:
-                    EditorGUILayout.Vector4Field(label, new Vector4(q.x, q.y, q.z, q.w));
-                    break;
-                case Color c:
-                    EditorGUILayout.ColorField(label, c);
-                    break;
-                case Color32 c32:
-                    EditorGUILayout.ColorField(label, c32);
-                    break;
-                
-                case NetworkId id:
-                    if (label.ToLower().Contains("prefab"))
-                    {
-                        var obj = GetNetworkPrefab(id);
-                        EditorGUILayout.ObjectField(label, obj, typeof(GameObject), true);
-                    }
-                    else
-                    {
-                        var obj =  GetNetworkObject(id);
-                        EditorGUILayout.ObjectField(label, obj, typeof(NetworkIdentity), true);
-                    }
-                    
-                    break;
-                
-                case Array a:
-                    {
-                        var fold = foldouts[_currentFoldout] = EditorGUILayout.Foldout(foldouts.GetValueOrDefault(_currentFoldout, false), $"{label} [{a.Length}]");
-                        _currentFoldout++;
-                        if (fold)
-                        {
-                            if (a.Length == 0)
-                            {
-                                EditorGUILayout.LabelField("Empty", EditorStyles.centeredGreyMiniLabel);
-                                break;
-                            }
-                            
-                            EditorGUILayout.BeginVertical("box");
-                            for (var i = 0; i < a.Length; i++)
-                            {
-                                _DrawObjectField(i.ToString(), a.GetValue(i));
-                            }
-                            EditorGUILayout.EndVertical();
-                        }
-                    }
-
-                    break;
-
-                default:
-                    {
-                        var fold = foldouts[_currentFoldout] = EditorGUILayout.Foldout(foldouts.GetValueOrDefault(_currentFoldout, false), $"{label} [{value.GetType().Name}]");
-                        _currentFoldout++;
-                        
-                        if (fold)
-                        {
-                            EditorGUILayout.BeginVertical("box");
-                            _DrawObjectReadOnly(value);
-                            EditorGUILayout.EndVertical();
-                        }
-                    }
-                    break;
-            }
-        }
-
-        private static GameObject GetNetworkPrefab(NetworkId id)
-        {
-            var manager = NetworkManager.Instance;
-            if (manager == null)
-                return null;
-            
-            if (manager.PrefabRegistry == null)
-                return null;
-            
-            return manager.PrefabRegistry.GetPrefab(id);
-        }
-
-        private static NetworkIdentity GetNetworkObject(NetworkId id)
-        {
-            #if UNITY_EDITOR
-            if (NetworkManager.Instance == null)
-            {
-                foreach (var obj in UnityEngine.Object.FindObjectsByType<NetworkIdentity>(FindObjectsSortMode.None))
-                    if (obj.Id == id)
-                        return obj;
-                
-                return null;
-            }
-            #endif
-            
-            return id == NetworkId.Empty ? null : NetworkManager.Instance.GetNetworkObject(id);
         }
     }
     #endif

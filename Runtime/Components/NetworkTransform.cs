@@ -343,8 +343,9 @@ namespace NetBuff.Components
         /// <summary>
         ///     The network id of the transform.
         /// </summary>
+        [InspectorMode(InspectorMode.Object)]
         public NetworkId Id { get; set; }
-
+        
         public void Serialize(BinaryWriter writer)
         {
             Id.Serialize(writer);

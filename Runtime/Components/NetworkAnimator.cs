@@ -649,11 +649,13 @@ namespace NetBuff.Components
         /// <summary>
         ///     Holds the data of the parameters that have been changed.
         /// </summary>
+        [InspectorMode(InspectorMode.Data)]
         public byte[] ParameterData { get; set; }
 
         /// <summary>
         ///     Holds the id of the object.
         /// </summary>
+        [InspectorMode(InspectorMode.Object)]
         public NetworkId Id { get; set; }
 
         public void Serialize(BinaryWriter writer)
@@ -754,6 +756,7 @@ namespace NetBuff.Components
         /// <summary>
         ///     The id of the object.
         /// </summary>
+        [InspectorMode(InspectorMode.Object)]
         public NetworkId Id { get; set; }
 
         public void Serialize(BinaryWriter writer)
