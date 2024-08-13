@@ -1,0 +1,23 @@
+{
+  "name": "Relay",
+  "rootNamespace": "",
+  "references": [
+    "GUID:b6ce6c5336d25914ca0f685ac576ed6b",
+    "GUID:03058786646e84a4587858e9302c3f41",
+    "GUID:fe25561d224ed4743af4c60938a59d0b",
+    "GUID:5540e30183c82e84b954c033c388e06c",
+    "GUID:f2d49d9fa7e7eb3418e39723a7d3b92f",
+    "GUID:e0cd26848372d4e5c891c569017e11f1",
+    "GUID:2665a8d13d1b3f18800f46e256720795",
+    "GUID:6055be8ebefd69e48b49212b09b47b2f"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": true,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}
