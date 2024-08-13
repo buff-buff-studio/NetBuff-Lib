@@ -634,7 +634,7 @@ namespace NetBuff.Components
         /// <summary>
         ///     Holds information about the layers that have been changed.
         /// </summary>
-        public LayerInfo[] Layers { get; set; }
+        public LayerInfo[] Layers { get; set; } = Array.Empty<LayerInfo>();  
 
         /// <summary>
         ///     The speed of the Animator.
@@ -650,7 +650,7 @@ namespace NetBuff.Components
         ///     Holds the data of the parameters that have been changed.
         /// </summary>
         [InspectorMode(InspectorMode.Data)]
-        public byte[] ParameterData { get; set; }
+        public byte[] ParameterData { get; set; } = Array.Empty<byte>();
 
         /// <summary>
         ///     Holds the id of the object.
