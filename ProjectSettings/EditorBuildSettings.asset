@@ -23,5 +23,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Samples/LocalSplitScreen/LocalSplitScreen.unity
     guid: 02ecccab28985ff4cb24576a18ec7da1
+  - enabled: 1
+    path: Assets/Samples/Relay/Relays.unity
+    guid: 62a3bd0408534a04293a67ae389278f9
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

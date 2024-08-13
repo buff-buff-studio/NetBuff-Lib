@@ -168,7 +168,7 @@ namespace NetBuff
             CancelInvoke(nameof(_UpdateGraphs));
         }
 
-        private void OnGUI()
+        protected virtual void OnGUI()
         {
             GUILayout.BeginArea(new Rect(10, 10, 200, 400));
 

@@ -1,21 +1,21 @@
 {
-    "name": "NetBuff.Editor",
-    "rootNamespace": "NetBuff",
-    "references": [
-        "GUID:b6ce6c5336d25914ca0f685ac576ed6b",
-        "GUID:d525ad6bd40672747bde77962f1c401e",
-        "GUID:54cb1906aeb4e4264bc1d2aa3818a43f",
-        "GUID:478a2357cc57436488a56e564b08d223"
-    ],
-    "includePlatforms": [
-        "Editor"
-    ],
-    "excludePlatforms": [],
-    "allowUnsafeCode": true,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": [],
-    "noEngineReferences": false
+  "name": "NetBuff.Editor",
+  "rootNamespace": "NetBuff",
+  "references": [
+    "GUID:b6ce6c5336d25914ca0f685ac576ed6b",
+    "GUID:d525ad6bd40672747bde77962f1c401e",
+    "GUID:54cb1906aeb4e4264bc1d2aa3818a43f",
+    "GUID:478a2357cc57436488a56e564b08d223"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": true,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
 }
