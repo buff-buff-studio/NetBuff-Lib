@@ -1,32 +1,42 @@
 ﻿
+
+
+using NetBuff.Components;
+using Unity.VisualScripting;
+#if UNITY_EDITOR
 using System;
 using System.Reflection;
 using NetBuff.Misc;
+
 using UnityEngine;
-#if UNITY_EDITOR
 using UnityEditor;
 #endif
 
 namespace NetBuff.Editor
 {
     #if UNITY_EDITOR
-    
-    [CustomPropertyDrawer(typeof(NetworkValue<>), true)]
-    public class NetworkValueDrawer : PropertyDrawer
+    public abstract class BaseNetworkValueDrawer : PropertyDrawer
     {
+        public abstract void HandleField(SerializedProperty value, Rect rect, SerializedProperty property,
+            GUIContent label);
+        
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+            var networkValue = GetTargetObjectOfProperty(property) as NetworkValue;
+            
             var value = property.FindPropertyRelative("value");
             var type = property.FindPropertyRelative("type");
             
-            //first rect 3/3
-            //last rect 1/3
             var valueRect = new Rect(position.x, position.y, position.width * 3 / 4, position.height);
             var typeRect = new Rect(position.x + position.width * 3 / 4, position.y, position.width / 4, position.height);
             
+            EditorGUI.BeginDisabledGroup(!networkValue?.CheckPermission() ?? true);
+            
             EditorGUI.BeginChangeCheck();
             EditorStyles.label.normal.textColor = Color.yellow;
-            EditorGUI.PropertyField(valueRect, value, label);
+            
+            HandleField(value, valueRect, property, label);
+            
             EditorStyles.label.normal.textColor = Color.white;
             
             EditorGUI.BeginDisabledGroup(Application.isPlaying);
@@ -36,8 +46,10 @@ namespace NetBuff.Editor
             if (EditorGUI.EndChangeCheck())
             {
                 property.serializedObject.ApplyModifiedProperties();
-                (GetTargetObjectOfProperty(property) as NetworkValue)!.EditorForceUpdate();
+                networkValue!.EditorForceUpdate();
             }
+            
+            EditorGUI.EndDisabledGroup();
         }
         
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
@@ -105,6 +117,76 @@ namespace NetBuff.Editor
             }
             return enm.Current;
         }
+        
+        #region Internal Util Methods
+        /// <summary>
+        ///     Returns the NetworkIdentity object from the given NetworkId.
+        ///     Will return null if the NetworkId is empty.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        protected static NetworkIdentity GetNetworkObject(NetworkId id)
+        {
+            #if UNITY_EDITOR
+            if (NetworkManager.Instance == null)
+            {
+                foreach (var obj in UnityEngine.Object.FindObjectsByType<NetworkIdentity>(FindObjectsSortMode.None))
+                    if (obj.Id == id)
+                        return obj;
+                
+                return null;
+            }
+            #endif
+            
+            return id == NetworkId.Empty ? null : NetworkManager.Instance.GetNetworkObject(id);
+        }
+        #endregion
     }
+
+    #region Types
+    [CustomPropertyDrawer(typeof(NetworkValue<>), true)]
+    public class NetworkValueDrawer : BaseNetworkValueDrawer
+    {
+        public override void HandleField(SerializedProperty value, Rect rect, SerializedProperty property, GUIContent label)
+        {
+            EditorGUI.PropertyField(rect, value, label);
+        }
+    }
+    
+    [CustomPropertyDrawer(typeof(NetworkBehaviourNetworkValue<>), true)]
+    public class NetworkBehaviourNetworkValueDrawer : BaseNetworkValueDrawer
+    {
+        public override void HandleField(SerializedProperty value, Rect rect, SerializedProperty property, GUIContent label)
+        {
+            var id = (NetworkId) value.GetUnderlyingValue();
+            
+            var type = property.GetUnderlyingType();
+            var genericBehaviourType = type.GetGenericArguments()[0];
+            var identity = GetNetworkObject(id);
+            var behaviour = identity == null ? null : identity.GetComponent(genericBehaviourType);
+            var newValue = EditorGUI.ObjectField(rect, label, behaviour, genericBehaviourType, true) as NetworkBehaviour;
+            var newId = newValue == null ? NetworkId.Empty : newValue.Id;
+            
+            if (id != newId)
+                value.SetUnderlyingValue(newId);
+        }
+    }
+
+    [CustomPropertyDrawer(typeof(NetworkIdentityNetworkValue), true)]
+    public class NetworkIdentityNetworkValueDrawer : BaseNetworkValueDrawer
+    {
+        public override void HandleField(SerializedProperty value, Rect rect, SerializedProperty property, GUIContent label)
+        {
+            var id = (NetworkId) value.GetUnderlyingValue();
+            
+            var identity = GetNetworkObject(id);
+            var newValue = EditorGUI.ObjectField(rect, label, identity, typeof(NetworkIdentity), true) as NetworkIdentity;
+            var newId = newValue == null ? NetworkId.Empty : newValue.Id;
+
+            if (id != newId)
+                value.SetUnderlyingValue(newId);
+        }
+    }
+    #endregion
     #endif
 }

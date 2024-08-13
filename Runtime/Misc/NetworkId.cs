@@ -148,7 +148,7 @@ namespace NetBuff.Misc
         /// <param name="input"></param>
         /// <param name="result"></param>
         /// <returns></returns>
-        public static bool TryParse(string input, out object result)
+        public static bool TryParse(string input, out NetworkId result)
         {
             try
             {
