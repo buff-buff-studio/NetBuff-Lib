@@ -734,7 +734,7 @@ namespace NetBuff
                 case NetworkObjectDespawnPacket destroyPacket:
                 {
                     if (!networkObjects.TryGetValue(destroyPacket.Id, out var identity)) return;
-                    if (identity.OwnerId != clientId)
+                    if (!CheckAuthority(identity.OwnerId, clientId))
                     {
                         Debug.LogWarning(
                             $"Client {clientId} tried to destroy object {destroyPacket.Id} which it does not own");
@@ -748,7 +748,7 @@ namespace NetBuff
                 case NetworkObjectActivePacket activePacket:
                 {
                     if (!networkObjects.TryGetValue(activePacket.Id, out var identity)) return;
-                    if (identity.OwnerId != clientId)
+                    if (!CheckAuthority(identity.OwnerId, clientId))
                     {
                         Debug.LogWarning(
                             $"Client {clientId} tried to change active state of object {activePacket.Id} which it does not own");
@@ -762,7 +762,7 @@ namespace NetBuff
                 case NetworkObjectOwnerPacket authorityPacket:
                 {
                     if (!networkObjects.TryGetValue(authorityPacket.Id, out var identity)) return;
-                    if (identity.OwnerId != clientId)
+                    if (!CheckAuthority(identity.OwnerId, clientId))
                     {
                         Debug.LogWarning(
                             $"Client {clientId} tried to change owner of object {authorityPacket.Id} which it does not own");
@@ -776,7 +776,7 @@ namespace NetBuff
                 case NetworkObjectMoveScenePacket moveObjectScenePacket:
                 {
                     if (!networkObjects.TryGetValue(moveObjectScenePacket.Id, out var identity)) return;
-                    if (identity.OwnerId != clientId)
+                    if (!CheckAuthority(identity.OwnerId, clientId))
                     {
                         Debug.LogWarning(
                             $"Client {clientId} tried to move object {moveObjectScenePacket.Id} which it does not own to another scene");
@@ -800,6 +800,23 @@ namespace NetBuff
             PacketListener.GetPacketListener(packet.GetType()).CallOnServerReceive(packet, clientId);
         }
 
+        /// <summary>
+        /// Used to check if the client has authority over the object.
+        /// </summary>
+        /// <param name="ownerId"></param>
+        /// <param name="clientId"></param>
+        /// <returns></returns>
+        protected bool CheckAuthority(int ownerId, int clientId)
+        {
+            if (clientId == ownerId)
+                return true;
+            
+            if(_localClientIds.Contains(ownerId) && _localClientIds.Contains(clientId))
+                return true;
+            
+            return false;
+        }
+        
         /// <summary>
         ///     Called when the client receives a packet from the server.
         ///     Only called on the client.
