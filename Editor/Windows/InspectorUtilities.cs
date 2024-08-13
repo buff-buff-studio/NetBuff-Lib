@@ -128,7 +128,10 @@ namespace NetBuff.Editor.Windows
                     return;
                 
                 case Enum enumValue:
-                    EditorGUILayout.EnumPopup(name, enumValue);
+                    if (enumValue.GetType().GetCustomAttribute<FlagsAttribute>() != null)
+                        EditorGUILayout.EnumFlagsField(name, enumValue);
+                    else
+                        EditorGUILayout.EnumPopup(name, enumValue);
                     return;
                 
                 case Vector2 vector2Value:

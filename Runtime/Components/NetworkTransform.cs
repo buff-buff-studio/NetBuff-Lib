@@ -333,7 +333,7 @@ namespace NetBuff.Components
         /// <summary>
         ///     The components of the transform.
         /// </summary>
-        public float[] Components { get; set; }
+        public float[] Components { get; set; } = Array.Empty<float>();
 
         /// <summary>
         ///     Determines which components have been changed.
