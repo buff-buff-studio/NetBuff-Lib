@@ -288,6 +288,7 @@ namespace ExamplePlatformer
     
     public class PacketBodyRotation : IOwnedPacket
     {
+        [InspectorMode(InspectorMode.Object)]
         public NetworkId Id { get; set; }
         public float BodyRotation { get; set; }
 

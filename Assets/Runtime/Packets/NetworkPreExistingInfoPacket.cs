@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using NetBuff.Interface;
 using NetBuff.Misc;
 using UnityEngine;
@@ -149,21 +150,25 @@ namespace NetBuff.Packets
         /// <summary>
         ///     Represents the state of a pre-existing object in the network.
         /// </summary>
+        [Serializable]
         public class PreExistingState
         {
             /// <summary>
             ///     The id of the object.
             /// </summary>
+            [InspectorMode(InspectorMode.Object)]
             public NetworkId Id { get; set; }
 
             /// <summary>
             ///     The id of the prefab.
             /// </summary>
+            [InspectorMode(InspectorMode.Prefab)]
             public NetworkId PrefabId { get; set; }
 
             /// <summary>
             ///     The id of the owner of the object.
             /// </summary>
+            [InspectorMode(InspectorMode.Owner)]
             public int OwnerId { get; set; }
 
             /// <summary>
@@ -189,6 +194,7 @@ namespace NetBuff.Packets
             /// <summary>
             ///     The id of the scene where the object is.
             /// </summary>
+            [InspectorMode(InspectorMode.Scene)]
             public int SceneId { get; set; }
         }
     }

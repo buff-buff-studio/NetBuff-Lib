@@ -12,11 +12,13 @@ namespace NetBuff.Packets
         /// <summary>
         ///     The network id of the network object.
         /// </summary>
+        [InspectorMode(InspectorMode.Object)]
         public NetworkId Id { get; set; }
 
         /// <summary>
         ///     The owner id of the network object.
         /// </summary>
+        [InspectorMode(InspectorMode.Owner)]
         public int OwnerId { get; set; }
 
         public void Serialize(BinaryWriter writer)

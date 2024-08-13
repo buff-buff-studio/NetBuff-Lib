@@ -12,16 +12,19 @@ namespace NetBuff.Packets
         /// <summary>
         ///     The network id of the network object.
         /// </summary>
+        [InspectorMode(InspectorMode.Standard)]
         public NetworkId Id { get; set; }
 
         /// <summary>
         ///     The behaviour id of the network behaviour (index in the network object).
         /// </summary>
+        [InspectorMode(InspectorMode.Behaviour)]
         public byte BehaviourId { get; set; }
 
         /// <summary>
         ///     The payload of the network behaviour data.
         /// </summary>
+        [InspectorMode(InspectorMode.Data)]
         public byte[] Payload { get; set; }
 
         public void Serialize(BinaryWriter writer)

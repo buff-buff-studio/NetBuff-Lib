@@ -13,17 +13,20 @@ namespace NetBuff.Packets
         /// <summary>
         ///     The network id of the network object.
         /// </summary>
+        [InspectorMode(InspectorMode.Object)]
         public NetworkId Id { get; set; }
 
         /// <summary>
         ///     The network id of the prefab.
         /// </summary>
+        [InspectorMode(InspectorMode.Prefab)]
         public NetworkId PrefabId { get; set; }
 
         /// <summary>
         ///     The owner id of the network object.
         ///     If the owner id is -1, the object will be owned by the server.
         /// </summary>
+        [InspectorMode(InspectorMode.Owner)]
         public int OwnerId { get; set; }
 
         /// <summary>
@@ -51,6 +54,7 @@ namespace NetBuff.Packets
         ///     If the scene id is 0, the object will be spawned in the main scene.
         ///     If the scene id is -1, the object will be spawned in the last loaded scene.
         /// </summary>
+        [InspectorMode(InspectorMode.Scene)]
         public int SceneId { get; set; }
 
         public void Serialize(BinaryWriter writer)
