@@ -376,10 +376,22 @@ namespace NetBuff.Editor
 
             if (_DrawHeader(null, "Session Data", simple, () => foldout.data, value => foldout.data = value))
             {
-                if (!manager.TryGetSessionData(id, out SessionData data))
-                    EditorGUILayout.HelpBox("No session data found!", MessageType.Warning);
+                if (manager.IsServerRunning)
+                {
+                    if (!manager.TryGetSessionData(id, out SessionData data))
+                        EditorGUILayout.HelpBox("No session data found!", MessageType.Warning);
+                    else
+                        _DrawObjectReadOnly(data);
+                }
                 else
-                    _DrawObjectReadOnly(data);
+                {
+                    var localSession = manager.GetLocalSessionData<SessionData>();
+
+                    if (localSession == null)
+                        EditorGUILayout.HelpBox("No session data found!", MessageType.Warning);
+                    else
+                        _DrawObjectReadOnly(localSession);
+                }
             }
 
             GUILayout.EndVertical();
