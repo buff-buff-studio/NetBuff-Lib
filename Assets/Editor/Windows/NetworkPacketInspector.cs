@@ -220,9 +220,12 @@ namespace NetBuff.Editor.Windows
 
         private void _DrawPacket(PacketData data, bool hideOrigin)
         {
-            if(!hideOrigin && filter.recordServerSideFilter != -1 && data.client != filter.recordServerSideFilter)
+            if (!hideOrigin && filter.recordServerSideFilter != -1 && data.client != filter.recordServerSideFilter)
                 return;
             
+            if(!ApplyTypeFilterForPacket(data.packet))
+                return;
+
             if (data.packet == null)
             {
                 EditorGUILayout.LabelField("Null Packet", EditorStyles.centeredGreyMiniLabel);
