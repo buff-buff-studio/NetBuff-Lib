@@ -23,9 +23,10 @@ namespace NetBuff.Editor.Windows
         public class PacketData
         {
             public int client;
+            
             [SerializeReference]
+            // ReSharper disable once InconsistentNaming
             public IPacket packet;
-            public bool foldout;
         }
 
         public enum PacketTabs
@@ -280,9 +281,6 @@ namespace NetBuff.Editor.Windows
 
         private void OnServerPacketReceived(int arg1, IPacket arg2)
         {
-            if(serverReceivedPackets.Count() >= limit)
-                serverReceivedPackets.RemoveAt(0);
-            
             if (filter.recordServerSideFilter != -1 && arg1 != filter.recordServerSideFilter)
                 return;
             
@@ -295,14 +293,14 @@ namespace NetBuff.Editor.Windows
                 packet = arg2
             });
             
+            if(serverReceivedPackets.Count > limit)
+                serverReceivedPackets.RemoveAt(0);
+
             Repaint();
         }
 
         private void OnClientPacketReceived(IPacket obj)
         {
-            if(clientReceivedPackets.Count() >= limit)
-                clientReceivedPackets.RemoveAt(0);
-            
             if (!ApplyTypeFilterForPacket(obj))
                 return;
             
@@ -312,6 +310,9 @@ namespace NetBuff.Editor.Windows
                 packet = obj
             });
             
+            if(clientReceivedPackets.Count > limit)
+                clientReceivedPackets.RemoveAt(0);
+
             Repaint();
         }
 
