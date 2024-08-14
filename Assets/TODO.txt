@@ -1,0 +1,11 @@
+﻿- When the server tries to start with invalid behaviour, no clue is given
+- Show behaviours and owners properly
+- Better object visualization, with paths, lock object / client to the state viewer, etc...
+
+- Create network profiling
+     - Bandwidth, latency, memory usage and performance
+
+Using path system where we can filter / navigate
+Clients/Server/0:
+Clients/Local/0:
+Objects/SceneName/2345436345647:
