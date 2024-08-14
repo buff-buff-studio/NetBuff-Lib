@@ -12,7 +12,7 @@ namespace NetBuff.Packets
         /// <summary>
         ///     The network id of the network object.
         /// </summary>
-        [InspectorMode(InspectorMode.Standard)]
+        [InspectorMode(InspectorMode.Object)]
         public NetworkId Id { get; set; }
 
         /// <summary>
