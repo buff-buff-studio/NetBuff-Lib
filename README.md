@@ -1,4 +1,4 @@
-# **NetBuff - A Buff Buff Multiplayer System** <sup>2.0<sup> 
+# **NetBuff Relay - A NetBuff Oficial Addon** <sup>1.0<sup> 
 
 <p align="center">
   <a href="https://buff-buff-studios.itch.io">

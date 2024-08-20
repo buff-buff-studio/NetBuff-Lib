@@ -1,23 +1,31 @@
 {
     "name": "com.buffbuffstudios.netbuff-relay",
-    "version": "2.2.2",
-    "displayName": "NetBuff 🐸",
-    "description": "NetBuff is a networking system based on the Unity game engine. Initially created for a college project, the system has been improved to the point of deserving to be polished and released / made available separately.\n\nThe NetBuff comes as a lighter and simpler alternative to other existing solutions such as Unity's own NGO (Netcode For GameObjects) and third-party solutions (Mirror, etc...)",
+    "version": "1.0",
+    "displayName": "NetBuff Relay Addon 🐸🧩",
+    "description": "Adds the ability to use Unity Relay in NetBuff (Don't work withou the original Package!)",
     "unity": "2022.3",
     "documentationUrl": "https://netbuff.buffbuffstudios.com",
-    "changelogUrl": "https://github.com/buff-buff-studio/NetBuff-Lib/compare/1.0..2.0",
+    "changelogUrl": "https://github.com/buff-buff-studio/NetBuff-Lib/tree/package_relay",
     "license": "CC-BY-NC-SA-4.0",
     "licensesUrl": "https://github.com/buff-buff-studio/NetBuff-Lib/blob/main/LICENSE-CC%20BY-NC-SA",
     "dependencies": {
+      "com.buffbuffstudios.netbuff": "https://github.com/buff-buff-studio/NetBuff-Lib.git#package",
       "com.unity.textmeshpro": "3.0.0",
-      "com.unity.editorcoroutines": "1.0.0"
+      "com.unity.jobs": "0.70.0-preview.7",
+      "com.unity.services.relay": "1.0.5",
+      "com.unity.transport": "1.3.0",
+      "com.unity.services.authentication": "3.3.0",
+      "com.unity.services.core": "1.12.2",
+      "com.unity.burst": "1.8.12",
+      "com.unity.collections": "1.4.0"
    },
    "keywords": [
       "network",
       "multiplayer",
       "netcode",
       "netbuff",
-      "buffbuff"
+      "buffbuff",
+      "relay"
     ],
     "author": {
       "name": "Buff Buff Studios",
@@ -25,26 +33,6 @@
       "url": "https://buff-buff-studios.itch.io/"
     },
     "samples": [
-        {
-            "displayName": "Getting Started",
-            "description": "A sample created following the steps of the documentation page 'Getting Started'",
-            "path": "Samples~/GettingStarted"
-        },
-        {
-            "displayName": "Local Split Screen",
-            "description": "A sample showcasing the local split screen feature",
-            "path": "Samples~/LocalSplitScreen"
-        },
-        {
-            "displayName": "Session Data Testing",
-            "description": "A sample showcasing how to customize the session data feature displayed on the documentation page 'Managing Sessions'",
-            "path": "Samples~/SceneLoading"
-        },
-        {
-            "displayName": "Scene Loading",
-            "description": "A sample showcasing how to load/unload scenes and move objects between scenes at run time. You can find information about it on the documentation page 'Scene Management'",
-            "path": "Samples~/SessionDataTesting"
-        }
     ]
   }
   
