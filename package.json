@@ -9,7 +9,6 @@
     "license": "CC-BY-NC-SA-4.0",
     "licensesUrl": "https://github.com/buff-buff-studio/NetBuff-Lib/blob/main/LICENSE-CC%20BY-NC-SA",
     "dependencies": {
-      "com.buffbuffstudios.netbuff": "https://github.com/buff-buff-studio/NetBuff-Lib.git#package",
       "com.unity.textmeshpro": "3.0.0",
       "com.unity.jobs": "0.70.0-preview.7",
       "com.unity.services.relay": "1.0.5",
