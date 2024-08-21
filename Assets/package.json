@@ -1,0 +1,37 @@
+{
+    "name": "com.buffbuffstudios.netbuff-relay",
+    "version": "1.0.0",
+    "displayName": "NetBuff Relay Addon 🐸🧩",
+    "description": "Adds the ability to use Unity Relay in NetBuff (Don't work withou the original Package!)\n\nOriginal Package: https://github.com/buff-buff-studio/NetBuff-Lib.git#package",
+    "unity": "2022.3",
+    "documentationUrl": "https://netbuff.buffbuffstudios.com",
+    "changelogUrl": "https://github.com/buff-buff-studio/NetBuff-Lib/tree/package_relay",
+    "license": "CC-BY-NC-SA-4.0",
+    "licensesUrl": "https://github.com/buff-buff-studio/NetBuff-Lib/blob/main/LICENSE-CC%20BY-NC-SA",
+    "dependencies": {
+      "com.unity.textmeshpro": "3.0.0",
+      "com.unity.jobs": "0.70.0-preview.7",
+      "com.unity.services.relay": "1.0.5",
+      "com.unity.transport": "1.3.0",
+      "com.unity.services.authentication": "3.3.0",
+      "com.unity.services.core": "1.12.2",
+      "com.unity.burst": "1.8.12",
+      "com.unity.collections": "1.4.0"
+   },
+   "keywords": [
+      "network",
+      "multiplayer",
+      "netcode",
+      "netbuff",
+      "buffbuff",
+      "relay"
+    ],
+    "author": {
+      "name": "Buff Buff Studios",
+      "email": "buffbuffstudios@gmail.com",
+      "url": "https://buff-buff-studios.itch.io/"
+    },
+    "samples": [
+    ]
+  }
+  
