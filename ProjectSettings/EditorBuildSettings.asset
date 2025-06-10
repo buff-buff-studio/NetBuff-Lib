@@ -6,11 +6,11 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Samples/SessionDataTesting/SessionDataTesting.unity
-    guid: 08733535d7a265b439e71d7a83ca15f7
-  - enabled: 1
     path: Assets/Samples/SceneLoading/SceneLoading.unity
     guid: 185fda8d84441714c9019457c58d3516
+  - enabled: 1
+    path: Assets/Samples/SessionDataTesting/SessionDataTesting.unity
+    guid: 08733535d7a265b439e71d7a83ca15f7
   - enabled: 1
     path: Assets/Samples/GettingStarted/GettingStarted.unity
     guid: cfd71157347b3924d9650fb3da8adb81

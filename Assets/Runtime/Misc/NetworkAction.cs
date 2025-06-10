@@ -30,11 +30,6 @@ namespace NetBuff.Misc
         public static NetworkActionListener<NetworkId, NetworkIdentity> OnObjectChangeActive { get; } = new();
 
         /// <summary>
-        ///     Called when a object scene is changed
-        /// </summary>
-        public static NetworkActionListener<NetworkId, NetworkIdentity> OnObjectSceneChanged { get; } = new();
-
-        /// <summary>
         ///     Called when a scene is loaded
         /// </summary>
         public static NetworkActionListener<string, int> OnSceneLoaded { get; } = new();
@@ -45,6 +40,12 @@ namespace NetBuff.Misc
         public static NetworkActionListener<string, int> OnSceneUnloaded { get; } = new();
 
         /// <summary>
+        ///     Called when a client is ready or not ready
+        /// </summary>
+        [ServerOnly]
+        public static NetworkActionListener<int, bool> OnClientReadyChanged { get; } = new();
+
+        /// <summary>
         ///     Clear all network actions
         /// </summary>
         public static void ClearAll()
@@ -53,7 +54,7 @@ namespace NetBuff.Misc
             OnObjectDespawn.Clear();
             OnObjectChangeOwner.Clear();
             OnObjectChangeActive.Clear();
-            OnObjectSceneChanged.Clear();
+            OnClientReadyChanged.Clear();
         }
     }
 

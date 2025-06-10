@@ -58,7 +58,7 @@ namespace CTF
 
             var deltaTime = Time.deltaTime;
             var isGrounded = false;
-            var velocity = _rigidbody.velocity;
+            var velocity = _rigidbody.linearVelocity;
             
             shotTimeout -= deltaTime;
             
@@ -89,7 +89,7 @@ namespace CTF
             velocity.z = move.z * walkSpeed;
             
             //Apply velocity and equilibrium
-            _rigidbody.velocity = velocity;
+            _rigidbody.linearVelocity = velocity;
             
             //Shot
             if(Input.GetMouseButtonDown(0) && shotTimeout <= 0)
@@ -163,7 +163,7 @@ namespace CTF
             {
                 var t = transform;
                 transform.position = GameManager.Instance.GetSpawnPoint(team.Value);
-                _rigidbody.velocity = Vector3.zero;
+                _rigidbody.linearVelocity = Vector3.zero;
                 t.forward = new Vector3(-t.position.x, 0, 0);
             }
         }
