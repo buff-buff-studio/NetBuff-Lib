@@ -7,7 +7,6 @@ namespace Samples.SceneLoading
     {
         private Vector3 _startPos;
         private Vector3 _position;
-        //private float maxDistance = 2f;
 
         private void Start()
         {
