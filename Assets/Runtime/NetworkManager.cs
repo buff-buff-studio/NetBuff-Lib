@@ -1347,6 +1347,7 @@ namespace NetBuff
 
         private void _SetIsReady(bool value)
         {
+            /*
             if (isReady == value)
                 return;
 
@@ -1370,6 +1371,7 @@ namespace NetBuff
                 OnClientReceivePacket(packet);
                 
             pendingPacketsClient.Clear();
+            */
         }
         #endregion
 
