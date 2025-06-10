@@ -1332,6 +1332,7 @@ namespace NetBuff
 
         private async Task _HandleLoadScenePacketAsync(NetworkLoadScenePacket packet)
         {
+            Debug.Log($"Loading scene: {packet.SceneName}");
             _SetIsReady(false);
             await _LoadSceneLocally(packet.SceneName, true);
             _SetIsReady(true);

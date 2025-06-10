@@ -1,0 +1,99 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: SkyboxProcedural
+  m_Shader: {fileID: -6465566751694194690, guid: 5e0d2d5dbbd5d3042bd16d28fb574307, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses:
+  - MOTIONVECTORS
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _SampleTexture2D_01ede330a40c4c388ed89215bf2cc5a8_Texture_1_Texture2D:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_Lightmaps:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_LightmapsInd:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - unity_ShadowMasks:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _CloudsConvergence: 1
+    - _CloudsHeight: 8.82
+    - _CloudsMovementSpeed: 0.0001
+    - _CloudsPosition: 0.02
+    - _CloudsScale: 0.15
+    - _CloudsShadow: 0.5
+    - _CloudsSharpness: 6.9
+    - _CloudsSpeed: 0.005
+    - _MoonExponent: 1
+    - _MoonIntensity: 5
+    - _MoonRadiusA: 0
+    - _MoonRadiusB: 0.05
+    - _QueueControl: 0
+    - _QueueOffset: 0
+    - _Rain: 0
+    - _SkyGradientLevel: 1
+    - _StarsDensity: 30
+    - _StarsHorizonLine: 1
+    - _StarsOn: 0
+    - _StarsScale: 30
+    - _StarsSpeed: 0.005
+    - _SunExponent: 5.05
+    - _SunIntensity: 6.18
+    - _SunRadiusA: 0.0699
+    - _SunRadiusB: 0.0904
+    - _SunsetGradientLevel: 1
+    m_Colors:
+    - _CloudsDarkColor: {r: 0.42172477, g: 0.7157037, b: 0.764151, a: 0}
+    - _CloudsLightColor: {r: 0.6755073, g: 0.8679245, b: 0.8659589, a: 0}
+    - _MoonColor: {r: 0, g: 0, b: 0, a: 0}
+    - _NightSkyColor: {r: 0.27812386, g: 0.34269089, b: 0.4716981, a: 0}
+    - _RainyDarkCloudColor: {r: 0.19237277, g: 0.22495896, b: 0.31132078, a: 0}
+    - _RainyLightCloudColor: {r: 0.31572628, g: 0.34263268, b: 0.40566036, a: 0}
+    - _RainySkyGradientColorA: {r: 0.12629047, g: 0.19210836, b: 0.20754716, a: 1}
+    - _RainySkyGradientColorB: {r: 0.30469027, g: 0.38679245, b: 0.38679245, a: 1}
+    - _SkyGradientColorA: {r: 0.15896085, g: 0.47932017, b: 0.5520116, a: 1}
+    - _SkyGradientColorB: {r: 0.8235295, g: 0.9294118, b: 0.9294118, a: 1}
+    - _SkyGradientColorC: {r: 0.8196079, g: 0.5372549, b: 0.25882348, a: 1}
+    - _StarsColor: {r: 0.9528302, g: 0.920935, b: 0.6786668, a: 0}
+    - _SunColor: {r: 1.4980394, g: 0.6756516, b: 0.10599334, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
+--- !u!114 &4480987955975397609
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 9
