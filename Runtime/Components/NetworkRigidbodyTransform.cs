@@ -106,7 +106,7 @@ namespace NetBuff.Components
                     return;
                 }
 
-            _lastVelocity = rigidbody.velocity;
+            _lastVelocity = rigidbody.linearVelocity;
             _lastAngularVelocity = rigidbody.angularVelocity;
             _lastIsKinematic = rigidbody.isKinematic;
         }
@@ -118,7 +118,7 @@ namespace NetBuff.Components
             var rotationChanged = Vector3.Distance(transform.eulerAngles, lastRotation) > rotationThreshold;
             var scaleChanged = Vector3.Distance(transform.localScale, lastScale) > scaleThreshold;
             var velocityChanged =
-                syncVelocity && Vector3.Distance(rigidbody.velocity, _lastVelocity) > velocityThreshold;
+                syncVelocity && Vector3.Distance(rigidbody.linearVelocity, _lastVelocity) > velocityThreshold;
             var angularVelocityChanged = syncAngularVelocity &&
                                          Vector3.Distance(rigidbody.angularVelocity, _lastAngularVelocity) >
                                          angularVelocityThreshold;
@@ -133,7 +133,7 @@ namespace NetBuff.Components
                 lastPosition = t.position;
                 lastRotation = t.eulerAngles;
                 lastScale = t.localScale;
-                _lastVelocity = rigidbody.velocity;
+                _lastVelocity = rigidbody.linearVelocity;
                 _lastAngularVelocity = rigidbody.angularVelocity;
                 _lastIsKinematic = rigidbody.isKinematic;
 
@@ -233,13 +233,13 @@ namespace NetBuff.Components
 
             if ((flag & 8) != 0)
             {
-                var velocity = rigidbody.velocity;
+                var velocity = rigidbody.linearVelocity;
                 velocity.x = cmp[index++];
                 velocity.y = cmp[index++];
                 velocity.z = cmp[index++];
 
                 if (!rigidbody.isKinematic)
-                    rigidbody.velocity = velocity;
+                    rigidbody.linearVelocity = velocity;
             }
 
             if ((flag & 16) != 0)

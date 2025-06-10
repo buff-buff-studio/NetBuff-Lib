@@ -676,33 +676,6 @@ namespace NetBuff.Components
         }
         #endregion
 
-        #region Scene Moving
-        /// <summary>
-        ///     Moves this object to a different scene.
-        ///     Requires authority.
-        /// </summary>
-        /// <returns></returns>
-        /// <param name="sceneId"></param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [RequiresAuthority]
-        public NetworkAction<NetworkId, NetworkIdentity> MoveToScene(int sceneId)
-        {
-            return Identity.MoveToScene(sceneId);
-        }
-
-        /// <summary>
-        ///     Moves this object to a different scene.
-        ///     Requires authority.
-        /// </summary>
-        /// <param name="sceneName"></param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [RequiresAuthority]
-        public void MoveToScene(string sceneName)
-        {
-            Identity.MoveToScene(sceneName);
-        }
-        #endregion
-
         #region Scene Utils
         /// <summary>
         ///     Returns the name of all the scenes loaded on the network.

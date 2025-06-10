@@ -400,42 +400,6 @@ namespace NetBuff.Components
         }
         #endregion
 
-        #region Scene Moving
-        /// <summary>
-        ///     Moves this object to a different scene.
-        ///     Requires authority.
-        /// </summary>
-        /// <returns></returns>
-        /// <param name="sceneId"></param>
-        [RequiresAuthority]
-        public NetworkAction<NetworkId, NetworkIdentity> MoveToScene(int sceneId)
-        {
-            if (!HasAuthority)
-                throw new InvalidOperationException("Only the object owner can move it to a different scene");
-
-            SendPacket(new NetworkObjectMoveScenePacket { Id = Id, SceneId = sceneId }, true);
-            var action = new NetworkAction<NetworkId, NetworkIdentity>(Id);
-            NetworkAction.OnObjectSceneChanged.Register(Id, action, true);
-            return action;
-        }
-
-        /// <summary>
-        ///     Moves this object to a different scene.
-        ///     Requires authority.
-        /// </summary>
-        /// <param name="sceneName"></param>
-        [RequiresAuthority]
-        public void MoveToScene(string sceneName)
-        {
-            if (!HasAuthority)
-                throw new InvalidOperationException("Only the object owner can move it to a different scene");
-
-            SendPacket(
-                new NetworkObjectMoveScenePacket { Id = Id, SceneId = NetworkManager.Instance.GetSceneId(sceneName) },
-                true);
-        }
-        #endregion
-
         #region Scene Utils
         /// <summary>
         ///     Returns the name of all the scenes loaded on the network.

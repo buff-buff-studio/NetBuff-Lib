@@ -1,11 +1,11 @@
 {
     "name": "com.buffbuffstudios.netbuff",
-    "version": "2.2.5",
+    "version": "2.3.0",
     "displayName": "NetBuff 🐸",
     "description": "NetBuff is a networking system based on the Unity game engine. Initially created for a college project, the system has been improved to the point of deserving to be polished and released / made available separately.\n\nThe NetBuff comes as a lighter and simpler alternative to other existing solutions such as Unity's own NGO (Netcode For GameObjects) and third-party solutions (Mirror, etc...)",
-    "unity": "2022.3",
+    "unity": "6000.0",
     "documentationUrl": "https://netbuff.buffbuffstudios.com",
-    "changelogUrl": "https://github.com/buff-buff-studio/NetBuff-Lib/compare/1.0..2.0",
+    "changelogUrl": "https://github.com/buff-buff-studio/NetBuff-Lib/compare/2.2.5..2.3.0",
     "license": "CC-BY-NC-SA-4.0",
     "licensesUrl": "https://github.com/buff-buff-studio/NetBuff-Lib/blob/main/LICENSE-CC%20BY-NC-SA",
     "dependencies": {
