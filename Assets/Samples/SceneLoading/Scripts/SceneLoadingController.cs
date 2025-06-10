@@ -37,13 +37,11 @@ namespace Samples.SceneLoading
             {
                 if (Input.GetKeyDown(KeyCode.Alpha1))
                 {
-                    Debug.Log("Toggling scene 1");
                     if (NetworkManager.Instance.IsSceneLoaded(scene1))
                         NetworkManager.Instance.UnloadScene(scene1);
                     else
                         NetworkManager.Instance.LoadScene(scene1);
 
-                    Debug.Log($"After toggling scene 1, is scene loaded: {NetworkManager.Instance.IsSceneLoaded(scene1)}");
                     ServerBroadcastPacket(new SceneLoadingPacketTest
                     {
                         TestMessage = "Hello from the server!"

@@ -73,7 +73,6 @@ namespace NetBuff
         private readonly List<SessionData> _disconnectedSessionData = new();
         private readonly Dictionary<int, SessionData> _sessionData = new();
 
-
         [SerializeField]
         [HideInInspector]
         private readonly List<IPacket> pendingPacketsClient = new();
@@ -640,6 +639,7 @@ namespace NetBuff
             {
                 notReadyClients.Remove(clientId);
                 NetworkAction.OnClientReadyChanged.Invoke(clientId, false);
+                OnServerIsReadyChanged(clientId, false);
             }
         }
 
@@ -715,6 +715,7 @@ namespace NetBuff
                                 {
                                     notReadyClients.Remove(clientId);
                                     NetworkAction.OnClientReadyChanged.Invoke(clientId, true);
+                                    OnServerIsReadyChanged(clientId, true);   
                                 }
                             }
                             else
@@ -723,6 +724,7 @@ namespace NetBuff
                                 {
                                     notReadyClients.Add(clientId);
                                     NetworkAction.OnClientReadyChanged.Invoke(clientId, false);
+                                    OnServerIsReadyChanged(clientId, false);
                                 }
                             }
                             return;
@@ -1332,7 +1334,6 @@ namespace NetBuff
 
         private async Task _HandleLoadScenePacketAsync(NetworkLoadScenePacket packet)
         {
-            Debug.Log($"Loading scene: {packet.SceneName}");
             _SetIsReady(false);
             await _LoadSceneLocally(packet.SceneName, true);
             _SetIsReady(true);
@@ -1347,18 +1348,21 @@ namespace NetBuff
 
         private void _SetIsReady(bool value)
         {
-            /*
             if (isReady == value)
                 return;
 
             isReady = value;
 
             if (IsClientRunning)
+            {
                 ClientSendPacket(new NetworkClientReadyPacket
                 {
                     ClientId = _localClientIds[0],
                     IsReady = value
                 }, true);
+
+                OnClientIsReadyChanged(value);
+            }
 
             if (!value)
                 return;
@@ -1371,7 +1375,6 @@ namespace NetBuff
                 OnClientReceivePacket(packet);
                 
             pendingPacketsClient.Clear();
-            */
         }
         #endregion
 
@@ -1787,6 +1790,28 @@ namespace NetBuff
                 throw new Exception("This method can only be called on the server");
 
             return notReadyClients.Count;
+        }
+
+        /// <summary>
+        ///     Called when the client ready state changes.
+        /// </summary>
+        /// <returns></returns>
+        /// <param name="isReady"></param>
+        [ClientOnly]
+        public virtual void OnClientIsReadyChanged(bool isReady)
+        {
+
+        }
+
+        /// <summary>
+        ///     Called when the server receives a client ready state change.
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="isReady"></param>
+        [ServerOnly]
+        public virtual void OnServerIsReadyChanged(int clientId, bool isReady)
+        {
+            
         }
         #endregion
 
