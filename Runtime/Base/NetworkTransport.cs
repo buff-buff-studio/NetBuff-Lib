@@ -5,7 +5,7 @@ using NetBuff.Interface;
 using NetBuff.Misc;
 using UnityEngine;
 
-namespace NetBuff
+namespace NetBuff.Base
 {
     /// <summary>
     ///     Base class for network transport.

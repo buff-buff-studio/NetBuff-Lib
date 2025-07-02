@@ -34,7 +34,7 @@ namespace NetBuff.Editor
             
             EditorGUI.BeginChangeCheck();
             EditorStyles.label.normal.textColor = Color.yellow;
-            
+
             HandleField(value, valueRect, property, label);
             
             EditorStyles.label.normal.textColor = Color.white;
@@ -149,7 +149,7 @@ namespace NetBuff.Editor
     {
         public override void HandleField(SerializedProperty value, Rect rect, SerializedProperty property, GUIContent label)
         {
-            EditorGUI.PropertyField(rect, value, label);
+            EditorGUI.PropertyField(rect, value, label, true);
         }
     }
     

@@ -1,7 +1,7 @@
 ﻿using System;
 using NetBuff.Interface;
 
-namespace NetBuff
+namespace NetBuff.Misc
 {
     /// <summary>
     ///     A registry for packet types.

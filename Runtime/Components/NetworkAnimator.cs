@@ -660,8 +660,7 @@ namespace NetBuff.Components
 
         public void Serialize(BinaryWriter writer)
         {
-            Id.Serialize(writer);
-
+            writer.Write(Id);
             writer.Write((byte)Change);
 
             if ((Change & Changes.Layers) != 0)
@@ -689,7 +688,7 @@ namespace NetBuff.Components
 
         public void Deserialize(BinaryReader reader)
         {
-            Id = NetworkId.Read(reader);
+            Id = reader.ReadNetworkId();
             Change = (Changes)reader.ReadByte();
             if ((Change & Changes.Layers) != 0)
             {
@@ -761,13 +760,13 @@ namespace NetBuff.Components
 
         public void Serialize(BinaryWriter writer)
         {
-            Id.Serialize(writer);
+            writer.Write(Id);
             writer.Write(TriggerHash);
         }
 
         public void Deserialize(BinaryReader reader)
         {
-            Id = NetworkId.Read(reader);
+            Id = reader.ReadNetworkId();
             TriggerHash = reader.ReadInt32();
         }
     }

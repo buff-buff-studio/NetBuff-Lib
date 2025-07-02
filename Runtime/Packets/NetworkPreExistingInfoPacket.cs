@@ -41,8 +41,8 @@ namespace NetBuff.Packets
             writer.Write(PreExistingObjects.Length);
             foreach (var preExistingObject in PreExistingObjects)
             {
-                preExistingObject.Id.Serialize(writer);
-                preExistingObject.PrefabId.Serialize(writer);
+                writer.Write(preExistingObject.Id);
+                writer.Write(preExistingObject.PrefabId);
                 writer.Write(preExistingObject.OwnerId);
                 writer.Write(preExistingObject.Position.x);
                 writer.Write(preExistingObject.Position.y);
@@ -59,7 +59,8 @@ namespace NetBuff.Packets
             }
 
             writer.Write(RemovedObjects.Length);
-            foreach (var removedObject in RemovedObjects) removedObject.Serialize(writer);
+            foreach (var removedObject in RemovedObjects)
+                writer.Write(removedObject);
 
             writer.Write(SceneNames.Length);
             foreach (var sceneName in SceneNames) writer.Write(sceneName);
@@ -67,8 +68,8 @@ namespace NetBuff.Packets
             writer.Write(SpawnedObjects.Length);
             foreach (var spawnedObject in SpawnedObjects)
             {
-                spawnedObject.Id.Serialize(writer);
-                spawnedObject.PrefabId.Serialize(writer);
+                writer.Write(spawnedObject.Id);
+                writer.Write(spawnedObject.PrefabId);
                 writer.Write(spawnedObject.OwnerId);
                 writer.Write(spawnedObject.Position.x);
                 writer.Write(spawnedObject.Position.y);
@@ -87,7 +88,7 @@ namespace NetBuff.Packets
             writer.Write(NetworkValues.Length);
             foreach (var networkValue in NetworkValues)
             {
-                networkValue.Id.Serialize(writer);
+                writer.Write(networkValue.Id);
                 writer.Write(networkValue.BehaviourId);
                 writer.Write(networkValue.Payload.Length);
                 writer.Write(networkValue.Payload);
@@ -101,8 +102,8 @@ namespace NetBuff.Packets
             for (var i = 0; i < preExistingObjectsLength; i++)
                 PreExistingObjects[i] = new PreExistingState
                 {
-                    Id = NetworkId.Read(reader),
-                    PrefabId = NetworkId.Read(reader),
+                    Id = reader.ReadNetworkId(),
+                    PrefabId = reader.ReadNetworkId(),
                     OwnerId = reader.ReadInt32(),
                     Position = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()),
                     Rotation = new Quaternion(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(),
@@ -114,19 +115,21 @@ namespace NetBuff.Packets
 
             var removedObjectsLength = reader.ReadInt32();
             RemovedObjects = new NetworkId[removedObjectsLength];
-            for (var i = 0; i < removedObjectsLength; i++) RemovedObjects[i] = NetworkId.Read(reader);
+            for (var i = 0; i < removedObjectsLength; i++)
+                RemovedObjects[i] = reader.ReadNetworkId();
 
             var sceneNamesLength = reader.ReadInt32();
             SceneNames = new string[sceneNamesLength];
-            for (var i = 0; i < sceneNamesLength; i++) SceneNames[i] = reader.ReadString();
+            for (var i = 0; i < sceneNamesLength; i++)
+                SceneNames[i] = reader.ReadString();
 
             var spawnedObjectsLength = reader.ReadInt32();
             SpawnedObjects = new NetworkObjectSpawnPacket[spawnedObjectsLength];
             for (var i = 0; i < spawnedObjectsLength; i++)
                 SpawnedObjects[i] = new NetworkObjectSpawnPacket
                 {
-                    Id = NetworkId.Read(reader),
-                    PrefabId = NetworkId.Read(reader),
+                    Id = reader.ReadNetworkId(),
+                    PrefabId = reader.ReadNetworkId(),
                     OwnerId = reader.ReadInt32(),
                     Position = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()),
                     Rotation = new Quaternion(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(),
@@ -141,7 +144,7 @@ namespace NetBuff.Packets
             for (var i = 0; i < networkValuesLength; i++)
                 NetworkValues[i] = new NetworkBehaviourDataPacket
                 {
-                    Id = NetworkId.Read(reader),
+                    Id = reader.ReadNetworkId(),
                     BehaviourId = reader.ReadByte(),
                     Payload = reader.ReadBytes(reader.ReadInt32())
                 };

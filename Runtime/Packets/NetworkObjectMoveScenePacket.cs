@@ -5,9 +5,9 @@ using NetBuff.Misc;
 namespace NetBuff.Packets
 {
     /// <summary>
-    ///     Packet used to change the active state of a network object.
+    ///     Packet used to move a network object to a new scene.
     /// </summary>
-    public class NetworkObjectActivePacket : IPacket
+    public class NetworkObjectMoveScenePacket : IPacket
     {
         /// <summary>
         ///     The network id of the network object.
@@ -16,20 +16,21 @@ namespace NetBuff.Packets
         public NetworkId Id { get; set; }
 
         /// <summary>
-        ///     The active state of the network object.
+        ///     The scene id to move the network object to.
         /// </summary>
-        public bool IsActive { get; set; }
+        [InspectorMode(InspectorMode.Scene)]
+        public int SceneId { get; set; }
 
         public void Serialize(BinaryWriter writer)
         {
             writer.Write(Id);
-            writer.Write(IsActive);
+            writer.Write(SceneId);
         }
 
         public void Deserialize(BinaryReader reader)
         {
             Id = reader.ReadNetworkId();
-            IsActive = reader.ReadBoolean();
+            SceneId = reader.ReadInt32();
         }
     }
 }

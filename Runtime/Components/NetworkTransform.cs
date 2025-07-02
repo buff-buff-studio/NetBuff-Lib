@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using NetBuff.Interface;
@@ -71,6 +72,8 @@ namespace NetBuff.Components
         #endregion
 
         #region Inspector Fields
+        public Transform target;
+        
         [Header("SETTINGS")]
         [SerializeField]
         protected int tickRate = -1;
@@ -87,6 +90,45 @@ namespace NetBuff.Components
         [SerializeField]
         protected SyncMode syncMode = SyncMode.PositionX | SyncMode.PositionY | SyncMode.PositionZ |
                                       SyncMode.RotationX | SyncMode.RotationY | SyncMode.RotationZ;
+        
+        [Header("SMOOTHING - POSITION")]
+        [Tooltip("Enable position smoothing")]
+        [SerializeField]
+        protected bool smoothPosition = true;
+
+        [Tooltip("Maximum position delta before snapping (0 = no limit)")]
+        [SerializeField]
+        protected float maxPositionDelta = 1f;
+
+        [Tooltip("Position interpolation speed")]
+        [SerializeField]
+        protected float positionSmoothTime = 0.1f;
+        
+        [Header("SMOOTHING - ROTATION")]
+        [Tooltip("Enable rotation smoothing")]
+        [SerializeField]
+        protected bool smoothRotation = true;
+
+        [Tooltip("Maximum rotation delta (degrees) before snapping (0 = no limit)")]
+        [SerializeField]
+        protected float maxRotationDelta = 15f;
+
+        [Tooltip("Rotation interpolation speed")]
+        [SerializeField]
+        protected float rotationSmoothTime = 0.1f;
+        
+        [Header("SMOOTHING - SCALE")]
+        [Tooltip("Enable scale smoothing")]
+        [SerializeField]
+        protected bool smoothScale = true;
+
+        [Tooltip("Maximum scale delta before snapping (0 = no limit)")]
+        [SerializeField]
+        protected float maxScaleDelta = 0.25f;
+
+        [Tooltip("Scale interpolation speed")]
+        [SerializeField]
+        protected float scaleSmoothTime = 0.1f;
         #endregion
 
         #region Internal Fields
@@ -95,6 +137,17 @@ namespace NetBuff.Components
         protected Vector3 lastScale;
         private bool _running;
         protected readonly List<float> components = new();
+        
+        // Smoothing targets
+        private Vector3 _targetPosition;
+        private Vector3 _targetEulerAngles;
+        private Vector3 _targetScale;
+        private bool _hasTargetPosition;
+        private bool _hasTargetRotation;
+        private bool _hasTargetScale;
+        private Vector3 _positionVelocity;
+        private Vector3 _rotationVelocity;
+        private Vector3 _scaleVelocity;
         #endregion
 
         #region Helper Properties
@@ -144,10 +197,19 @@ namespace NetBuff.Components
         #region Unity Callbacks
         protected virtual void OnEnable()
         {
-            var t = transform;
-            lastPosition = t.position;
-            lastRotation = t.eulerAngles;
-            lastScale = t.localScale;
+            if(target == null)
+                target = transform;
+
+            lastPosition = target.position;
+            lastRotation = target.eulerAngles;
+            lastScale = target.localScale;
+            
+            _hasTargetPosition = false;
+            _hasTargetRotation = false;
+            _hasTargetScale = false;
+            _positionVelocity = Vector3.zero;
+            _rotationVelocity = Vector3.zero;
+            _scaleVelocity = Vector3.zero;
 
             if (NetworkManager.Instance != null)
             {
@@ -160,6 +222,15 @@ namespace NetBuff.Components
         private void OnDisable()
         {
             _Stop();
+            _hasTargetPosition = false;
+            _hasTargetRotation = false;
+            _hasTargetScale = false;
+        }
+
+        protected virtual void Update()
+        {
+            if (!HasAuthority)
+                Interpolate();
         }
         #endregion
 
@@ -170,16 +241,22 @@ namespace NetBuff.Components
             if (!HasAuthority) return;
 
             _running = true;
-            InvokeRepeating(nameof(Tick), 0,
-                1f / (tickRate == -1 ? NetworkManager.Instance.DefaultTickRate : tickRate));
+            _running = true;
+            StartCoroutine(TickCoroutine());
         }
 
         private void _Stop()
         {
-            if (_running)
+            _running = false;
+        }
+
+        private IEnumerator TickCoroutine()
+        {
+            var interval = 1f / (tickRate == -1 ? NetworkManager.Instance.DefaultTickRate : tickRate);
+            while (_running)
             {
-                CancelInvoke(nameof(Tick));
-                _running = false;
+                Tick();
+                yield return new WaitForSecondsRealtime(interval);
             }
         }
 
@@ -189,13 +266,198 @@ namespace NetBuff.Components
             if (ShouldResend(out var packet))
                 SendPacket(packet);
         }
+        
+        protected virtual void Interpolate()
+        {
+            // Position interpolation
+            if (_hasTargetPosition)
+            {
+                if (smoothPosition)
+                {
+                    // Check if we need to snap
+                    if (maxPositionDelta > 0 && Vector3.Distance(target.position, _targetPosition) > maxPositionDelta)
+                    {
+                        target.position = _targetPosition;
+                        _hasTargetPosition = false;
+                        _positionVelocity = Vector3.zero;
+                    }
+                    else
+                    {
+                        target.position = Vector3.SmoothDamp(
+                            target.position,
+                            _targetPosition,
+                            ref _positionVelocity,
+                            positionSmoothTime
+                        );
+                        
+                        // Check if close enough to snap
+                        if (Vector3.Distance(target.position, _targetPosition) < positionThreshold)
+                        {
+                            target.position = _targetPosition;
+                            _hasTargetPosition = false;
+                        }
+                    }
+                }
+                else
+                {
+                    target.position = _targetPosition;
+                    _hasTargetPosition = false;
+                }
+            }
+
+            // Rotation interpolation
+            if (_hasTargetRotation)
+            {
+                if (smoothRotation)
+                {
+                    // Handle snapping per axis
+                    bool needsSnap = false;
+                    Vector3 currentEuler = target.eulerAngles;
+                    
+                    if (maxRotationDelta > 0)
+                    {
+                        if ((syncMode & SyncMode.RotationX) != 0 && 
+                            Mathf.Abs(Mathf.DeltaAngle(currentEuler.x, _targetEulerAngles.x)) > maxRotationDelta)
+                            needsSnap = true;
+                        
+                        if ((syncMode & SyncMode.RotationY) != 0 && 
+                            Mathf.Abs(Mathf.DeltaAngle(currentEuler.y, _targetEulerAngles.y)) > maxRotationDelta)
+                            needsSnap = true;
+                        
+                        if ((syncMode & SyncMode.RotationZ) != 0 && 
+                            Mathf.Abs(Mathf.DeltaAngle(currentEuler.z, _targetEulerAngles.z)) > maxRotationDelta)
+                            needsSnap = true;
+                    }
+
+                    if (needsSnap)
+                    {
+                        // Apply synced axes directly
+                        if ((syncMode & SyncMode.RotationX) != 0) currentEuler.x = _targetEulerAngles.x;
+                        if ((syncMode & SyncMode.RotationY) != 0) currentEuler.y = _targetEulerAngles.y;
+                        if ((syncMode & SyncMode.RotationZ) != 0) currentEuler.z = _targetEulerAngles.z;
+                        
+                        target.eulerAngles = currentEuler;
+                        _hasTargetRotation = false;
+                        _rotationVelocity = Vector3.zero;
+                    }
+                    else
+                    {
+                        // Smooth each axis separately
+                        Vector3 smoothEuler = currentEuler;
+                        
+                        if ((syncMode & SyncMode.RotationX) != 0)
+                            smoothEuler.x = Mathf.SmoothDampAngle(
+                                currentEuler.x,
+                                _targetEulerAngles.x,
+                                ref _rotationVelocity.x,
+                                rotationSmoothTime
+                            );
+                        
+                        if ((syncMode & SyncMode.RotationY) != 0)
+                            smoothEuler.y = Mathf.SmoothDampAngle(
+                                currentEuler.y,
+                                _targetEulerAngles.y,
+                                ref _rotationVelocity.y,
+                                rotationSmoothTime
+                            );
+                        
+                        if ((syncMode & SyncMode.RotationZ) != 0)
+                            smoothEuler.z = Mathf.SmoothDampAngle(
+                                currentEuler.z,
+                                _targetEulerAngles.z,
+                                ref _rotationVelocity.z,
+                                rotationSmoothTime
+                            );
+                        
+                        target.eulerAngles = smoothEuler;
+                        
+                        // Check if close enough to snap
+                        bool closeEnough = true;
+                        if ((syncMode & SyncMode.RotationX) != 0 && 
+                            Mathf.Abs(Mathf.DeltaAngle(smoothEuler.x, _targetEulerAngles.x)) > rotationThreshold)
+                            closeEnough = false;
+                        
+                        if ((syncMode & SyncMode.RotationY) != 0 && 
+                            Mathf.Abs(Mathf.DeltaAngle(smoothEuler.y, _targetEulerAngles.y)) > rotationThreshold)
+                            closeEnough = false;
+                        
+                        if ((syncMode & SyncMode.RotationZ) != 0 && 
+                            Mathf.Abs(Mathf.DeltaAngle(smoothEuler.z, _targetEulerAngles.z)) > rotationThreshold)
+                            closeEnough = false;
+                        
+                        if (closeEnough)
+                        {
+                            if ((syncMode & SyncMode.RotationX) != 0) smoothEuler.x = _targetEulerAngles.x;
+                            if ((syncMode & SyncMode.RotationY) != 0) smoothEuler.y = _targetEulerAngles.y;
+                            if ((syncMode & SyncMode.RotationZ) != 0) smoothEuler.z = _targetEulerAngles.z;
+                            
+                            target.eulerAngles = smoothEuler;
+                            _hasTargetRotation = false;
+                        }
+                    }
+                }
+                else
+                {
+                    // Apply rotation directly
+                    Vector3 current = target.eulerAngles;
+                    if ((syncMode & SyncMode.RotationX) != 0) current.x = _targetEulerAngles.x;
+                    if ((syncMode & SyncMode.RotationY) != 0) current.y = _targetEulerAngles.y;
+                    if ((syncMode & SyncMode.RotationZ) != 0) current.z = _targetEulerAngles.z;
+                    
+                    target.eulerAngles = current;
+                    _hasTargetRotation = false;
+                }
+            }
+
+            // Scale interpolation
+            if (_hasTargetScale)
+            {
+                if (smoothScale)
+                {
+                    // Check if we need to snap
+                    if (maxScaleDelta > 0 && Vector3.Distance(target.localScale, _targetScale) > maxScaleDelta)
+                    {
+                        target.localScale = _targetScale;
+                        _hasTargetScale = false;
+                        _scaleVelocity = Vector3.zero;
+                    }
+                    else
+                    {
+                        target.localScale = Vector3.SmoothDamp(
+                            target.localScale,
+                            _targetScale,
+                            ref _scaleVelocity,
+                            scaleSmoothTime
+                        );
+                        
+                        // Check if close enough to snap
+                        if (Vector3.Distance(target.localScale, _targetScale) < scaleThreshold)
+                        {
+                            target.localScale = _targetScale;
+                            _hasTargetScale = false;
+                        }
+                    }
+                }
+                else
+                {
+                    target.localScale = _targetScale;
+                    _hasTargetScale = false;
+                }
+            }
+        }
         #endregion
 
         #region Network Callbacks
         public override void OnOwnershipChanged(int oldOwner, int newOwner)
         {
             if (HasAuthority)
+            {
+                // Reset targets when gaining authority
+                _hasTargetPosition = false;
+                _hasTargetRotation = false;
+                _hasTargetScale = false;
                 _Begin();
+            }
             else
                 _Stop();
         }
@@ -211,7 +473,7 @@ namespace NetBuff.Components
             if (clientId != OwnerId)
                 return;
 
-            if (packet is TransformPacket transformPacket)
+            if (packet is TransformPacket transformPacket && transformPacket.BehaviourId == BehaviourId)
                 ServerBroadcastPacketExceptFor(transformPacket, clientId);
         }
 
@@ -220,7 +482,7 @@ namespace NetBuff.Components
             if (HasAuthority)
                 return;
 
-            if (packet is TransformPacket transformPacket)
+            if (packet is TransformPacket transformPacket && transformPacket.BehaviourId == BehaviourId)
                 ApplyTransformPacket(transformPacket);
         }
         #endregion
@@ -233,18 +495,17 @@ namespace NetBuff.Components
         /// <returns></returns>
         protected virtual bool ShouldResend(out TransformPacket packet)
         {
-            var positionChanged = Vector3.Distance(transform.position, lastPosition) > positionThreshold;
-            var rotationChanged = Vector3.Distance(transform.eulerAngles, lastRotation) > rotationThreshold;
-            var scaleChanged = Vector3.Distance(transform.localScale, lastScale) > scaleThreshold;
+            var positionChanged = Vector3.Distance(target.position, lastPosition) > positionThreshold;
+            var rotationChanged = Vector3.Distance(target.eulerAngles, lastRotation) > rotationThreshold;
+            var scaleChanged = Vector3.Distance(target.localScale, lastScale) > scaleThreshold;
 
             if (positionChanged || rotationChanged || scaleChanged)
             {
                 components.Clear();
 
-                var t = transform;
-                lastPosition = t.position;
-                lastRotation = t.eulerAngles;
-                lastScale = t.localScale;
+                lastPosition = target.position;
+                lastRotation = target.eulerAngles;
+                lastScale = target.localScale;
 
                 var flag = (short)0;
                 if (positionChanged)
@@ -275,7 +536,8 @@ namespace NetBuff.Components
                 {
                     Id = Id,
                     Components = components.ToArray(),
-                    Flag = flag
+                    Flag = flag,
+                    BehaviourId = BehaviourId
                 };
                 return true;
             }
@@ -292,79 +554,49 @@ namespace NetBuff.Components
         {
             var cmp = packet.Components;
             var flag = packet.Flag;
-            var t = transform;
 
-            var index = 0;
+            // Instead of applying directly, set target values for interpolation
+            int index = 0;
+            
+            // Position
             if ((flag & 1) != 0)
             {
-                var pos = t.position;
-                if ((syncMode & SyncMode.PositionX) != 0) pos.x = cmp[index++];
-                if ((syncMode & SyncMode.PositionY) != 0) pos.y = cmp[index++];
-                if ((syncMode & SyncMode.PositionZ) != 0) pos.z = cmp[index++];
-                t.position = pos;
+                Vector3 basePos = _hasTargetPosition ? _targetPosition : target.position;
+                
+                if ((syncMode & SyncMode.PositionX) != 0) basePos.x = cmp[index++];
+                if ((syncMode & SyncMode.PositionY) != 0) basePos.y = cmp[index++];
+                if ((syncMode & SyncMode.PositionZ) != 0) basePos.z = cmp[index++];
+                
+                _targetPosition = basePos;
+                _hasTargetPosition = true;
             }
 
+            // Rotation
             if ((flag & 2) != 0)
             {
-                var rot = t.eulerAngles;
-                if ((syncMode & SyncMode.RotationX) != 0) rot.x = cmp[index++];
-                if ((syncMode & SyncMode.RotationY) != 0) rot.y = cmp[index++];
-                if ((syncMode & SyncMode.RotationZ) != 0) rot.z = cmp[index++];
-                t.eulerAngles = rot;
+                Vector3 baseRot = _hasTargetRotation ? _targetEulerAngles : target.eulerAngles;
+                
+                if ((syncMode & SyncMode.RotationX) != 0) baseRot.x = cmp[index++];
+                if ((syncMode & SyncMode.RotationY) != 0) baseRot.y = cmp[index++];
+                if ((syncMode & SyncMode.RotationZ) != 0) baseRot.z = cmp[index++];
+                
+                _targetEulerAngles = baseRot;
+                _hasTargetRotation = true;
             }
 
+            // Scale
             if ((flag & 4) != 0)
             {
-                var scale = t.localScale;
-                if ((syncMode & SyncMode.ScaleX) != 0) scale.x = cmp[index++];
-                if ((syncMode & SyncMode.ScaleY) != 0) scale.y = cmp[index++];
-                if ((syncMode & SyncMode.ScaleZ) != 0) scale.z = cmp[index];
-                t.localScale = scale;
+                Vector3 baseScale = _hasTargetScale ? _targetScale : target.localScale;
+                
+                if ((syncMode & SyncMode.ScaleX) != 0) baseScale.x = cmp[index++];
+                if ((syncMode & SyncMode.ScaleY) != 0) baseScale.y = cmp[index++];
+                if ((syncMode & SyncMode.ScaleZ) != 0) baseScale.z = cmp[index];
+                
+                _targetScale = baseScale;
+                _hasTargetScale = true;
             }
         }
         #endregion
-    }
-
-    /// <summary>
-    ///     Packet used to sync the transform components.
-    /// </summary>
-    public class TransformPacket : IOwnedPacket
-    {
-        /// <summary>
-        ///     The components of the transform.
-        /// </summary>
-        public float[] Components { get; set; } = Array.Empty<float>();
-
-        /// <summary>
-        ///     Determines which components have been changed.
-        /// </summary>
-        public short Flag { get; set; }
-
-        /// <summary>
-        ///     The network id of the transform.
-        /// </summary>
-        [InspectorMode(InspectorMode.Object)]
-        public NetworkId Id { get; set; }
-        
-        public void Serialize(BinaryWriter writer)
-        {
-            Id.Serialize(writer);
-            writer.Write(Flag);
-
-            writer.Write((byte)Components.Length);
-            foreach (var t in Components)
-                writer.Write(t);
-        }
-
-        public void Deserialize(BinaryReader reader)
-        {
-            Id = NetworkId.Read(reader);
-            Flag = reader.ReadInt16();
-
-            var count = reader.ReadByte();
-            Components = new float[count];
-            for (var i = 0; i < count; i++)
-                Components[i] = reader.ReadSingle();
-        }
     }
 }
