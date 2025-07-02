@@ -29,7 +29,7 @@ namespace NetBuff.Packets
 
         public void Serialize(BinaryWriter writer)
         {
-            Id.Serialize(writer);
+            writer.Write(Id);
             writer.Write(BehaviourId);
             writer.Write(Payload.Length);
             writer.Write(Payload);
@@ -37,7 +37,7 @@ namespace NetBuff.Packets
 
         public void Deserialize(BinaryReader reader)
         {
-            Id = NetworkId.Read(reader);
+            Id = reader.ReadNetworkId();
             BehaviourId = reader.ReadByte();
             var length = reader.ReadInt32();
             Payload = reader.ReadBytes(length);

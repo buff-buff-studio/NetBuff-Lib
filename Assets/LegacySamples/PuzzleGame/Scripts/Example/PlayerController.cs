@@ -294,13 +294,13 @@ namespace ExamplePlatformer
 
         public void Serialize(BinaryWriter writer)
         {
-            Id.Serialize(writer);
+            writer.Write(Id);
             writer.Write(BodyRotation);
         }
 
         public void Deserialize(BinaryReader reader)
         {
-            Id = NetworkId.Read(reader);
+            Id = reader.ReadNetworkId();
             BodyRotation = reader.ReadSingle();
         }
     }
@@ -311,12 +311,12 @@ namespace ExamplePlatformer
         
         public void Serialize(BinaryWriter writer)
         {
-            Id.Serialize(writer);
+            writer.Write(Id);
         }
 
         public void Deserialize(BinaryReader reader)
         {
-            Id = NetworkId.Read(reader);
+            Id = reader.ReadNetworkId();
         }
     }
 }

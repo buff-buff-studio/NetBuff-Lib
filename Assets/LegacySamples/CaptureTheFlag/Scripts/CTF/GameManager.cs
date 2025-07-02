@@ -166,12 +166,12 @@ namespace CTF
         
         public void Serialize(BinaryWriter writer)
         {
-            Id.Serialize(writer);
+            writer.Write(Id);
         }
 
         public void Deserialize(BinaryReader reader)
         {
-            Id = NetworkId.Read(reader);
+            Id = reader.ReadNetworkId();
         }
     }
 }

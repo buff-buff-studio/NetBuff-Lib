@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.IO;
 using System.Text;
 using UnityEngine;
 using Random = System.Random;
@@ -68,20 +67,6 @@ namespace NetBuff.Misc
         }
 
         /// <summary>
-        ///     Reads a network ID from a binary reader.
-        /// </summary>
-        /// <param name="reader"></param>
-        /// <returns></returns>
-        public static NetworkId Read(BinaryReader reader)
-        {
-            return new NetworkId
-            {
-                low = reader.ReadInt32(),
-                high = reader.ReadInt32()
-            };
-        }
-
-        /// <summary>
         ///     Compares two network IDs.
         /// </summary>
         /// <param name="obj"></param>
@@ -106,6 +91,7 @@ namespace NetBuff.Misc
             return low ^ high;
         }
 
+        /*
         /// <summary>
         ///     Serializes the network ID to a binary writer.
         /// </summary>
@@ -129,6 +115,7 @@ namespace NetBuff.Misc
             high = reader.ReadInt32();
             return this;
         }
+        */
 
         /// <summary>
         ///     Converts the network ID to a 16-character hexadecimal string.

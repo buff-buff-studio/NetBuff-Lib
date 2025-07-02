@@ -6,15 +6,15 @@ namespace NetBuff.Components
     /// <summary>
     ///     Syncs the components of a transform over the network, along with the velocity and angular velocity of a Rigidbody.
     /// </summary>
-    [RequireComponent(typeof(Rigidbody))]
     [Icon("Assets/Editor/Icons/NetworkRigidbodyTransform.png")]
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-rigidbody-transform")]
-    public class NetworkRigidbodyTransform : NetworkTransform
+    public class NetworkRigidbodyTransform : NetworkRawTransform
     {
         #region Inspector Fields
-        #pragma warning disable 0109
+#pragma warning disable 0109
         [SerializeField]
-        protected new Rigidbody rigidbody;
+        [HideInInspector]
+        private new Rigidbody rigidbody;
 
         [SerializeField]
         protected bool syncVelocity = true;
@@ -97,7 +97,7 @@ namespace NetBuff.Components
             if (rigidbody == null)
                 if (TryGetComponent(out Rigidbody rb))
                 {
-                    rigidbody = rb;
+                    rigidbody = target.GetComponent<Rigidbody>();
                 }
                 else
                 {
@@ -114,9 +114,9 @@ namespace NetBuff.Components
         #region Virtual Methods
         protected override bool ShouldResend(out TransformPacket packet)
         {
-            var positionChanged = Vector3.Distance(transform.position, lastPosition) > positionThreshold;
-            var rotationChanged = Vector3.Distance(transform.eulerAngles, lastRotation) > rotationThreshold;
-            var scaleChanged = Vector3.Distance(transform.localScale, lastScale) > scaleThreshold;
+            var positionChanged = Vector3.Distance(rigidbody.transform.position, lastPosition) > positionThreshold;
+            var rotationChanged = Vector3.Distance(rigidbody.transform.eulerAngles, lastRotation) > rotationThreshold;
+            var scaleChanged = Vector3.Distance(rigidbody.transform.localScale, lastScale) > scaleThreshold;
             var velocityChanged =
                 syncVelocity && Vector3.Distance(rigidbody.velocity, _lastVelocity) > velocityThreshold;
             var angularVelocityChanged = syncAngularVelocity &&
@@ -129,7 +129,7 @@ namespace NetBuff.Components
             {
                 components.Clear();
 
-                var t = transform;
+                var t = rigidbody.transform;
                 lastPosition = t.position;
                 lastRotation = t.eulerAngles;
                 lastScale = t.localScale;
@@ -201,7 +201,7 @@ namespace NetBuff.Components
         {
             var cmp = packet.Components;
             var flag = packet.Flag;
-            var t = transform;
+            var t = rigidbody.transform;
 
             var index = 0;
             if ((flag & 1) != 0)

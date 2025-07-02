@@ -302,12 +302,12 @@ namespace NetBuff.Misc
         
         public override void Serialize(BinaryWriter writer)
         {
-            value.Serialize(writer);
+            writer.Write(value);
         }
 
         public override void Deserialize(BinaryReader reader)
         {
-            var v = NetworkId.Read(reader);
+            var v = reader.ReadNetworkId();
             SetValueCalling(v);
         }
         
@@ -851,12 +851,12 @@ namespace NetBuff.Misc
 
         public override void Serialize(BinaryWriter writer)
         {
-            value.Serialize(writer);
+            writer.Write(value);
         }
 
         public override void Deserialize(BinaryReader reader)
         {
-            var v = NetworkId.Read(reader);
+            var v = reader.ReadNetworkId();
             SetValueCalling(v);
         }
     }

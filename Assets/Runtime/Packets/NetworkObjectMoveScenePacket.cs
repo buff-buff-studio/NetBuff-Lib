@@ -23,13 +23,13 @@ namespace NetBuff.Packets
 
         public void Serialize(BinaryWriter writer)
         {
-            Id.Serialize(writer);
+            writer.Write(Id);
             writer.Write(SceneId);
         }
 
         public void Deserialize(BinaryReader reader)
         {
-            Id = NetworkId.Read(reader);
+            Id = reader.ReadNetworkId();
             SceneId = reader.ReadInt32();
         }
     }

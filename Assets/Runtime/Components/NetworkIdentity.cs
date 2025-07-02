@@ -17,17 +17,39 @@ namespace NetBuff.Components
     /// </summary>
     [Icon("Assets/Editor/Icons/NetworkIdentity.png")]
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-identity")]
+    [DisallowMultipleComponent]
     public sealed class NetworkIdentity : MonoBehaviour
     {
         #region Unity Callbacks
         private void OnValidate()
         {
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
+            if (Application.isPlaying)
+                return;
+
             var identities = FindObjectsByType<NetworkIdentity>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            if (identities.Where(identity => identity != this).All(identity => identity.id != id)) return;
-            id = NetworkId.New();
-            EditorUtility.SetDirty(this);
-            #endif
+
+            foreach (var identity in identities)
+            {
+                if (identity.id == id && identity.gameObject != this.gameObject)
+                {
+                    var isThisPrefab = PrefabUtility.IsPartOfPrefabInstance(this.gameObject);
+                    var isOtherPrefab = PrefabUtility.IsPartOfPrefabInstance(identity.gameObject);
+
+                    if (isOtherPrefab)
+                        if (PrefabUtility.GetCorrespondingObjectFromSource(identity.gameObject) == this.gameObject)
+                            return;
+
+                    if (isThisPrefab)
+                        if (PrefabUtility.GetCorrespondingObjectFromSource(this.gameObject) == identity.gameObject)
+                            return;
+
+                    id = NetworkId.New();
+                    EditorUtility.SetDirty(this);
+                    break;
+                }
+            } 
+#endif
         }
         #endregion
 
@@ -222,9 +244,9 @@ namespace NetBuff.Components
                 throw new InvalidOperationException("Only the object owner can despawn it");
 
             if (OwnerId == -1)
-                ServerBroadcastPacket(new NetworkObjectDespawnPacket { Id = Id });
+                ServerBroadcastPacket(new NetworkObjectDespawnPacket { Id = Id }, true);
             else
-                ClientSendPacket(new NetworkObjectDespawnPacket { Id = Id });
+                ClientSendPacket(new NetworkObjectDespawnPacket { Id = Id }, true);
 
             var action = new NetworkAction<NetworkId, NetworkIdentity>(Id);
             NetworkAction.OnObjectDespawn.Register(Id, action, true);
@@ -244,9 +266,9 @@ namespace NetBuff.Components
                 throw new InvalidOperationException("Only the object owner can set its active state");
 
             if (OwnerId == -1)
-                ServerBroadcastPacket(new NetworkObjectActivePacket { Id = Id, IsActive = active });
+                ServerBroadcastPacket(new NetworkObjectActivePacket { Id = Id, IsActive = active }, true);
             else
-                ClientSendPacket(new NetworkObjectActivePacket { Id = Id, IsActive = active });
+                ClientSendPacket(new NetworkObjectActivePacket { Id = Id, IsActive = active }, true);
 
             var action = new NetworkAction<NetworkId, NetworkIdentity>(Id);
             NetworkAction.OnObjectChangeActive.Register(Id, action, true);
@@ -267,9 +289,9 @@ namespace NetBuff.Components
                 throw new InvalidOperationException("Only the object owner can change its owner");
 
             if (OwnerId == -1)
-                ServerBroadcastPacket(new NetworkObjectOwnerPacket { Id = Id, OwnerId = clientId });
+                ServerBroadcastPacket(new NetworkObjectOwnerPacket { Id = Id, OwnerId = clientId }, true);
             else
-                ClientSendPacket(new NetworkObjectOwnerPacket { Id = Id, OwnerId = clientId });
+                ClientSendPacket(new NetworkObjectOwnerPacket { Id = Id, OwnerId = clientId }, true);
 
             var action = new NetworkAction<NetworkId, NetworkIdentity>(Id);
             NetworkAction.OnObjectChangeOwner.Register(Id, action, true);
@@ -292,7 +314,7 @@ namespace NetBuff.Components
                 throw new InvalidOperationException("Only the server can force set the owner of an object");
 
             ownerId = clientId;
-            ServerBroadcastPacket(new NetworkObjectOwnerPacket { Id = Id, OwnerId = clientId });
+            ServerBroadcastPacket(new NetworkObjectOwnerPacket { Id = Id, OwnerId = clientId }, true);
         }
 
         /// <summary>
@@ -429,6 +451,9 @@ namespace NetBuff.Components
         {
             if (!HasAuthority)
                 throw new InvalidOperationException("Only the object owner can move it to a different scene");
+
+            if (PrefabId == NetworkId.Empty)
+                throw new InvalidOperationException("The object must be spawned from a prefab to move it to a different scene");
 
             SendPacket(
                 new NetworkObjectMoveScenePacket { Id = Id, SceneId = NetworkManager.Instance.GetSceneId(sceneName) },

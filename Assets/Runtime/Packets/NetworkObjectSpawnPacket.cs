@@ -59,8 +59,8 @@ namespace NetBuff.Packets
 
         public void Serialize(BinaryWriter writer)
         {
-            Id.Serialize(writer);
-            PrefabId.Serialize(writer);
+            writer.Write(Id);
+            writer.Write(PrefabId);
             writer.Write(OwnerId);
             writer.Write(Position.x);
             writer.Write(Position.y);
@@ -78,8 +78,8 @@ namespace NetBuff.Packets
 
         public void Deserialize(BinaryReader reader)
         {
-            Id = NetworkId.Read(reader);
-            PrefabId = NetworkId.Read(reader);
+            Id = reader.ReadNetworkId();
+            PrefabId = reader.ReadNetworkId();
             OwnerId = reader.ReadInt32();
             Position = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
             Rotation = new Quaternion(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(),

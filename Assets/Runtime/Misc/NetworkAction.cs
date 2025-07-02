@@ -44,6 +44,7 @@ namespace NetBuff.Misc
         /// </summary>
         public static NetworkActionListener<string, int> OnSceneUnloaded { get; } = new();
 
+
         /// <summary>
         ///     Clear all network actions
         /// </summary>
