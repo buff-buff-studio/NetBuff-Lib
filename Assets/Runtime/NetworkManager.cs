@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using AYellowpaper.SerializedCollections;
+using NetBuff.Base;
 using NetBuff.Components;
 using NetBuff.Interface;
 using NetBuff.Misc;

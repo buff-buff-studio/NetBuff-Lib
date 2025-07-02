@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using NetBuff.Base;
 using NetBuff.Discover;
 using NetBuff.Misc;
 using NetBuff.UDP;

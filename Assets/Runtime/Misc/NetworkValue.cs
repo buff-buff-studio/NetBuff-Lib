@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Reflection;
+using NetBuff.Base;
 using NetBuff.Components;
 using UnityEngine;
 using UnityEngine.Serialization;

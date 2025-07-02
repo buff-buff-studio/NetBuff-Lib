@@ -4,6 +4,8 @@ using NetBuff.Interface;
 using NetBuff.Misc;
 using NetBuff.Packets;
 using UnityEngine;
+using NetBuff.Base;
+
 #if UNITY_EDITOR
 using UnityEditor;
 using System.Linq;
