@@ -30,7 +30,6 @@ namespace CTF
         
         private void OnEnable()
         {
-            WithValues(flagRedCarrier, flagBlueCarrier, redScore, blueScore, time);
             Instance = this;
             
             InvokeRepeating(nameof(UpdateTime), 1, 1);

@@ -1,11 +1,10 @@
-﻿using UnityEngine;
+﻿using System.IO;
+using NetBuff.Misc;
+using NetBuff.Packets;
+using UnityEngine;
 
-// ReSharper disable BitwiseOperatorOnEnumWithoutFlags
 namespace NetBuff.Components
 {
-    /// <summary>
-    ///     Syncs the components of a transform over the network, along with the velocity and angular velocity of a Rigidbody.
-    /// </summary>
     [Icon("Assets/Editor/Icons/NetworkRigidbodyTransform.png")]
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-rigidbody-transform")]
     public class NetworkRigidbodyTransform : NetworkRawTransform
@@ -13,14 +12,13 @@ namespace NetBuff.Components
         #region Inspector Fields
 #pragma warning disable 0109
         [SerializeField]
-        [HideInInspector]
-        private new Rigidbody rigidbody;
+        public new Rigidbody rigidbody;
 
         [SerializeField]
-        protected bool syncVelocity = true;
+        protected bool syncLinearVelocity = true;
 
         [SerializeField]
-        protected float velocityThreshold = 0.001f;
+        protected float linearVelocityThreshold = 0.001f;
 
         [SerializeField]
         protected bool syncAngularVelocity = true;
@@ -39,50 +37,32 @@ namespace NetBuff.Components
         #endregion
 
         #region Helper Properties
-        /// <summary>
-        ///     The Rigidbody component to sync.
-        /// </summary>
         public Rigidbody Rigidbody => rigidbody;
 
-        /// <summary>
-        ///     Defines whether the velocity should be synced.
-        /// </summary>
         public bool SyncVelocity
         {
-            get => syncVelocity;
-            set => syncVelocity = value;
+            get => syncLinearVelocity;
+            set => syncLinearVelocity = value;
         }
 
-        /// <summary>
-        ///     Defines the threshold for the velocity to be considered changed.
-        /// </summary>
         public float VelocityThreshold
         {
-            get => velocityThreshold;
-            set => velocityThreshold = value;
+            get => linearVelocityThreshold;
+            set => linearVelocityThreshold = value;
         }
 
-        /// <summary>
-        ///     Defines whether the angular velocity should be synced.
-        /// </summary>
         public bool SyncAngularVelocity
         {
             get => syncAngularVelocity;
             set => syncAngularVelocity = value;
         }
 
-        /// <summary>
-        ///     Defines the threshold for the angular velocity to be considered changed.
-        /// </summary>
         public float AngularVelocityThreshold
         {
             get => angularVelocityThreshold;
             set => angularVelocityThreshold = value;
         }
 
-        /// <summary>
-        ///     Defines whether the isKinematic property should be synced.
-        /// </summary>
         public bool SyncIsKinematic
         {
             get => syncIsKinematic;
@@ -92,33 +72,29 @@ namespace NetBuff.Components
 
         protected override void OnEnable()
         {
-            base.OnEnable();
-
             if (rigidbody == null)
-                if (TryGetComponent(out Rigidbody rb))
+                if (!TryGetComponent(out rigidbody))
                 {
-                    rigidbody = target.GetComponent<Rigidbody>();
-                }
-                else
-                {
-                    Debug.LogError("No Rigidbody component found on " + name);
+                    Debug.LogError("[NetworkRigidbodyTransform] No Rigidbody component found on " + name);
                     enabled = false;
                     return;
                 }
 
-            _lastVelocity = rigidbody.velocity;
+            _lastVelocity = rigidbody.linearVelocity;
             _lastAngularVelocity = rigidbody.angularVelocity;
             _lastIsKinematic = rigidbody.isKinematic;
+
+             base.OnEnable();
         }
 
         #region Virtual Methods
-        protected override bool ShouldResend(out TransformPacket packet)
+        protected override bool ShouldResend(out NetworkTransformPacket packet)
         {
             var positionChanged = Vector3.Distance(rigidbody.transform.position, lastPosition) > positionThreshold;
             var rotationChanged = Vector3.Distance(rigidbody.transform.eulerAngles, lastRotation) > rotationThreshold;
             var scaleChanged = Vector3.Distance(rigidbody.transform.localScale, lastScale) > scaleThreshold;
             var velocityChanged =
-                syncVelocity && Vector3.Distance(rigidbody.velocity, _lastVelocity) > velocityThreshold;
+                syncLinearVelocity && Vector3.Distance(rigidbody.linearVelocity, _lastVelocity) > linearVelocityThreshold;
             var angularVelocityChanged = syncAngularVelocity &&
                                          Vector3.Distance(rigidbody.angularVelocity, _lastAngularVelocity) >
                                          angularVelocityThreshold;
@@ -133,12 +109,12 @@ namespace NetBuff.Components
                 lastPosition = t.position;
                 lastRotation = t.eulerAngles;
                 lastScale = t.localScale;
-                _lastVelocity = rigidbody.velocity;
+                _lastVelocity = rigidbody.linearVelocity;
                 _lastAngularVelocity = rigidbody.angularVelocity;
                 _lastIsKinematic = rigidbody.isKinematic;
 
                 var flag = (short)0;
-                if (positionChanged)
+                if (positionChanged && (syncMode & SyncMode.Position) != 0)
                 {
                     flag |= 1;
                     if ((syncMode & SyncMode.PositionX) != 0) components.Add(lastPosition.x);
@@ -146,7 +122,7 @@ namespace NetBuff.Components
                     if ((syncMode & SyncMode.PositionZ) != 0) components.Add(lastPosition.z);
                 }
 
-                if (rotationChanged)
+                if (rotationChanged && (syncMode & SyncMode.Rotation) != 0)
                 {
                     flag |= 2;
                     if ((syncMode & SyncMode.RotationX) != 0) components.Add(lastRotation.x);
@@ -154,7 +130,7 @@ namespace NetBuff.Components
                     if ((syncMode & SyncMode.RotationZ) != 0) components.Add(lastRotation.z);
                 }
 
-                if (scaleChanged)
+                if (scaleChanged && (syncMode & SyncMode.Scale) != 0)
                 {
                     flag |= 4;
                     if ((syncMode & SyncMode.ScaleX) != 0) components.Add(lastScale.x);
@@ -184,7 +160,7 @@ namespace NetBuff.Components
                     components.Add(_lastIsKinematic ? 1 : 0);
                 }
 
-                packet = new TransformPacket
+                packet = new NetworkTransformPacket
                 {
                     Id = Id,
                     Components = components.ToArray(),
@@ -197,7 +173,7 @@ namespace NetBuff.Components
             return false;
         }
 
-        protected override void ApplyTransformPacket(TransformPacket packet)
+        protected override void ApplyTransformPacket(NetworkTransformPacket packet)
         {
             var cmp = packet.Components;
             var flag = packet.Flag;
@@ -233,13 +209,13 @@ namespace NetBuff.Components
 
             if ((flag & 8) != 0)
             {
-                var velocity = rigidbody.velocity;
+                var velocity = rigidbody.linearVelocity;
                 velocity.x = cmp[index++];
                 velocity.y = cmp[index++];
                 velocity.z = cmp[index++];
 
                 if (!rigidbody.isKinematic)
-                    rigidbody.velocity = velocity;
+                    rigidbody.linearVelocity = velocity;
             }
 
             if ((flag & 16) != 0)
@@ -253,6 +229,32 @@ namespace NetBuff.Components
 
             if ((flag & 32) != 0) rigidbody.isKinematic = cmp[index] > 0;
         }
+        #endregion
+        
+        #region Custom Serialization
+
+        public override void OnSerialize(BinaryWriter writer, bool forceSendAll, bool isSnapshot)
+        {
+            base.OnSerialize(writer, forceSendAll, isSnapshot);
+            if(syncIsKinematic)
+                writer.Write(rigidbody.isKinematic);
+            if(syncLinearVelocity)
+                writer.Write(rigidbody.linearVelocity);
+            if(syncAngularVelocity)
+                writer.Write(rigidbody.angularVelocity);
+        }
+
+        public override void OnDeserialize(BinaryReader reader, bool isSnapshot)
+        {
+            base.OnDeserialize(reader, isSnapshot);
+            if(syncIsKinematic)
+                rigidbody.isKinematic = reader.ReadBoolean();
+            if(syncLinearVelocity)
+                rigidbody.linearVelocity = reader.ReadVector3();
+            if(syncAngularVelocity)
+                rigidbody.angularVelocity = reader.ReadVector3();
+        }
+
         #endregion
     }
 }

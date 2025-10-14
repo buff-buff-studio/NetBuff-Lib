@@ -63,30 +63,53 @@ namespace NetBuff.Editor.Windows
 
         public Vector2 scrollMainPanel;
         public Vector2 scrollObjectsPanel;
-        public Vector2 scrollFilter;
 
         public EditorGUISplitView verticalSplitView = new(EditorGUISplitView.Direction.Vertical);
         public SerializedDictionary<string, bool> foldoutsScenes = new();
         public Filter filter = new();
+        public bool showSelectedOnly;
+        
+        private Texture2D _icon;
+        private Texture _iconScene;
+        private Texture _iconNetworkIdentity;
+        private Texture _iconDefaultBehaviour;
+        private Texture _iconClient;
        
         [MenuItem("NetBuff/Network State Inspector")]
-        [MenuItem("Window/Network/State Inspector")]
+        [MenuItem("Window/NetBuff/Network State Inspector")]
         public static void ShowWindow()
         {
-            GetWindow<NetworkStateInspector>("Network State Inspector");
+            var inspectorType = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.InspectorWindow");
+            var window = GetWindow<NetworkStateInspector>(null, false, inspectorType);
+            window.Show();
         }
-
+        
+        private void OnEnable()
+        {
+            _icon = EditorGUIUtility.Load("Assets/NetBuff/Editor/Icons/NetworkStateInspector.png") as Texture2D;
+            
+            var windowIcon = EditorGUIUtility.Load("Assets/NetBuff/Editor/Icons/WindowNetworkStateInspector.png") as Texture2D;
+            titleContent = new GUIContent("Network State Inspector", windowIcon);
+            
+            _iconScene = EditorGUIUtility.IconContent("SceneAsset Icon").image;
+            _iconNetworkIdentity = EditorGUIUtility.Load("Assets/NetBuff/Editor/Icons/NetworkIdentity.png") as Texture;
+            _iconDefaultBehaviour = EditorGUIUtility.IconContent("cs Script Icon").image;
+            _iconClient = EditorGUIUtility.IconContent("Avatar Icon").image;
+        }
+        
         private void OnGUI()
         {
             var manager = NetworkManager.Instance;
             if (manager == null)
             {
+                _DrawHeader();
                 EditorGUILayout.HelpBox("No active NetworkManager found!", MessageType.Warning);
                 return;
             }
 
             verticalSplitView.BeginSplitView();
-
+            _DrawHeader();
+            
             #region Connections
             scrollMainPanel = EditorGUILayout.BeginScrollView(scrollMainPanel);
             GUILayout.BeginVertical("Box");
@@ -94,14 +117,13 @@ namespace NetBuff.Editor.Windows
             if (manager.Transport == null)
             {
                 GUILayout.BeginVertical("Box");
-                EditorGUILayout.LabelField("Local Client", EditorStyles.boldLabel);
                 EditorGUILayout.HelpBox("No active transport found!", MessageType.Warning);
                 GUILayout.EndVertical();
             }
             else
             {
                 GUILayout.BeginVertical("Box");
-                EditorGUILayout.LabelField("Local Client", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("Local Client (Client Side)", EditorStyles.boldLabel);
 
                 if (manager.IsClientRunning)
                     _DrawConnectionInfo(manager, manager.ClientConnectionInfo, true, true);
@@ -111,7 +133,7 @@ namespace NetBuff.Editor.Windows
                 GUILayout.EndVertical();
 
                 GUILayout.BeginVertical("Box");
-                EditorGUILayout.LabelField("Remote Clients", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("Remote Clients (Server Side)", EditorStyles.boldLabel);
 
                 if (manager.IsServerRunning)
                 {
@@ -138,6 +160,7 @@ namespace NetBuff.Editor.Windows
             GUILayout.BeginVertical("Box");
             
             EditorGUILayout.LabelField("Network Scenes / Objects", EditorStyles.boldLabel);
+            showSelectedOnly = EditorGUILayout.Toggle("Show Selected Only", showSelectedOnly);
             
             _DrawFilter();
             
@@ -158,41 +181,41 @@ namespace NetBuff.Editor.Windows
                 if (networkIdentities.Length == 0)
                     continue;
 
-                var open = foldoutsScenes[scene] = EditorGUILayout.BeginFoldoutHeaderGroup(foldoutsScenes.GetValueOrDefault(scene, false), scene);
+                var open = foldoutsScenes[scene] = EditorGUILayout.BeginFoldoutHeaderGroup(foldoutsScenes.GetValueOrDefault(scene, false), new GUIContent($" {scene}", _iconScene));
                 EditorGUILayout.EndFoldoutHeaderGroup();
                 
                 EditorGUILayout.BeginVertical("Box");
                 
-                if (manager.IsServerRunning)
+                if (open)
                 {
-                    if (manager.MainScene == scene)
+                    if (manager.IsServerRunning)
                     {
-                        EditorGUILayout.HelpBox("Main scene can't be unloaded!", MessageType.Warning);
+                        if (manager.MainScene == scene)
+                        {
+                            EditorGUILayout.HelpBox("Main scene can't be unloaded!", MessageType.Warning);
+                        }
+                        else
+                        {
+                            EditorGUILayout.BeginHorizontal();
+                            if (GUILayout.Button("Unload Scene"))
+                            {
+                                manager.UnloadScene(scene);
+                            }
+
+                            if (GUILayout.Button("Reload Scene"))
+                            {
+                                manager.UnloadScene(scene);
+                                manager.LoadScene(scene);
+                            }
+
+                            EditorGUILayout.EndHorizontal();
+                        }
                     }
                     else
                     {
-                        EditorGUILayout.BeginHorizontal();
-                        if (GUILayout.Button("Unload Scene"))
-                        {
-                            manager.UnloadScene(scene);
-                        }
-
-                        if (GUILayout.Button("Reload Scene"))
-                        {
-                            manager.UnloadScene(scene);
-                            manager.LoadScene(scene);
-                        }
-
-                        EditorGUILayout.EndHorizontal();
+                        EditorGUILayout.HelpBox("Only server can load/unload scenes!", MessageType.Warning);
                     }
-                }
-                else
-                {
-                    EditorGUILayout.HelpBox("Only server can load/unload scenes!", MessageType.Warning);
-                }
-                
-                if (open)
-                {
+                    
                     foreach (var identity in networkIdentities)
                         _DrawNetworkIdentity(manager, identity, true, foldoutsObjects);
                 }
@@ -207,6 +230,22 @@ namespace NetBuff.Editor.Windows
             verticalSplitView.EndSplitView();
             Repaint();
         }
+        
+        private void _DrawHeader()
+        {
+            if (_icon != null)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                GUILayout.Label(_icon, GUILayout.Width(50), GUILayout.Height(50));
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
+            }
+            
+            GUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Network State Inspector", EditorStyles.centeredGreyMiniLabel, GUILayout.Height(20));
+            GUILayout.EndHorizontal();
+        }
 
         private void _DrawFilter()
         {
@@ -214,7 +253,7 @@ namespace NetBuff.Editor.Windows
             
             EditorGUILayout.BeginHorizontal();
             filter.search = EditorGUILayout.TextField("Search", filter.search);
-            if (GUILayout.Button("X", GUILayout.Width(20)))
+            if (GUILayout.Button("-", GUILayout.Width(20)))
             {
                 Undo.RecordObject(this, "Clear Search");
                 filter.Clear();
@@ -222,72 +261,37 @@ namespace NetBuff.Editor.Windows
             }
             EditorGUILayout.EndHorizontal();
             
-            bool DrawBadge(string typeName)
-            {
-                var type = Type.GetType(typeName);
-                if (type == null)
-                    return true;
-                var needWidth = EditorStyles.helpBox.CalcSize(new GUIContent(type.Name)).x + 20;
-                EditorGUILayout.LabelField(type.Name, EditorStyles.helpBox, GUILayout.Width(needWidth));
-                var lastRect = GUILayoutUtility.GetLastRect();
-                var rect = new Rect(lastRect.x + needWidth - 20, lastRect.y, 20, lastRect.height);
-                
-                if (GUI.Button(rect, "X"))
-                {
-                    Undo.RecordObject(this, "Remove Component");
-                    filter.components.Remove(type.AssemblyQualifiedName);
-                    Repaint();
-                    return false;
-                }
-                
-                return true;
-            }
-            
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Components");
-            if (GUILayout.Button("+", GUILayout.Width(20)))
-            {
-                var menu = new GenericMenu();
-                
-                var types = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes().Where(t => t.IsSubclassOf(typeof(NetworkBehaviour)) && !t.IsAbstract));
-
-                foreach (var type in types)
-                {
-                    if (filter.components.Contains(type.AssemblyQualifiedName))
-                        continue;
-                    
-                    var type1 = type;
-                    menu.AddItem(new GUIContent(type.Name), false, () =>
-                    {
-                        Undo.RecordObject(this, "Add Component");
-                        filter.components.Add(type1.AssemblyQualifiedName);
-                        Repaint();
-                    });
-                }
-                menu.ShowAsContext();
-            }
-            EditorGUILayout.EndHorizontal();
-
+            EditorGUILayout.BeginVertical("box");
             if (filter.components.Count > 0)
             {
-                scrollFilter = EditorGUILayout.BeginScrollView(scrollFilter,true, false, GUI.skin.horizontalScrollbar, GUI.skin.verticalScrollbar, GUI.skin.scrollView, GUILayout.Height(40));
-                scrollFilter.y = 0;
-                
                 EditorGUILayout.BeginHorizontal();
-                foreach (var type in filter.components)
-                    if (!DrawBadge(type))
-                        break;
-
-                GUILayout.FlexibleSpace();
+                EditorGUILayout.LabelField("Component Type Filter", EditorStyles.boldLabel);
+                if (GUILayout.Button("+", GUILayout.Width(20)))
+                    _OpenAddTypeContext();
                 EditorGUILayout.EndHorizontal();
-                EditorGUILayout.EndScrollView();
+                
+                EditorGUILayout.BeginVertical();
+                foreach (var type in filter.components)
+                    if (!_DrawBadge(type))
+                        break;
+                EditorGUILayout.EndVertical();
             }
+            else
+            {
+                EditorGUILayout.LabelField("Component Type Filter", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("No Component Types Selected", EditorStyles.centeredGreyMiniLabel);
+                
+                if (GUILayout.Button("Add Component Type Filter"))
+                    _OpenAddTypeContext();
+            }
+            EditorGUILayout.EndVertical();
             
             GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(1));
         }
 
         private IEnumerable<NetworkIdentity> _ApplyFilter(IEnumerable<NetworkIdentity> objects)
         {
+            var selected = Selection.objects.ToList();
             var filterById = false;
             var filterId = NetworkId.Empty;
 
@@ -309,13 +313,18 @@ namespace NetBuff.Editor.Windows
                         return false;
                 }
                 
+                if (showSelectedOnly)
+                {
+                    if (!selected.Any(s => s is GameObject go && go.GetInstanceID() == o.gameObject.GetInstanceID()))
+                        return false;
+                }
+                
                 if (string.IsNullOrEmpty(filter.search))
                     return true;
 
                 if (o.gameObject.name.Contains(filter.search))
                     return true;
-
-
+                
                 return false;
             });
         }
@@ -334,6 +343,48 @@ namespace NetBuff.Editor.Windows
             }
         }
         
+        private void _OpenAddTypeContext()
+        {
+            var menu = new GenericMenu();
+            var types = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes().Where(t => t.IsSubclassOf(typeof(NetworkBehaviour)) && !t.IsAbstract));
+
+            foreach (var type in types)
+            {
+                if (filter.components.Contains(type.AssemblyQualifiedName))
+                    continue;
+                    
+                var type1 = type;
+                menu.AddItem(new GUIContent(type.Name), false, () =>
+                {
+                    Undo.RecordObject(this, "Add Component");
+                    filter.components.Add(type1.AssemblyQualifiedName);
+                    Repaint();
+                });
+            }
+            menu.ShowAsContext();
+        }
+        
+        private bool _DrawBadge(string typeName)
+        {
+            var type = Type.GetType(typeName);
+            if (type == null)
+                return true;
+            var needWidth = EditorStyles.helpBox.CalcSize(new GUIContent(type.Name)).x + 20;
+            EditorGUILayout.LabelField(type.Name, EditorStyles.helpBox, GUILayout.Width(needWidth));
+            var lastRect = GUILayoutUtility.GetLastRect();
+            var rect = new Rect(lastRect.x + needWidth - 20, lastRect.y, 20, lastRect.height);
+                
+            if (GUI.Button(rect, "-", EditorStyles.miniButton))
+            {
+                Undo.RecordObject(this, "Remove Component");
+                filter.components.Remove(type.AssemblyQualifiedName);
+                Repaint();
+                return false;
+            }
+                
+            return true;
+        }
+        
         private bool _DrawConnectionInfo(NetworkManager manager, IConnectionInfo info, bool simple, bool local = false)
         {
             GUILayout.BeginVertical("Box");
@@ -348,16 +399,19 @@ namespace NetBuff.Editor.Windows
             else
                 foldoutsRemoteClients[id] = foldout;
 
-            if (_DrawHeader(info, local ? "Local Client" : $"Client #{id}", simple, () => foldout.main,
+            if (_DrawHeader(info, new GUIContent(local ? " Local Client" : $" Client #{id}", _iconClient), simple, () => foldout.main,
                     value => foldout.main = value))
             {
+                var ready = manager.IsClientReady(id);
+
+                EditorGUILayout.LabelField("Ready", ready ? "Yes" : "No");
                 EditorGUILayout.LabelField("Latency", info.Latency.ToString());
                 EditorGUILayout.LabelField("Packets",
                     $"R {info.PacketReceived} | S {info.PacketSent} | L {info.PacketLoss} ({info.PacketLossPercentage:0.00}%)");
 
                 _DrawConnectionInfoSessionData(manager, id, foldout, simple);
                 _DrawConnectionInfoObjects(manager, id, foldout, simple);
-
+                
                 if (!local)
                 {
                     if (GUILayout.Button("Disconnect"))
@@ -377,14 +431,14 @@ namespace NetBuff.Editor.Windows
         {
             GUILayout.BeginVertical("Box");
 
-            if (_DrawHeader(null, "Session Data", simple, () => foldout.data, value => foldout.data = value))
+            if (_DrawHeader(null, new GUIContent("Session Data"), simple, () => foldout.data, value => foldout.data = value))
             {
                 if (manager.IsServerRunning)
                 {
                     if (!manager.TryGetSessionData(id, out SessionData data))
                         EditorGUILayout.HelpBox("No session data found!", MessageType.Warning);
-                    else
-                        _DrawObjectReadOnly(data);
+                    else if (!_DrawObjectReadOnly(data))
+                        EditorGUILayout.LabelField("Empty Session Data", EditorStyles.centeredGreyMiniLabel);
                 }
                 else
                 {
@@ -392,8 +446,8 @@ namespace NetBuff.Editor.Windows
 
                     if (localSession == null)
                         EditorGUILayout.HelpBox("No session data found!", MessageType.Warning);
-                    else
-                        _DrawObjectReadOnly(localSession);
+                    else if (!_DrawObjectReadOnly(localSession))
+                        EditorGUILayout.LabelField("Empty Session Data", EditorStyles.centeredGreyMiniLabel);
                 }
             }
 
@@ -404,13 +458,21 @@ namespace NetBuff.Editor.Windows
         {
             GUILayout.BeginVertical("Box");
 
-            if (_DrawHeader(null, "Owned Objects", simple, () => foldout.objects,
+            if (_DrawHeader(null, new GUIContent("Owned Objects"), simple, () => foldout.objects,
                     value => foldout.objects = value))
             {
                 var objects = manager.GetNetworkObjectsOwnedBy(id);
                 EditorGUILayout.BeginVertical("Box");
+                var found = false;
                 foreach (var identity in objects)
+                {
                     _DrawNetworkIdentity(manager, identity, simple, foldout.objectsFoldouts);
+                    found = true;
+                }
+                
+                if(!found)
+                    EditorGUILayout.LabelField("No Owned Objects", EditorStyles.centeredGreyMiniLabel);
+
                 EditorGUILayout.EndVertical();
             }
 
@@ -431,7 +493,7 @@ namespace NetBuff.Editor.Windows
             dict[identity.Id] = foldout;
             
             GUILayout.BeginVertical("Box");
-            var open = _DrawHeader(identity, identity.gameObject.name, simple, () => foldout.main,
+            var open = _DrawHeader(identity, new GUIContent($" {identity.gameObject.name}", _iconNetworkIdentity), simple, () => foldout.main,
                 value => foldout.main = value);
             
             var idLabel = identity.Id.ToString();
@@ -441,6 +503,7 @@ namespace NetBuff.Editor.Windows
 
             if(open)
             {
+                EditorGUI.indentLevel++;
                 EditorGUI.BeginDisabledGroup(true);
                 EditorGUILayout.TextField("Owner", identity.OwnerId == -1 ? "Server" : identity.OwnerId.ToString());
                 EditorGUILayout.Toggle("Authority", identity.HasAuthority);
@@ -453,7 +516,7 @@ namespace NetBuff.Editor.Windows
                 EditorGUI.EndDisabledGroup();
 
                 EditorGUILayout.BeginVertical("Box");
-                foldout.behaviours = _DrawHeader(null, "Behaviours", simple, () => foldout.behaviours,
+                foldout.behaviours = _DrawHeader(null, new GUIContent("Behaviours"), simple, () => foldout.behaviours,
                     value => foldout.behaviours = value);
                 
                 if (foldout.behaviours)
@@ -464,11 +527,17 @@ namespace NetBuff.Editor.Windows
                         EditorGUILayout.BeginVertical("Box");
                         var i = index;
                         var index1 = index;
-                        if (_DrawHeader(null, behaviour.GetType().Name, simple,
+
+                        var icon = _iconDefaultBehaviour;
+                        var customIcon = EditorGUIUtility.ObjectContent(null, behaviour.GetType());
+                        if (customIcon != null && customIcon.image != null)
+                            icon = customIcon.image;
+                        
+                        if (_DrawHeader(null, new GUIContent($" {behaviour.GetType().Name}", icon), simple,
                                 () => foldout.behavioursFoldouts.GetValueOrDefault(index1, false),
                                 value => foldout.behavioursFoldouts[i] = value))
                         {
-                            //draw behaviour
+                            EditorGUI.indentLevel++;
                             var so = new SerializedObject(behaviour);
                             so.UpdateIfRequiredOrScript();
                             
@@ -477,17 +546,19 @@ namespace NetBuff.Editor.Windows
                             var iterator = so.GetIterator();
                             for (var enterChildren = true; iterator.NextVisible(enterChildren); enterChildren = false)
                             {
-                                if (iterator.boxedValue is NetworkValue)
-                                {
-                                    found = true;
-                                    EditorGUILayout.PropertyField(iterator, true);
-                                }
+                                if (iterator.propertyType != SerializedPropertyType.Generic ||
+                                    !iterator.type.EndsWith("NetworkValue") ||
+                                    iterator.boxedValue is not NetworkValue) continue;
+                                
+                                found = true;
+                                EditorGUILayout.PropertyField(iterator, true);
                             }
                             
                             if (!found)
-                                EditorGUILayout.HelpBox("No network values found!", MessageType.Warning);
+                                EditorGUILayout.LabelField("No Network Values found", EditorStyles.centeredGreyMiniLabel);
                             
                             so.ApplyModifiedProperties();
+                            EditorGUI.indentLevel--;
                         }
                         
                         EditorGUILayout.EndVertical();
@@ -513,12 +584,13 @@ namespace NetBuff.Editor.Windows
                     
                     EditorGUILayout.EndHorizontal();
                 }
+                EditorGUI.indentLevel--;
             }
             
             GUILayout.EndVertical();
         }
         
-        private bool _DrawHeader(object selectable, string header, bool simple, Func<bool> getState, Action<bool> setState)
+        private bool _DrawHeader(object selectable, GUIContent header, bool simple, Func<bool> getState, Action<bool> setState)
         {
             if (!simple)
             {
@@ -526,7 +598,7 @@ namespace NetBuff.Editor.Windows
                 return true;
             }
             
-            var rect = GUILayoutUtility.GetRect(new GUIContent(header), EditorStyles.foldoutHeader);
+            var rect = GUILayoutUtility.GetRect(header, EditorStyles.foldoutHeader);
             var canSelect = selectable is NetworkIdentity;
             var headerRect = new Rect(rect.x, rect.y, canSelect ? rect.width - 100 : rect.width, EditorGUIUtility.singleLineHeight);
             
@@ -538,8 +610,8 @@ namespace NetBuff.Editor.Windows
             
             if (canSelect)
             {
-                var selectRect = new Rect(rect.x + rect.width - 100, rect.y, 50, EditorGUIUtility.singleLineHeight);
-                var filterRect = new Rect(rect.x + rect.width - 50, rect.y, 50, EditorGUIUtility.singleLineHeight);
+                var selectRect = new Rect(rect.x + rect.width - 100, rect.y, 49, EditorGUIUtility.singleLineHeight);
+                var filterRect = new Rect(rect.x + rect.width - 49, rect.y, 49, EditorGUIUtility.singleLineHeight);
                 
                 if (GUI.Button(selectRect, "Select"))
                 {
@@ -561,14 +633,14 @@ namespace NetBuff.Editor.Windows
             return newOpen;
         }
 
-        private void _DrawObjectReadOnly(object o)
+        private bool _DrawObjectReadOnly(object o)
         {
             EditorGUI.BeginDisabledGroup(true);
-            foreach (var field in o.GetType().GetFields())
-            {
+            var fields = o.GetType().GetFields();
+            foreach (var field in fields)
                 _DrawObjectField(field.Name, field.GetValue(o));
-            }
             EditorGUI.EndDisabledGroup();
+            return fields.Length > 0;
         }
         
         private void _DrawObjectField(string label, object value)

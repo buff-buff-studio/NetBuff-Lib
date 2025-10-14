@@ -11,7 +11,6 @@ namespace ExamplePlatformer.Props
 
         private void OnEnable()
         {
-            WithValues(isOpen);
             UpdateVisuals(isOpen.Value, isOpen.Value);
             isOpen.OnValueChanged += UpdateVisuals;
         }

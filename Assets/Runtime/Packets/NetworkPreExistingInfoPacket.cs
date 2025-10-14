@@ -6,35 +6,19 @@ using UnityEngine;
 
 namespace NetBuff.Packets
 {
-    /// <summary>
-    ///     Packet used to send information about pre-existing objects in the network.
-    /// </summary>
     public class NetworkPreExistingInfoPacket : IPacket
     {
-        /// <summary>
-        ///     The pre-existing objects in the network.
-        /// </summary>
         public PreExistingState[] PreExistingObjects { get; set; }
 
-        /// <summary>
-        ///     The id of the pre-existing objects that were removed from the network.
-        /// </summary>
         public NetworkId[] RemovedObjects { get; set; }
 
-        /// <summary>
-        ///     The names of the scenes that are loaded in the network.
-        /// </summary>
-        public string[] SceneNames { get; set; }
+        public string[] LoadedSceneNames { get; set; }
 
-        /// <summary>
-        ///     The spawned objects in the network.
-        /// </summary>
         public NetworkObjectSpawnPacket[] SpawnedObjects { get; set; }
 
-        /// <summary>
-        ///     The data of the network behaviours in the network.
-        /// </summary>
         public NetworkBehaviourDataPacket[] NetworkValues { get; set; }
+        
+        public bool IsSnapshot { get; set; }
 
         public void Serialize(BinaryWriter writer)
         {
@@ -62,8 +46,8 @@ namespace NetBuff.Packets
             foreach (var removedObject in RemovedObjects)
                 writer.Write(removedObject);
 
-            writer.Write(SceneNames.Length);
-            foreach (var sceneName in SceneNames) writer.Write(sceneName);
+            writer.Write(LoadedSceneNames.Length);
+            foreach (var sceneName in LoadedSceneNames) writer.Write(sceneName);
 
             writer.Write(SpawnedObjects.Length);
             foreach (var spawnedObject in SpawnedObjects)
@@ -93,6 +77,8 @@ namespace NetBuff.Packets
                 writer.Write(networkValue.Payload.Length);
                 writer.Write(networkValue.Payload);
             }
+            
+            writer.Write(IsSnapshot);
         }
 
         public void Deserialize(BinaryReader reader)
@@ -119,9 +105,9 @@ namespace NetBuff.Packets
                 RemovedObjects[i] = reader.ReadNetworkId();
 
             var sceneNamesLength = reader.ReadInt32();
-            SceneNames = new string[sceneNamesLength];
+            LoadedSceneNames = new string[sceneNamesLength];
             for (var i = 0; i < sceneNamesLength; i++)
-                SceneNames[i] = reader.ReadString();
+                LoadedSceneNames[i] = reader.ReadString();
 
             var spawnedObjectsLength = reader.ReadInt32();
             SpawnedObjects = new NetworkObjectSpawnPacket[spawnedObjectsLength];
@@ -148,56 +134,31 @@ namespace NetBuff.Packets
                     BehaviourId = reader.ReadByte(),
                     Payload = reader.ReadBytes(reader.ReadInt32())
                 };
+            
+            IsSnapshot = reader.ReadBoolean();
         }
 
-        /// <summary>
-        ///     Represents the state of a pre-existing object in the network.
-        /// </summary>
         [Serializable]
         public class PreExistingState
         {
-            /// <summary>
-            ///     The id of the object.
-            /// </summary>
-            [InspectorMode(InspectorMode.Object)]
+            [NetworkIdInspectorMode(NetworkIdInspectorMode.Object)]
             public NetworkId Id { get; set; }
 
-            /// <summary>
-            ///     The id of the prefab.
-            /// </summary>
-            [InspectorMode(InspectorMode.Prefab)]
+            [NetworkIdInspectorMode(NetworkIdInspectorMode.Prefab)]
             public NetworkId PrefabId { get; set; }
 
-            /// <summary>
-            ///     The id of the owner of the object.
-            /// </summary>
-            [InspectorMode(InspectorMode.Owner)]
+            [NetworkIdInspectorMode(NetworkIdInspectorMode.Owner)]
             public int OwnerId { get; set; }
 
-            /// <summary>
-            ///     The position of the object.
-            /// </summary>
             public Vector3 Position { get; set; }
 
-            /// <summary>
-            ///     The rotation of the object.
-            /// </summary>
             public Quaternion Rotation { get; set; }
 
-            /// <summary>
-            ///     The scale of the object.
-            /// </summary>
             public Vector3 Scale { get; set; }
 
-            /// <summary>
-            ///     The state of the object.
-            /// </summary>
             public bool IsActive { get; set; }
 
-            /// <summary>
-            ///     The id of the scene where the object is.
-            /// </summary>
-            [InspectorMode(InspectorMode.Scene)]
+            [NetworkIdInspectorMode(NetworkIdInspectorMode.Scene)]
             public int SceneId { get; set; }
         }
     }

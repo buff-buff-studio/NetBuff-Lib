@@ -19,7 +19,7 @@ MonoBehaviour:
     width: 1536
     height: 772.8
   m_ShowMode: 4
-  m_Title: Console
+  m_Title: Network State Inspector
   m_RootView: {fileID: 2}
   m_MinSize: {x: 875, y: 300}
   m_MaxSize: {x: 10000, y: 10000}
@@ -139,7 +139,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 0
     y: 0
-    width: 849.6
+    width: 844
     height: 722.8
   m_MinSize: {x: 200, y: 100}
   m_MaxSize: {x: 16192, y: 16192}
@@ -164,7 +164,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 0
     y: 0
-    width: 849.6
+    width: 844
     height: 268.8
   m_MinSize: {x: 200, y: 50}
   m_MaxSize: {x: 16192, y: 8096}
@@ -187,7 +187,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 0
     y: 0
-    width: 208.8
+    width: 205.6
     height: 268.8
   m_MinSize: {x: 201, y: 221}
   m_MaxSize: {x: 4001, y: 4021}
@@ -211,9 +211,9 @@ MonoBehaviour:
   m_Children: []
   m_Position:
     serializedVersion: 2
-    x: 208.8
+    x: 205.6
     y: 0
-    width: 640.8
+    width: 638.4
     height: 268.8
   m_MinSize: {x: 202, y: 221}
   m_MaxSize: {x: 4002, y: 4021}
@@ -240,7 +240,7 @@ MonoBehaviour:
     serializedVersion: 2
     x: 0
     y: 268.8
-    width: 849.6
+    width: 844
     height: 454
   m_MinSize: {x: 101, y: 121}
   m_MaxSize: {x: 4001, y: 4021}
@@ -267,9 +267,9 @@ MonoBehaviour:
   m_Children: []
   m_Position:
     serializedVersion: 2
-    x: 849.6
+    x: 844
     y: 0
-    width: 686.4
+    width: 692
     height: 722.8
   m_MinSize: {x: 51, y: 71}
   m_MaxSize: {x: 4001, y: 4021}
@@ -300,9 +300,9 @@ MonoBehaviour:
     m_TextWithWhitespace: "Network State Inspector\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 850.6
-    y: 19
-    width: 685.4
+    x: 844
+    y: 73.6
+    width: 691
     height: 701.8
   m_SerializedDataModeController:
     m_DataMode: 0
@@ -315,14 +315,6 @@ MonoBehaviour:
     m_SaveData: []
     m_ContainerData: []
     m_OverlaysVisible: 1
-  scrollMainPanel: {x: 0, y: 113}
-  verticalSplitView:
-    splitDirection: 1
-    splitNormalizedPosition: 0.48114285
-    resize: 0
-    scrollPosition: {x: 0, y: 0}
-    minNormalizedPosition: 0.1
-    maxNormalizedPosition: 0.9
   foldoutsLocalClients:
     _serializedList:
     - Key: 0
@@ -330,6 +322,8 @@ MonoBehaviour:
         main: 1
         data: 1
         objects: 0
+        objectsFoldouts:
+          _serializedList: []
   foldoutsRemoteClients:
     _serializedList:
     - Key: 0
@@ -337,11 +331,25 @@ MonoBehaviour:
         main: 1
         data: 1
         objects: 1
+        objectsFoldouts:
+          _serializedList: []
   foldoutsObjects:
     _serializedList: []
-  selectedObjectId:
-    high: 0
-    low: 0
+  scrollMainPanel: {x: 0, y: 113}
+  scrollObjectsPanel: {x: 0, y: 0}
+  scrollFilter: {x: 0, y: 0}
+  verticalSplitView:
+    splitDirection: 1
+    splitNormalizedPosition: 0.48114285
+    resize: 0
+    scrollPosition: {x: 0, y: 0}
+    minNormalizedPosition: 0.1
+    maxNormalizedPosition: 0.9
+  foldoutsScenes:
+    _serializedList: []
+  filter:
+    search: 
+    components: []
 --- !u!114 &13
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -364,8 +372,8 @@ MonoBehaviour:
   m_Pos:
     serializedVersion: 2
     x: 0
-    y: 287.8
-    width: 848.6
+    y: 342.4
+    width: 843
     height: 433
   m_SerializedDataModeController:
     m_DataMode: 0
@@ -400,8 +408,8 @@ MonoBehaviour:
   m_Pos:
     serializedVersion: 2
     x: 0
-    y: 19
-    width: 207.8
+    y: 73.6
+    width: 204.6
     height: 247.79999
   m_SerializedDataModeController:
     m_DataMode: 0
@@ -419,7 +427,7 @@ MonoBehaviour:
       scrollPos: {x: 0, y: 0}
       m_SelectedIDs: 
       m_LastClickedID: 0
-      m_ExpandedIDs: 1ed8ffff58d9ffff32f8ffff10fbffff
+      m_ExpandedIDs: f2aaffff
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -1003,9 +1011,9 @@ MonoBehaviour:
     m_TextWithWhitespace: "Game\u200B"
   m_Pos:
     serializedVersion: 2
-    x: 209.8
-    y: 19
-    width: 638.8
+    x: 205.6
+    y: 73.6
+    width: 636.4
     height: 247.79999
   m_SerializedDataModeController:
     m_DataMode: 0
@@ -1024,7 +1032,7 @@ MonoBehaviour:
   m_ShowGizmos: 0
   m_TargetDisplay: 0
   m_ClearColor: {r: 0, g: 0, b: 0, a: 0}
-  m_TargetSize: {x: 638.8, y: 226.79999}
+  m_TargetSize: {x: 636.4, y: 226.79999}
   m_TextureFilterMode: 0
   m_TextureHideFlags: 61
   m_RenderIMGUI: 1
@@ -1039,8 +1047,8 @@ MonoBehaviour:
     m_VRangeLocked: 0
     hZoomLockedByDefault: 0
     vZoomLockedByDefault: 0
-    m_HBaseRangeMin: -255.52
-    m_HBaseRangeMax: 255.52
+    m_HBaseRangeMin: -254.56001
+    m_HBaseRangeMax: 254.56001
     m_VBaseRangeMin: -90.71999
     m_VBaseRangeMax: 90.71999
     m_HAllowExceedBaseRangeMin: 1
@@ -1048,7 +1056,7 @@ MonoBehaviour:
     m_VAllowExceedBaseRangeMin: 1
     m_VAllowExceedBaseRangeMax: 1
     m_ScaleWithWindow: 0
-    m_HSlider: 1
+    m_HSlider: 0
     m_VSlider: 0
     m_IgnoreScrollWheelUntilClicked: 0
     m_EnableMouseInput: 1
@@ -1060,23 +1068,23 @@ MonoBehaviour:
       serializedVersion: 2
       x: 0
       y: 21
-      width: 638.8
+      width: 636.4
       height: 226.79999
     m_Scale: {x: 1.25, y: 1.25}
-    m_Translation: {x: 319.4, y: 113.399994}
+    m_Translation: {x: 318.2, y: 113.399994}
     m_MarginLeft: 0
     m_MarginRight: 0
     m_MarginTop: 0
     m_MarginBottom: 0
     m_LastShownAreaInsideMargins:
       serializedVersion: 2
-      x: -255.51999
+      x: -254.56001
       y: -90.71999
-      width: 511.03998
+      width: 509.12003
       height: 181.43999
     m_MinimalGUI: 1
   m_defaultScale: 1
-  m_LastWindowPixelSize: {x: 798.5, y: 309.75}
+  m_LastWindowPixelSize: {x: 795.5, y: 309.75}
   m_ClearInEditMode: 1
   m_NoCameraWarning: 1
   m_LowResolutionForAspectRatios: 01000000000000000000
@@ -1148,7 +1156,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: a87a0000
     m_LastClickedID: 31400
-    m_ExpandedIDs: 00000000cc7a0000
+    m_ExpandedIDs: 
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -1177,7 +1185,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 00000000cc7a0000
+    m_ExpandedIDs: 
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 

@@ -17,7 +17,6 @@ namespace Samples.SceneLoading
         
         private void OnEnable()
         {
-            WithValues(number);
             number.OnValueChanged += (_, newValue) =>
             {
                 if (text != null) text.text = newValue.ToString();

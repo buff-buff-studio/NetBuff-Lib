@@ -5,57 +5,29 @@ using UnityEngine;
 
 namespace NetBuff.Packets
 {
-    /// <summary>
-    ///     Packet used to spawn a network object.
-    /// </summary>
     public class NetworkObjectSpawnPacket : IPacket
     {
-        /// <summary>
-        ///     The network id of the network object.
-        /// </summary>
-        [InspectorMode(InspectorMode.Object)]
+        [NetworkIdInspectorMode(NetworkIdInspectorMode.Object)]
         public NetworkId Id { get; set; }
 
-        /// <summary>
-        ///     The network id of the prefab.
-        /// </summary>
-        [InspectorMode(InspectorMode.Prefab)]
+        [NetworkIdInspectorMode(NetworkIdInspectorMode.Prefab)]
         public NetworkId PrefabId { get; set; }
 
-        /// <summary>
-        ///     The owner id of the network object.
-        ///     If the owner id is -1, the object will be owned by the server.
-        /// </summary>
-        [InspectorMode(InspectorMode.Owner)]
+        [NetworkIdInspectorMode(NetworkIdInspectorMode.Owner)]
         public int OwnerId { get; set; }
 
-        /// <summary>
-        ///     The position of the network object.
-        /// </summary>
         public Vector3 Position { get; set; }
 
-        /// <summary>
-        ///     The rotation of the network object.
-        /// </summary>
         public Quaternion Rotation { get; set; }
 
-        /// <summary>
-        ///     The scale of the network object.
-        /// </summary>
         public Vector3 Scale { get; set; }
 
-        /// <summary>
-        ///     The active state of the network object.
-        /// </summary>
         public bool IsActive { get; set; }
 
-        /// <summary>
-        ///     The scene id of the network object.
-        ///     If the scene id is 0, the object will be spawned in the main scene.
-        ///     If the scene id is -1, the object will be spawned in the last loaded scene.
-        /// </summary>
-        [InspectorMode(InspectorMode.Scene)]
+        [NetworkIdInspectorMode(NetworkIdInspectorMode.Scene)]
         public int SceneId { get; set; }
+
+        public NetworkId EventId { get; set; } = NetworkId.Empty;
 
         public void Serialize(BinaryWriter writer)
         {
@@ -74,6 +46,7 @@ namespace NetBuff.Packets
             writer.Write(Scale.z);
             writer.Write(IsActive);
             writer.Write(SceneId);
+            writer.Write(EventId);
         }
 
         public void Deserialize(BinaryReader reader)
@@ -87,6 +60,7 @@ namespace NetBuff.Packets
             Scale = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
             IsActive = reader.ReadBoolean();
             SceneId = reader.ReadInt32();
+            EventId = reader.ReadNetworkId();
         }
     }
 }

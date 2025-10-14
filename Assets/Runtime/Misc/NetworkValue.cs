@@ -1,45 +1,25 @@
 using System;
 using System.IO;
 using System.Reflection;
-using NetBuff.Base;
+using System.Runtime.CompilerServices;
 using NetBuff.Components;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace NetBuff.Misc
 {
     #region Base Types
-    /// <summary>
-    ///     Base class for all network values.
-    ///     Used to store values that are synchronized over the network.
-    /// </summary>
     [Serializable]
     public abstract class NetworkValue
     {
-        /// <summary>
-        ///     Used to determine who can modify a value.
-        /// </summary>
         public enum ModifierType
         {
-            /// <summary>
-            ///     Only the owner of the behaviour that this value is attached to can modify it.
-            /// </summary>
             OwnerOnly,
 
-            /// <summary>
-            ///     Only the server can modify it.
-            /// </summary>
             Server,
 
-            /// <summary>
-            ///     Everybody can modify it.
-            /// </summary>
             Everybody
         }
 
-        /// <summary>
-        ///     The behaviour that this value is attached to.
-        /// </summary>
         public NetworkBehaviour AttachedTo
         {
             get => attachedTo;
@@ -53,22 +33,10 @@ namespace NetBuff.Misc
             }
         }
 
-        /// <summary>
-        ///     Serializes the value to a binary writer.
-        /// </summary>
-        /// <param name="writer"></param>
         public abstract void Serialize(BinaryWriter writer);
 
-        /// <summary>
-        ///     Deserializes the value from a binary reader.
-        /// </summary>
-        /// <param name="reader"></param>
-        public abstract void Deserialize(BinaryReader reader);
+        public abstract void Deserialize(BinaryReader reader, bool callCallback);
 
-        /// <summary>
-        ///     Checks if the environment has permission to modify this value.
-        /// </summary>
-        /// <returns></returns>
         public abstract bool CheckPermission();
 
         #if UNITY_EDITOR
@@ -82,21 +50,14 @@ namespace NetBuff.Misc
         #endregion
     }
 
-    /// <summary>
-    ///     Base class for all network values.
-    ///     Used to store values that are synchronized over the network.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
     [Serializable]
     public abstract class NetworkValue<T> : NetworkValue
     {
         public delegate void ValueChangeHandler(T oldValue, T newValue);
-
-        [FormerlySerializedAs("_value")]
+        
         [SerializeField]
         protected T value;
-
-        [FormerlySerializedAs("_type")]
+        
         [SerializeField]
         protected ModifierType type;
 
@@ -111,11 +72,6 @@ namespace NetBuff.Misc
             this.type = type;
         }
 
-        /// <summary>
-        ///     The value of this network value.
-        ///     Can only be set if the local environment has permission.
-        ///     Use the CheckPermission method to check if the environment has permission.
-        /// </summary>
         public T Value
         {
             get => value;
@@ -125,14 +81,14 @@ namespace NetBuff.Misc
             {
                 if (value.Equals(this.value))
                     return;
-
+                
                 var man = NetworkManager.Instance;
                 if (man == null || man.EnvironmentType == NetworkTransport.EnvironmentType.None)
                 {
                     SetValueCalling(value);
                     return;
                 }
-
+                
                 if (attachedTo == null)
                     throw new InvalidOperationException("This value is not attached to any NetworkBehaviour");
 
@@ -143,15 +99,12 @@ namespace NetBuff.Misc
                 if (@delegate == null)
                     AttachedTo = attachedTo;
                 #endif
-
+                    
                 SetValueCalling(value);
-                @delegate?.Invoke(this);
+                @delegate!.Invoke(this);
             }
         }
 
-        /// <summary>
-        ///     Called when the value of this network value changes.
-        /// </summary>
         public event ValueChangeHandler OnValueChanged;
         
         public override bool CheckPermission()
@@ -178,11 +131,9 @@ namespace NetBuff.Misc
             #endif
         }
 
-        /// <summary>
-        ///     Used to set the value of this network value.
-        ///     Shall only be used internally.
-        /// </summary>
-        /// <param name="newValue"></param>
+        public abstract T Deserialize(BinaryReader reader);
+    
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void SetValueCalling(T newValue)
         {
             var oldValue = value;
@@ -190,59 +141,55 @@ namespace NetBuff.Misc
 
             OnValueChanged?.Invoke(oldValue, newValue);
         }
-
+        
         #if UNITY_EDITOR
         public override void EditorForceUpdate()
         {
             SetValueCalling(value);
 
-            if (attachedTo != null)
-                @delegate(this);
+            if (attachedTo == null)
+                return;
+            
+            if (@delegate == null)
+                AttachedTo = attachedTo;
+            
+            // ReSharper disable once PossibleNullReferenceException
+            @delegate(this);
         }
         #endif
 
-        /// <summary>
-        ///     Returns a string representation of this network value.
-        /// </summary>
-        /// <returns></returns>
+        public override void Deserialize(BinaryReader reader, bool callCallback)
+        {
+            var v = Deserialize(reader);
+            if(callCallback)
+                SetValueCalling(v);
+            else
+                value = v;
+        }
+
         public override string ToString()
         {
             return $"NetworkValue({value.ToString()})";
         }
     }
     
-    /// <summary>
-    ///     Used as base to types that store references using the attached NetworkIdentity to synchronize the value over the network.
-    /// </summary>
     [Serializable]
     public abstract class NetworkIdentityBasedValue<T> : NetworkValue
     {
         public delegate void ValueChangeHandler(T oldValue, T newValue);
 
-        [FormerlySerializedAs("_value")]
         [SerializeField]
         protected NetworkId value;
 
-        [FormerlySerializedAs("_type")]
         [SerializeField]
         protected ModifierType type;
 
-        /// <summary>
-        ///     The raw value of this network value.
-        ///     Can only be set if the local environment has permission.
-        ///     Use the CheckPermission method to check if the environment has permission.
-        /// </summary>
         public NetworkId RawValue
         {
             get => value;
             set => SetValueCalling(value);
         }
         
-        /// <summary>
-        ///     The value of this network value.
-        ///     Can only be set if the local environment has permission.
-        ///     Use the CheckPermission method to check if the environment has permission.
-        /// </summary>
         public T Value
         {
             get => GetFromNetworkId(value);
@@ -277,9 +224,6 @@ namespace NetBuff.Misc
             }
         }
 
-        /// <summary>
-        ///     Called when the value of this network value changes.
-        /// </summary>
         public event ValueChangeHandler OnValueChanged;
         
         protected NetworkIdentityBasedValue(ModifierType type = ModifierType.OwnerOnly)
@@ -287,18 +231,8 @@ namespace NetBuff.Misc
             this.type = type;
         }
 
-        /// <summary>
-        /// Converts a network ID to the desired network object.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
         protected abstract T GetFromNetworkId(NetworkId id);
         
-        /// <summary>
-        /// Converts the value to a network ID.
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
         protected abstract NetworkId GetNetworkId(T value);
         
         public override void Serialize(BinaryWriter writer)
@@ -306,10 +240,13 @@ namespace NetBuff.Misc
             writer.Write(value);
         }
 
-        public override void Deserialize(BinaryReader reader)
+        public override void Deserialize(BinaryReader reader, bool callCallback)
         {
             var v = reader.ReadNetworkId();
-            SetValueCalling(v);
+            if(callCallback)
+                SetValueCalling(v);
+            else
+                value = v;
         }
         
         public override bool CheckPermission()
@@ -335,12 +272,8 @@ namespace NetBuff.Misc
             };
             #endif
         }
-
-        /// <summary>
-        ///     Used to set the value of this network value.
-        ///     Shall only be used internally.
-        /// </summary>
-        /// <param name="newValue"></param>
+    
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void SetValueCalling(T newValue)
         {
             var oldValue = GetFromNetworkId(value);
@@ -349,11 +282,6 @@ namespace NetBuff.Misc
             OnValueChanged?.Invoke(oldValue, newValue);
         }
         
-        /// <summary>
-        ///     Used to set the value of this network value.
-        ///     Shall only be used internally.
-        /// </summary>
-        /// <param name="newValue"></param>
         protected void SetValueCalling(NetworkId newValue)
         {
             var oldValue = GetFromNetworkId(value);
@@ -371,22 +299,12 @@ namespace NetBuff.Misc
         }
         #endif
 
-        /// <summary>
-        ///     Returns a string representation of this network value.
-        /// </summary>
-        /// <returns></returns>
         public override string ToString()
         {
             return $"NetworkValue({value})";
         }
 
         #region Internal Util Methods
-        /// <summary>
-        ///     Returns the NetworkIdentity object from the given NetworkId.
-        ///     Will return null if the NetworkId is empty.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
         protected static NetworkIdentity GetNetworkObject(NetworkId id)
         {
             #if UNITY_EDITOR
@@ -407,9 +325,6 @@ namespace NetBuff.Misc
     #endregion
 
     #region Primite Types
-    /// <summary>
-    ///     USed to store a boolean value that is synchronized over the network.
-    /// </summary>
     [Serializable]
     public class BoolNetworkValue : NetworkValue<bool>
     {
@@ -428,16 +343,12 @@ namespace NetBuff.Misc
             writer.Write(value);
         }
 
-        public override void Deserialize(BinaryReader reader)
+        public override bool Deserialize(BinaryReader reader)
         {
-            var v = reader.ReadBoolean();
-            SetValueCalling(v);
+            return reader.ReadBoolean();
         }
     }
 
-    /// <summary>
-    ///     Used to store a byte value that is synchronized over the network.
-    /// </summary>
     [Serializable]
     public class ByteNetworkValue : NetworkValue<byte>
     {
@@ -456,16 +367,12 @@ namespace NetBuff.Misc
             writer.Write(value);
         }
 
-        public override void Deserialize(BinaryReader reader)
+        public override byte Deserialize(BinaryReader reader)
         {
-            var v = reader.ReadByte();
-            SetValueCalling(v);
+            return reader.ReadByte();
         }
     }
 
-    /// <summary>
-    ///     Used to store a int value that is synchronized over the network.
-    /// </summary>
     [Serializable]
     public class IntNetworkValue : NetworkValue<int>
     {
@@ -483,16 +390,12 @@ namespace NetBuff.Misc
             writer.Write(value);
         }
 
-        public override void Deserialize(BinaryReader reader)
+        public override int Deserialize(BinaryReader reader)
         {
-            var v = reader.ReadInt32();
-            SetValueCalling(v);
+            return reader.ReadInt32();
         }
     }
 
-    /// <summary>
-    ///     Used to store a float value that is synchronized over the network.
-    /// </summary>
     [Serializable]
     public class FloatNetworkValue : NetworkValue<float>
     {
@@ -511,16 +414,12 @@ namespace NetBuff.Misc
             writer.Write(value);
         }
 
-        public override void Deserialize(BinaryReader reader)
+        public override float Deserialize(BinaryReader reader)
         {
-            var v = reader.ReadSingle();
-            SetValueCalling(v);
+            return reader.ReadSingle();
         }
     }
 
-    /// <summary>
-    ///     Used to store a double value that is synchronized over the network.
-    /// </summary>
     [Serializable]
     public class DoubleNetworkValue : NetworkValue<double>
     {
@@ -539,16 +438,12 @@ namespace NetBuff.Misc
             writer.Write(value);
         }
 
-        public override void Deserialize(BinaryReader reader)
+        public override double Deserialize(BinaryReader reader)
         {
-            var v = reader.ReadDouble();
-            SetValueCalling(v);
+            return reader.ReadDouble();
         }
     }
 
-    /// <summary>
-    ///     Used to store a long value that is synchronized over the network.
-    /// </summary>
     [Serializable]
     public class LongNetworkValue : NetworkValue<long>
     {
@@ -567,16 +462,12 @@ namespace NetBuff.Misc
             writer.Write(value);
         }
 
-        public override void Deserialize(BinaryReader reader)
+        public override long Deserialize(BinaryReader reader)
         {
-            var v = reader.ReadInt64();
-            SetValueCalling(v);
+            return reader.ReadInt64();
         }
     }
 
-    /// <summary>
-    ///     Used to store a short value that is synchronized over the network.
-    /// </summary>
     [Serializable]
     public class ShortNetworkValue : NetworkValue<short>
     {
@@ -594,18 +485,39 @@ namespace NetBuff.Misc
             writer.Write(value);
         }
 
-        public override void Deserialize(BinaryReader reader)
+        public override short Deserialize(BinaryReader reader)
         {
-            var v = reader.ReadInt16();
-            SetValueCalling(v);
+            return reader.ReadInt16();
+        }
+    }
+    #endregion
+
+    #region Enum Types
+    [Serializable]
+    public class EnumNetworkValue<T> : NetworkValue<T> where T : Enum
+    {
+        public EnumNetworkValue()
+        {
+            
+        }
+        
+        public EnumNetworkValue(T defaultValue, ModifierType type = ModifierType.OwnerOnly) : base(defaultValue, type)
+        {
+        }
+
+        public override void Serialize(BinaryWriter writer)
+        {
+            writer.Write(Convert.ToInt32(value));
+        }
+        
+        public override T Deserialize(BinaryReader reader)
+        {
+            return (T)Enum.ToObject(typeof(T), reader.ReadInt32());
         }
     }
     #endregion
 
     #region Built-In Types
-    /// <summary>
-    ///     Used to store a string value that is synchronized over the network.
-    /// </summary>
     [Serializable]
     public class StringNetworkValue : NetworkValue<string>
     {
@@ -624,18 +536,14 @@ namespace NetBuff.Misc
             writer.Write(value);
         }
 
-        public override void Deserialize(BinaryReader reader)
+        public override string Deserialize(BinaryReader reader)
         {
-            var v = reader.ReadString();
-            SetValueCalling(v);
+            return reader.ReadString();
         }
     }
     #endregion
 
     #region Unity Built-In Types
-    /// <summary>
-    ///     Used to store a Vector2 value that is synchronized over the network.
-    /// </summary>
     [Serializable]
     public class Vector2NetworkValue : NetworkValue<Vector2>
     {
@@ -655,17 +563,12 @@ namespace NetBuff.Misc
             writer.Write(value.y);
         }
 
-        public override void Deserialize(BinaryReader reader)
+        public override Vector2 Deserialize(BinaryReader reader)
         {
-            var x = reader.ReadSingle();
-            var y = reader.ReadSingle();
-            SetValueCalling(new Vector2(x, y));
+            return new Vector2(reader.ReadSingle(), reader.ReadSingle());
         }
     }
 
-    /// <summary>
-    ///     Used to store a Vector3 value that is synchronized over the network.
-    /// </summary>
     [Serializable]
     public class Vector3NetworkValue : NetworkValue<Vector3>
     {
@@ -686,18 +589,12 @@ namespace NetBuff.Misc
             writer.Write(value.z);
         }
 
-        public override void Deserialize(BinaryReader reader)
+        public override Vector3 Deserialize(BinaryReader reader)
         {
-            var x = reader.ReadSingle();
-            var y = reader.ReadSingle();
-            var z = reader.ReadSingle();
-            SetValueCalling(new Vector3(x, y, z));
+            return new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
         }
     }
 
-    /// <summary>
-    ///     Used to store a Vector4 value that is synchronized over the network.
-    /// </summary>
     [Serializable]
     public class Vector4NetworkValue : NetworkValue<Vector4>
     {
@@ -719,19 +616,12 @@ namespace NetBuff.Misc
             writer.Write(value.w);
         }
 
-        public override void Deserialize(BinaryReader reader)
+        public override Vector4 Deserialize(BinaryReader reader)
         {
-            var x = reader.ReadSingle();
-            var y = reader.ReadSingle();
-            var z = reader.ReadSingle();
-            var w = reader.ReadSingle();
-            SetValueCalling(new Vector4(x, y, z, w));
+            return new Vector4(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
         }
     }
 
-    /// <summary>
-    ///     Used to store a Quaternion value that is synchronized over the network.
-    /// </summary>
     [Serializable]
     public class QuaternionNetworkValue : NetworkValue<Quaternion>
     {
@@ -753,19 +643,12 @@ namespace NetBuff.Misc
             writer.Write(value.w);
         }
 
-        public override void Deserialize(BinaryReader reader)
+        public override Quaternion Deserialize(BinaryReader reader)
         {
-            var x = reader.ReadSingle();
-            var y = reader.ReadSingle();
-            var z = reader.ReadSingle();
-            var w = reader.ReadSingle();
-            SetValueCalling(new Quaternion(x, y, z, w));
+            return new Quaternion(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
         }
     }
 
-    /// <summary>
-    ///     Used to store a Color value that is synchronized over the network.
-    /// </summary>
     [Serializable]
     public class ColorNetworkValue : NetworkValue<Color>
     {
@@ -787,19 +670,12 @@ namespace NetBuff.Misc
             writer.Write(value.a);
         }
 
-        public override void Deserialize(BinaryReader reader)
+        public override Color Deserialize(BinaryReader reader)
         {
-            var r = reader.ReadSingle();
-            var g = reader.ReadSingle();
-            var b = reader.ReadSingle();
-            var a = reader.ReadSingle();
-            SetValueCalling(new Color(r, g, b, a));
+            return new Color(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
         }
     }
 
-    /// <summary>
-    ///     Used to store a Color32 value that is synchronized over the network.
-    /// </summary>
     [Serializable]
     public class Color32NetworkValue : NetworkValue<Color32>
     {
@@ -821,22 +697,14 @@ namespace NetBuff.Misc
             writer.Write(value.a);
         }
 
-        public override void Deserialize(BinaryReader reader)
+        public override Color32 Deserialize(BinaryReader reader)
         {
-            var r = reader.ReadByte();
-            var g = reader.ReadByte();
-            var b = reader.ReadByte();
-            var a = reader.ReadByte();
-            SetValueCalling(new Color32(r, g, b, a));
+            return new Color32(reader.ReadByte(), reader.ReadByte(), reader.ReadByte(), reader.ReadByte()); 
         }
     }
     #endregion
 
     #region NetBuff Simple Types
-    /// <summary>
-    ///     Used to store a NetworkId value that is synchronized over the network.
-    ///     Used to keep reference to other network objets throughout the network.
-    /// </summary>
     [Serializable]
     public class NetworkIdNetworkValue : NetworkValue<NetworkId>
     {
@@ -855,18 +723,14 @@ namespace NetBuff.Misc
             writer.Write(value);
         }
 
-        public override void Deserialize(BinaryReader reader)
+        public override NetworkId Deserialize(BinaryReader reader)
         {
-            var v = reader.ReadNetworkId();
-            SetValueCalling(v);
+            return reader.ReadNetworkId();
         }
     }
     #endregion
     
     #region NetBuff Complex Types
-    /// <summary>
-    ///     Used to store a NetworkIdentity reference that is synchronized over the network.
-    /// </summary>
     [Serializable]
     public class NetworkIdentityNetworkValue : NetworkIdentityBasedValue<NetworkIdentity>
     {
@@ -886,9 +750,6 @@ namespace NetBuff.Misc
         }
     }
     
-    /// <summary>
-    ///     Used to store a NetworkBehaviour reference that is synchronized over the network.
-    /// </summary>
     [Serializable]
     public class NetworkBehaviourNetworkValue<T> : NetworkIdentityBasedValue<T> where T : NetworkBehaviour 
     {
@@ -908,10 +769,6 @@ namespace NetBuff.Misc
         }
     }
     
-    /// <summary>
-    ///     Used to store a GameObject reference that is synchronized over the network.
-    ///     The GameObject must have a NetworkIdentity component attached.
-    /// </summary>
     [Serializable]
     public class GameObjectNetworkValue : NetworkIdentityBasedValue<GameObject>
     {
@@ -938,10 +795,6 @@ namespace NetBuff.Misc
         }
     }
     
-    /// <summary>
-    ///     Used to store a Component (MonoBehaviour / Built-In Components) reference that is synchronized over the network.
-    ///     The Component must be attached to a GameObject with a NetworkIdentity component.
-    /// </summary>
     [Serializable]
     public class ComponentNetworkValue<T> : NetworkIdentityBasedValue<T> where T : Component
     {

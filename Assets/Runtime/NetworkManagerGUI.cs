@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using NetBuff.Base;
 using NetBuff.Discover;
 using NetBuff.Misc;
 using NetBuff.UDP;
@@ -8,51 +7,23 @@ using UnityEngine;
 
 namespace NetBuff
 {
-    /// <summary>
-    ///     NetworkManagerGUI is a simple GUI for NetworkManager.
-    ///     Provides a simple way to start a server, client, or host.
-    ///     Also provides a way to see the server list and connect to them.
-    ///     Can plot graphs for FPS, Latency, Packet Sent, Packet Received, and Packet Loss.
-    ///     Displays the current status of the server and client.
-    /// </summary>
     [RequireComponent(typeof(NetworkManager))]
     [Icon("Assets/Editor/Icons/NetworkManagerGUI.png")]
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-manager-gui")]
     public class NetworkManagerGUI : MonoBehaviour
     {
-        /// <summary>
-        ///     Used to choose the current rendered graph type.
-        /// </summary>
         public enum CurrentGraph
         {
-            /// <summary>
-            ///     No graph is rendered.
-            /// </summary>
             None,
 
-            /// <summary>
-            ///     A graph for FPS is rendered.
-            /// </summary>
             FPS,
 
-            /// <summary>
-            ///     A graph for Latency is rendered.
-            /// </summary>
             Latency,
 
-            /// <summary>
-            ///     A graph for Packet Sent is rendered.
-            /// </summary>
             PacketSent,
 
-            /// <summary>
-            ///     A graph for Packet Received is rendered.
-            /// </summary>
             PacketReceived,
 
-            /// <summary>
-            ///     A graph for Packet Loss is rendered.
-            /// </summary>
             PacketLoss
         }
 
@@ -76,19 +47,16 @@ namespace NetBuff
         #region Internal Fields
         private ServerDiscoverer.ServerInfo[] _serverList;
         private readonly GraphPlotter.GraphPlotterData _fpsData = new();
-        private readonly GraphPlotter.GraphPlotterData _plotLatency = new() { Max = 250 };
-        private readonly GraphPlotter.GraphPlotterData _plotPacketSent = new() { Max = 0 };
-        private readonly GraphPlotter.GraphPlotterData _plotPacketReceived = new() { Max = 0 };
-        private readonly GraphPlotter.GraphPlotterData _plotPacketLoss = new() { Max = 100 };
+        private readonly GraphPlotter.GraphPlotterData _plotLatencyData = new() { Max = 250 };
+        private readonly GraphPlotter.GraphPlotterData _plotPacketSentData = new() { Max = 0 };
+        private readonly GraphPlotter.GraphPlotterData _plotPacketReceivedData = new() { Max = 0 };
+        private readonly GraphPlotter.GraphPlotterData _plotPacketLossData = new() { Max = 100 };
         private long _lastPacketSent;
         private long _lastPacketReceived;
         private long _lastPacketLoss;
         #endregion
 
         #region Helper Properties
-        /// <summary>
-        ///     Determines the rate at which the graphs are plotted.
-        /// </summary>
         private int GraphPlottingRate
         {
             get => graphPlottingRate;
@@ -104,9 +72,6 @@ namespace NetBuff
             }
         }
 
-        /// <summary>
-        ///     Determines whether the FPS graph is plotted.
-        /// </summary>
         public bool PlotFPS
         {
             get => plotFPS;
@@ -117,9 +82,6 @@ namespace NetBuff
             }
         }
 
-        /// <summary>
-        ///     Determines whether the Latency graph is plotted.
-        /// </summary>
         public bool PlotLatency
         {
             get => plotLatency;
@@ -130,9 +92,6 @@ namespace NetBuff
             }
         }
 
-        /// <summary>
-        ///     Determines whether the Packet Rate graph is plotted.
-        /// </summary>
         public bool PlotPacketRate
         {
             get => plotPacketRate;
@@ -143,9 +102,6 @@ namespace NetBuff
             }
         }
 
-        /// <summary>
-        ///     Determines the current rendered graph type.
-        /// </summary>
         public CurrentGraph CurrentGraphType
         {
             get => currentGraph;
@@ -201,7 +157,6 @@ namespace NetBuff
                     _DrawAddressAndPort();
                     if (GUILayout.Button("Start Client")) NetworkManager.Instance.StartClient();
                     if (GUILayout.Button("Close")) NetworkManager.Instance.Close();
-
                     break;
 
                 case NetworkTransport.EnvironmentType.Client:
@@ -214,7 +169,7 @@ namespace NetBuff
                     if (GUILayout.Button("Close")) NetworkManager.Instance.Close();
                     break;
             }
-
+            
             GUILayout.EndArea();
 
             if (NetworkManager.Instance.EnvironmentType == NetworkTransport.EnvironmentType.None)
@@ -234,16 +189,16 @@ namespace NetBuff
             _fpsData.Clear();
             _fpsData.Max = 0;
 
-            _plotLatency.Clear();
+            _plotLatencyData.Clear();
 
-            _plotPacketSent.Clear();
-            _plotPacketSent.Max = 0;
+            _plotPacketSentData.Clear();
+            _plotPacketSentData.Max = 0;
 
-            _plotPacketReceived.Clear();
-            _plotPacketReceived.Max = 0;
+            _plotPacketReceivedData.Clear();
+            _plotPacketReceivedData.Max = 0;
 
-            _plotPacketLoss.Clear();
-            _plotPacketLoss.Max = 0;
+            _plotPacketLossData.Clear();
+            _plotPacketLossData.Max = 0;
         }
         #endregion
 
@@ -253,7 +208,7 @@ namespace NetBuff
             if (plotLatency)
             {
                 var info = NetworkManager.Instance.ClientConnectionInfo;
-                _plotLatency.AddData(info?.Latency ?? 0, false);
+                _plotLatencyData.AddData(info?.Latency ?? 0, false);
             }
 
             if (plotPacketRate)
@@ -264,10 +219,10 @@ namespace NetBuff
                 var packetReceived = info?.PacketReceived ?? 0;
                 var packetLoss = info?.PacketLoss ?? 0;
 
-                _plotPacketSent.AddData(packetSent - _lastPacketSent);
-                _plotPacketReceived.AddData(packetReceived - _lastPacketReceived);
-                _plotPacketLoss.AddData(packetLoss - _lastPacketLoss);
-                _plotPacketSent.Max = _plotPacketReceived.Max = Mathf.Max(_plotPacketSent.Max, _plotPacketReceived.Max);
+                _plotPacketSentData.AddData(packetSent - _lastPacketSent);
+                _plotPacketReceivedData.AddData(packetReceived - _lastPacketReceived);
+                _plotPacketLossData.AddData(packetLoss - _lastPacketLoss);
+                _plotPacketSentData.Max = _plotPacketReceivedData.Max = Mathf.Max(_plotPacketSentData.Max, _plotPacketReceivedData.Max);
 
                 _lastPacketSent = packetSent;
                 _lastPacketReceived = packetReceived;
@@ -291,23 +246,23 @@ namespace NetBuff
                 case CurrentGraph.Latency:
                     if (NetworkManager.Instance.EnvironmentType == NetworkTransport.EnvironmentType.None)
                         return;
-                    GraphPlotter.DrawGraph(0, h, 2, Color.red, w, _plotLatency.Data, _plotLatency.Max, h / 4f);
+                    GraphPlotter.DrawGraph(0, h, 2, Color.red, w, _plotLatencyData.Data, _plotLatencyData.Max, h / 4f);
                     break;
                 case CurrentGraph.PacketSent:
                     if (NetworkManager.Instance.EnvironmentType == NetworkTransport.EnvironmentType.None)
                         return;
-                    GraphPlotter.DrawGraph(0, h, 2, Color.blue, w, _plotPacketSent.Data, _plotPacketSent.Max, h / 4f);
+                    GraphPlotter.DrawGraph(0, h, 2, Color.blue, w, _plotPacketSentData.Data, _plotPacketSentData.Max, h / 4f);
                     break;
                 case CurrentGraph.PacketReceived:
                     if (NetworkManager.Instance.EnvironmentType == NetworkTransport.EnvironmentType.None)
                         return;
-                    GraphPlotter.DrawGraph(0, h, 2, Color.yellow, w, _plotPacketReceived.Data, _plotPacketReceived.Max,
+                    GraphPlotter.DrawGraph(0, h, 2, Color.yellow, w, _plotPacketReceivedData.Data, _plotPacketReceivedData.Max,
                         h / 2f);
                     break;
                 case CurrentGraph.PacketLoss:
                     if (NetworkManager.Instance.EnvironmentType == NetworkTransport.EnvironmentType.None)
                         return;
-                    GraphPlotter.DrawGraph(0, h, 2, Color.magenta, w, _plotPacketLoss.Data, _plotPacketLoss.Max,
+                    GraphPlotter.DrawGraph(0, h, 2, Color.magenta, w, _plotPacketLossData.Data, _plotPacketLossData.Max,
                         h / 2f);
                     break;
             }

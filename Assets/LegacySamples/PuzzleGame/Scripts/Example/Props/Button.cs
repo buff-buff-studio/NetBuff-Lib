@@ -8,12 +8,7 @@ namespace ExamplePlatformer.Props
         public BoolNetworkValue isPressed = new(false);
         public Transform knob;
         private Collider[] _results = new Collider[16];
-
-        private void OnEnable()
-        {
-            WithValues(isPressed);
-        }
-
+        
         public void FixedUpdate()
         {
             if (!HasAuthority)

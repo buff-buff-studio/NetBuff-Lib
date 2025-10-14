@@ -4,27 +4,16 @@ using NetBuff.Misc;
 
 namespace NetBuff.Packets
 {
-    /// <summary>
-    ///     Packet used to synchronize data of a network behaviour.
-    /// </summary>
+    [PacketInspectorPriority(PacketInspectorPriority.Normal)]
     public class NetworkBehaviourDataPacket : IPacket
     {
-        /// <summary>
-        ///     The network id of the network object.
-        /// </summary>
-        [InspectorMode(InspectorMode.Object)]
+        [NetworkIdInspectorMode(NetworkIdInspectorMode.Object)]
         public NetworkId Id { get; set; }
 
-        /// <summary>
-        ///     The behaviour id of the network behaviour (index in the network object).
-        /// </summary>
-        [InspectorMode(InspectorMode.Behaviour)]
+        [NetworkIdInspectorMode(NetworkIdInspectorMode.Behaviour)]
         public byte BehaviourId { get; set; }
 
-        /// <summary>
-        ///     The payload of the network behaviour data.
-        /// </summary>
-        [InspectorMode(InspectorMode.Data)]
+        [NetworkIdInspectorMode(NetworkIdInspectorMode.Data)]
         public byte[] Payload { get; set; }
 
         public void Serialize(BinaryWriter writer)

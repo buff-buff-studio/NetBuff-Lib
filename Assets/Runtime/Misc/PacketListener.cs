@@ -4,20 +4,11 @@ using NetBuff.Interface;
 
 namespace NetBuff.Misc
 {
-    /// <summary>
-    ///     Base class for packet listeners
-    ///     Used to listen for packets and call events when a packet is received
-    /// </summary>
     public abstract class PacketListener
     {
         private static readonly Dictionary<Type, PacketListener> _PacketListeners = new();
         
         #region Listeners
-        /// <summary>
-        ///     Returns the packet listener for the given packet type.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
         public static PacketListener<T> GetPacketListener<T>() where T : IPacket
         {
             if (_PacketListeners.TryGetValue(typeof(T), out var listener))
@@ -29,11 +20,6 @@ namespace NetBuff.Misc
             return (PacketListener<T>)listener;
         }
 
-        /// <summary>
-        ///     Returns the packet listener for the given packet type.
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
         public static PacketListener GetPacketListener(Type type)
         {
             if (_PacketListeners.TryGetValue(type, out var listener))
@@ -47,26 +33,11 @@ namespace NetBuff.Misc
         #endregion
 
         
-        /// <summary>
-        ///     Call the OnServerReceive event.
-        ///     Can be used to simulate a server receiving a packet.
-        /// </summary>
-        /// <param name="packet"></param>
-        /// <param name="client"></param>
         public abstract bool CallOnServerReceive(IPacket packet, int client);
 
-        /// <summary>
-        ///     Call the OnClientReceive event.
-        ///     Can be used to simulate a client receiving a packet.
-        /// </summary>
-        /// <param name="packet"></param>
         public abstract bool CallOnClientReceive(IPacket packet);
     }
 
-    /// <summary>
-    ///     Generic packet listener. Used to listen for packets of a specific type.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
     public class PacketListener<T> : PacketListener where T : IPacket
     {
         private readonly List<Func<T, int, bool>> _onServerReceive = new();

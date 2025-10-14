@@ -36,7 +36,7 @@ namespace NetBuff.Editor
 
         private static void OnCreated(string path)
         {
-            Debug.Log("Detected scene creation. Re-generating ids...");
+            Debug.Log("[NetBuff] Detected scene creation. Re-generating ids...");
             var s = File.ReadAllLines(path);
             var i = 0;
             
@@ -75,7 +75,7 @@ namespace NetBuff.Editor
                                     s[i + 1] = $"    high: {newId.High}";
                                     s[i + 2] = $"    low: {newId.Low}";
                                     
-                                    Debug.Log($"Generated new NetworkId for GameObject: {gameObjectName} ({newId})");
+                                    Debug.Log($"[NetBuff] Generated new NetworkId for GameObject: {gameObjectName} ({newId})");
                                 }
                             }
                         }

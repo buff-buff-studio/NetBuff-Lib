@@ -42,8 +42,7 @@ namespace ExamplePlatformer
             remoteBodyRotation = body.localEulerAngles.y;
             _controller = GetComponent<CharacterController>();
             InvokeRepeating(nameof(Tick), 0, 1f / tickRate);
-            WithValues(nickname, bodyColor);
-
+            
             nickname.OnValueChanged += (_, newValue) =>
             {
                 headplate.text = newValue;
@@ -111,10 +110,10 @@ namespace ExamplePlatformer
         }
 
         /// <summary>
-        /// Called when a packet is received by the client
+        /// Called when a packet is received
         /// </summary>
         /// <param name="packet"></param>
-        public override void OnClientReceivePacket(IOwnedPacket packet)
+        public override void OnReceivePacket(IOwnedPacket packet)
         {
             switch (packet)
             {
@@ -288,7 +287,7 @@ namespace ExamplePlatformer
     
     public class PacketBodyRotation : IOwnedPacket
     {
-        [InspectorMode(InspectorMode.Object)]
+        [NetworkIdInspectorMode(NetworkIdInspectorMode.Object)]
         public NetworkId Id { get; set; }
         public float BodyRotation { get; set; }
 
