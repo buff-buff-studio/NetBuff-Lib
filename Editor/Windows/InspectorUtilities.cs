@@ -10,7 +10,6 @@ using NetBuff.Misc;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
-using InspectorMode = NetBuff.Misc.InspectorMode;
 #endif
 
 namespace NetBuff.Editor.Windows
@@ -43,12 +42,12 @@ namespace NetBuff.Editor.Windows
             public bool drawFields = true;
             public bool drawProperties = true;
             
-            public InspectorMode networkIdDrawMode = InspectorMode.Standard;
+            public NetworkIdInspectorMode networkIdDrawMode = NetworkIdInspectorMode.Standard;
 
             public void LoadAttributes(MemberInfo info)
             {
-                var mode = info.GetCustomAttribute<InspectorModeAttribute>();
-                networkIdDrawMode = mode?.InspectorMode ?? InspectorMode.Standard;
+                var mode = info.GetCustomAttribute<NetworkIdInspectorModeAttribute>();
+                networkIdDrawMode = mode?.NetworkIdInspectorMode ?? NetworkIdInspectorMode.Standard;
             }
         }
         
@@ -86,15 +85,15 @@ namespace NetBuff.Editor.Windows
                 case int intValue:
                     switch (options.networkIdDrawMode)
                     {
-                        case InspectorMode.Owner:
-                            EditorGUILayout.TextField($"{name}", intValue == -1 ? "Server" : $"Client {intValue}");
+                        case NetworkIdInspectorMode.Owner:
+                            EditorGUILayout.TextField($"{name} (Client)", intValue == -1 ? "Server" : $"{intValue}");
                             return;
                         
-                        case InspectorMode.Behaviour:
-                            EditorGUILayout.TextField($"{name} (BH)", $"Behaviour {intValue}");
+                        case NetworkIdInspectorMode.Behaviour:
+                            EditorGUILayout.TextField($"{name} (Bhvr)", $"Behaviour {intValue}");
                             return;
                         
-                        case InspectorMode.Scene:
+                        case NetworkIdInspectorMode.Scene:
                             EditorGUILayout.TextField($"{name} (Scene)", _GetSceneName(intValue));
                             return;
                         
@@ -192,6 +191,9 @@ namespace NetBuff.Editor.Windows
                     const int limitPerRow = 8;
                             
                     EditorGUILayout.BeginVertical("box");
+                    
+                    if(count == 0)
+                        EditorGUILayout.LabelField("Empty Array Segment", EditorStyles.centeredGreyMiniLabel);
                             
                     for (var i = 0; i < count; i++)
                     {
@@ -213,7 +215,7 @@ namespace NetBuff.Editor.Windows
                 {
                     switch (options.networkIdDrawMode)
                     {
-                        case InspectorMode.Data:
+                        case NetworkIdInspectorMode.Data:
                             var count = a.Length;
                             
                             var dataState = EditorGUILayout.BeginFoldoutHeaderGroup(fold.GetState(path), $"{name} ({count})");
@@ -226,6 +228,9 @@ namespace NetBuff.Editor.Windows
                             const int limitPerRow = 8;
                             
                             EditorGUILayout.BeginVertical("box");
+                            
+                            if(count == 0)
+                                EditorGUILayout.LabelField("Empty Array", EditorStyles.centeredGreyMiniLabel);
                             
                             for (var i = 0; i < count; i++)
                             {
@@ -270,10 +275,10 @@ namespace NetBuff.Editor.Windows
                 case NetworkId networkIdValue:
                     switch (options.networkIdDrawMode)
                     {
-                        case InspectorMode.Standard:
+                        case NetworkIdInspectorMode.Standard:
                             EditorGUILayout.TextField(name, networkIdValue.ToString());
                             return;
-                        case InspectorMode.Object:
+                        case NetworkIdInspectorMode.Object:
                             var obj = _GetNetworkObject(networkIdValue);
                             var label = $"{name} (Object)";
                             if(obj == null)
@@ -281,7 +286,7 @@ namespace NetBuff.Editor.Windows
                             else
                                 EditorGUILayout.ObjectField(label, obj, typeof(NetworkIdentity), true);
                             return;
-                        case InspectorMode.Prefab:
+                        case NetworkIdInspectorMode.Prefab:
                             var prefab = _GetNetworkPrefab(networkIdValue);
                             var prefabLabel = $"{name} (Prefab)";
                             if(prefab == null)

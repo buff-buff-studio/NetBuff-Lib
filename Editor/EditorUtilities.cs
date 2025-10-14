@@ -78,7 +78,7 @@ namespace NetBuff.Editor
             _scenes.Clear();
             foreach (var scene in EditorBuildSettings.scenes) 
             {
-                if (scene.path == null || scene.path.StartsWith("Assets") == false)
+                if (scene.path == null || !scene.path.StartsWith("Assets"))
                     continue;
 
                 var scenePath = Application.dataPath + scene.path.Substring(6);
@@ -113,7 +113,7 @@ namespace NetBuff.Editor
         [MenuItem("NetBuff/Check Prefab Registries", priority = 1)]
         public static void CheckPrefabs()
         {
-            Debug.Log("Checking prefab registries");
+            Debug.Log("[NetBuff] Checking prefab registries");
             var search = AssetDatabase.FindAssets("t:NetworkPrefabRegistry");
 
             foreach (var guid in search)
@@ -125,10 +125,10 @@ namespace NetBuff.Editor
                 
                 var foundKeys = new List<NetworkId>();
 
-                bool hasProblem = false;
+                var hasProblem = false;
                 void ShowProblem(string error)
                 {
-                    Debug.LogError($"Problem found in {npr.name}: {error}");
+                    Debug.LogError($"[NetBuff] Problem found in {npr.name}: {error}");
                     hasProblem = true;
                 }
 
@@ -173,8 +173,7 @@ namespace NetBuff.Editor
                 Finish();
             }
             
-            //close progress bar
-            Debug.Log("Finished checking prefab registries");
+            Debug.Log("[NetBuff] Finished checking prefab registries");
         }
 
         [MenuItem("NetBuff/Solve Scene Internal Network Id Duplicates", priority = 100)]
@@ -213,7 +212,6 @@ namespace NetBuff.Editor
         {
             if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
             {
-                //get all scenes
                 var scenes = EditorBuildSettings.scenes;
                 var controlGroup = new List<NetworkId>();
                 foreach (var scene in scenes)
@@ -229,7 +227,7 @@ namespace NetBuff.Editor
 
         private static void _SolveSceneIdDuplicates(string path, List<NetworkId> controlGroup)
         {
-            Debug.Log("Solving scene NetworkId duplicates: " + path);
+            Debug.Log("[NetBuff] Solving scene NetworkId duplicates: " + path);
             var s = File.ReadAllLines(path);
             var i = 0;
             var found = false;
@@ -273,7 +271,7 @@ namespace NetBuff.Editor
                                     if (controlGroup.Contains(id))
                                     {
                                         found = true;
-                                        Debug.LogError($"Detected duplicate NetworkId for GameObject: {gameObjectName}: ({id})");
+                                        Debug.LogError($"[NetBuff] Detected duplicate NetworkId for GameObject: {gameObjectName}: ({id})");
 
                                         do
                                         {
@@ -308,7 +306,7 @@ namespace NetBuff.Editor
         
         private static void _RegenerateIds(string path, List<NetworkId> controlGroup)
         {
-            Debug.Log("Regenerating scene NetworkIds: " + path);
+            Debug.Log($"[NetBuff] Regenerating scene NetworkIds: {path}");
             var s = File.ReadAllLines(path);
             var i = 0;
             
@@ -327,8 +325,7 @@ namespace NetBuff.Editor
                         
                         if (_RegexGameObjectName.IsMatch(s[i]))
                         {
-                            if(gameObjectName == null)
-                                gameObjectName = s[i].Substring(10);
+                            gameObjectName ??= s[i][10..];
                         }
                         
                         if (_RegexMonoBehaviour.IsMatch(s[i]))

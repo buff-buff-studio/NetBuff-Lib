@@ -6,7 +6,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using NetBuff.Base;
 using NetBuff.Discover;
 using NetBuff.Interface;
 using NetBuff.Misc;
@@ -15,11 +14,6 @@ using UnityEngine.Assertions;
 
 namespace NetBuff.UDP
 {
-    /// <summary>
-    ///     Uses the UDP (User Datagram Protocol) protocol to manage the connection between the server and clients.
-    ///     Responsible for internally managing the connection between the server and clients.
-    ///     Holds the connection information of clients and provides methods for sending and receiving packets.
-    /// </summary>
     [Icon("Assets/Editor/Icons/UDPNetworkTransport.png")]
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/transports/#udp")]
     public class UDPNetworkTransport : NetworkTransport
@@ -126,11 +120,11 @@ namespace NetBuff.UDP
 
         public override void Close()
         {
-            _server?.Close();
-            _client?.Disconnect("disconnect");
-
             Type = EnvironmentType.None;
 
+            _server?.Close();
+            _client?.Disconnect("disconnect");
+            
             _server = null;
             _client = null;
         }
@@ -240,37 +234,24 @@ namespace NetBuff.UDP
         #endregion
 
         #region Helper Properties
-        /// <summary>
-        ///     The address of the server.
-        /// </summary>
         public string Address
         {
             get => address;
             set => address = value;
         }
 
-        /// <summary>
-        ///     The port of the server / client connection.
-        /// </summary>
         public int Port
         {
             get => port;
             set => port = value;
         }
 
-        /// <summary>
-        ///     The password of the server.
-        ///     The password that the client is using to connect to the server.
-        /// </summary>
         public string Password
         {
             get => password;
             set => password = value;
         }
 
-        /// <summary>
-        ///     The maximum number of clients that can connect to the server at the same time.
-        /// </summary>
         public int MaxClients
         {
             get => maxClients;
@@ -576,7 +557,7 @@ namespace NetBuff.UDP
             {
                 if (!_isRunning)
                     return;
-
+                
                 for (var i = 0; i < _peers.Count; i++)
                 {
                     var peer = _peers.ElementAt(i).Value;
@@ -601,10 +582,11 @@ namespace NetBuff.UDP
 
             private void _Loop()
             {
-                try
+                var threadBuffer = new byte[1024];
+
+                while (_isRunning)
                 {
-                    var threadBuffer = new byte[1024];
-                    while (true)
+                    try
                     {
                         EndPoint remote = new IPEndPoint(IPAddress.Any, 0);
                         var received = _socket.ReceiveFrom(threadBuffer, ref remote);
@@ -619,11 +601,9 @@ namespace NetBuff.UDP
                                 if (peer != null)
                                 {
                                     var nowRemote = BitConverter.ToInt64(threadBuffer, 3);
-
                                     peer.latency = (short)((now - nowRemote) / 20_000);
                                     peer.lastReceivedTicks = now;
                                 }
-
                                 break;
 
                             case _CHANNEL_SERVER_INFO:
@@ -640,7 +620,6 @@ namespace NetBuff.UDP
                                     peer.lastReceivedTicks = now;
                                     peer.receivedUnreliable.Enqueue(b);
                                 }
-
                                 break;
 
                             case _CHANNEL_RELIABLE_FRAGMENT_HEADER:
@@ -649,29 +628,30 @@ namespace NetBuff.UDP
                                 var sequence = (threadBuffer[2] << 24) | (threadBuffer[3] << 16) |
                                                (threadBuffer[4] << 8) | threadBuffer[5];
 
-                                //Send ACK
-                                var ack = new byte[5];
-                                ack[0] = _CHANNEL_ACK;
-                                ack[1] = threadBuffer[2];
-                                ack[2] = threadBuffer[3];
-                                ack[3] = threadBuffer[4];
-                                ack[4] = threadBuffer[5];
-
+                                // Send ACK
+                                var ack = new[] { _CHANNEL_ACK, threadBuffer[2], threadBuffer[3], threadBuffer[4], threadBuffer[5] };
                                 _InternalSendSpan(new UDPSpan(ack), remote);
+
+                                if (peer == null)
+                                {
+                                    var id = _nextClientId++;
+                                    peer = new UDPPeer(id, remote);
+                                    _peers.Add(id, peer);
+                                    _peersByIp.Add(remote, peer);
+                                }
+
                                 peer.lastReceivedTicks = now;
 
                                 if (!peer.receivedReliable.ContainsKey(sequence))
                                 {
-                                    var count = threadBuffer[6];
-
+                                    int count = threadBuffer[6];
                                     var b = new byte[received - 7];
                                     Buffer.BlockCopy(threadBuffer, 7, b, 0, received - 7);
                                     peer.receivedReliable.Add(sequence,
-                                        new ReliableReceived
-                                            { data = b, waitingFragmentUntil = sequence + count - 1, type = type });
+                                        new ReliableReceived { data = b, waitingFragmentUntil = sequence + count - 1, type = type });
                                 }
                             }
-                                break;
+                            break;
 
                             case _CHANNEL_RELIABLE:
                             {
@@ -679,14 +659,8 @@ namespace NetBuff.UDP
                                 var sequence = (threadBuffer[2] << 24) | (threadBuffer[3] << 16) |
                                                (threadBuffer[4] << 8) | threadBuffer[5];
 
-                                //Send ACK
-                                var ack = new byte[5];
-                                ack[0] = _CHANNEL_ACK;
-                                ack[1] = threadBuffer[2];
-                                ack[2] = threadBuffer[3];
-                                ack[3] = threadBuffer[4];
-                                ack[4] = threadBuffer[5];
-
+                                // Send ACK
+                                var ack = new[] { _CHANNEL_ACK, threadBuffer[2], threadBuffer[3], threadBuffer[4], threadBuffer[5] };
                                 _InternalSendSpan(new UDPSpan(ack), remote);
 
                                 if (peer == null)
@@ -703,12 +677,11 @@ namespace NetBuff.UDP
                                 {
                                     var b = new byte[received - 6];
                                     Buffer.BlockCopy(threadBuffer, 6, b, 0, received - 6);
-
                                     peer.receivedReliable.Add(sequence,
                                         new ReliableReceived { data = b, type = type });
                                 }
                             }
-                                break;
+                            break;
 
                             case _CHANNEL_ACK:
                                 if (peer != null)
@@ -718,30 +691,31 @@ namespace NetBuff.UDP
 
                                     lock (peer.sentReliable)
                                     {
-                                        if (peer.sentReliable.ContainsKey(sequence))
-                                            peer.sentReliable.Remove(sequence);
+                                        peer.sentReliable.Remove(sequence);
                                     }
-
                                     peer.lastReceivedTicks = now;
                                 }
-
                                 break;
                         }
                     }
-                }
-                catch (Exception e)
-                {
-                    if (_isRunning)
-                        _actions.Enqueue(() =>
+                    catch (SocketException ex)
+                    {
+                        if (ex.SocketErrorCode is SocketError.WouldBlock or SocketError.ConnectionReset)
+                            continue;
+
+                        Debug.LogWarning($"[UDPNetworkTransport] {ex.Message}");
+                    }
+                    catch (Exception e)
+                    {
+                         _actions.Enqueue(() =>
                         {
                             onError?.Invoke(e.Message);
                             _isRunning = false;
                             _socket.Close();
                             _thread = null;
                         });
+                    }
                 }
-
-                // ReSharper disable once FunctionNeverReturns
             }
 
             private void _InternalSendSpan(UDPSpan span, EndPoint remote)

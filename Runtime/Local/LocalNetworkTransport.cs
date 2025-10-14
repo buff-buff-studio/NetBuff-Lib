@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using NetBuff.Base;
 using NetBuff.Discover;
 using NetBuff.Interface;
 using NetBuff.Packets;
@@ -8,10 +7,6 @@ using UnityEngine;
 
 namespace NetBuff.Local
 {
-    /// <summary>
-    ///     Used for local running, does not actually send packets over the network.
-    ///     Can be used on Split Screen games or for testing.
-    /// </summary>
     [Icon("Assets/Editor/Icons/LocalNetworkTransport.png")]
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/transports/#local")]
     public class LocalNetworkTransport : NetworkTransport
@@ -22,10 +17,6 @@ namespace NetBuff.Local
         #endregion
 
         #region Helper Properties
-        /// <summary>
-        ///     The amount of clients that will be created when the host is started.
-        /// </summary>
-        /// <exception cref="Exception"></exception>
         public int ClientCount
         {
             get => clientCount;
@@ -49,6 +40,8 @@ namespace NetBuff.Local
         #region Internal Methods
         private void _CreatePlayers()
         {
+            ClientConnectionInfo = new LocalClientConnectionInfo(0);
+
             for (var i = 0; i < clientCount; i++)
             {
                 var id = _nextClientId++;

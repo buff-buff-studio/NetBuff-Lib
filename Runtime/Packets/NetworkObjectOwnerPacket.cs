@@ -4,33 +4,28 @@ using NetBuff.Misc;
 
 namespace NetBuff.Packets
 {
-    /// <summary>
-    ///     Packet used to change the owner of a network object.
-    /// </summary>
     public class NetworkObjectOwnerPacket : IPacket
     {
-        /// <summary>
-        ///     The network id of the network object.
-        /// </summary>
-        [InspectorMode(InspectorMode.Object)]
+        [NetworkIdInspectorMode(NetworkIdInspectorMode.Object)]
         public NetworkId Id { get; set; }
 
-        /// <summary>
-        ///     The owner id of the network object.
-        /// </summary>
-        [InspectorMode(InspectorMode.Owner)]
+        [NetworkIdInspectorMode(NetworkIdInspectorMode.Owner)]
         public int OwnerId { get; set; }
+
+        public NetworkId EventId { get; set; } = NetworkId.Empty;
 
         public void Serialize(BinaryWriter writer)
         {
             writer.Write(Id);
             writer.Write(OwnerId);
+            writer.Write(EventId);
         }
 
         public void Deserialize(BinaryReader reader)
         {
             Id = reader.ReadNetworkId();
             OwnerId = reader.ReadInt32();
+            EventId = reader.ReadNetworkId();
         }
     }
 }

@@ -3,10 +3,6 @@ using UnityEngine;
 
 namespace NetBuff.Misc
 {
-    /// <summary>
-    ///      Provides extension methods for writing and reading Unity types to and from a binary stream.
-    ///      These methods are useful for serializing Unity types for network transmission or file storage.
-    /// </summary>
     public static class BinaryWriterExtensions
     {
         public static void Write(this BinaryWriter writer, Vector2 value)
@@ -70,7 +66,7 @@ namespace NetBuff.Misc
 
         public static void Write(this BinaryWriter writer, Matrix4x4 value)
         {
-            for (int i = 0; i < 16; i++)
+            for (var i = 0; i < 16; i++)
             {
                 writer.Write(value[i / 4, i % 4]);
             }
@@ -157,13 +153,12 @@ namespace NetBuff.Misc
             return new Bounds(reader.ReadVector3(), reader.ReadVector3());
         }
 
-        public static Matrix4x4 ReadMatrix4x4(this BinaryReader reader)
+        // ReSharper disable once InconsistentNaming
+        public static Matrix4x4 ReadMatrix4X4(this BinaryReader reader)
         {
             var matrix = new Matrix4x4();
-            for (int i = 0; i < 16; i++)
-            {
+            for (var i = 0; i < 16; i++)
                 matrix[i / 4, i % 4] = reader.ReadSingle();
-            }
             return matrix;
         }
 

@@ -3,71 +3,40 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using NetBuff.Interface;
-using NetBuff.Misc;
+using NetBuff.Packets;
 using UnityEngine;
+
+#if NETBUFF_ADVANCED_DEBUG
+using NetBuff.Misc;
+#endif
 
 namespace NetBuff.Components
 {
-    /// <summary>
-    ///     Syncs the components of a transform over the network.
-    /// </summary>
     [Icon("Assets/Editor/Icons/NetworkTransform.png")]
     [HelpURL("https://buff-buff-studio.github.io/NetBuff-Lib-Docs/components/#network-transform")]
-    public class NetworkTransform : NetworkBehaviour
+    public class NetworkTransform : NetworkBehaviour, INetworkBehaviourSerializer
     {
         #region Enum
         [Flags]
         public enum SyncMode
         {
-            /// <summary>
-            ///     No components are synced.
-            /// </summary>
             None = 0,
 
-            /// <summary>
-            ///     The x position of the transform is synced.
-            /// </summary>
             PositionX = 1,
-
-            /// <summary>
-            ///     The y position of the transform is synced.
-            /// </summary>
             PositionY = 2,
-
-            /// <summary>
-            ///     The z position of the transform is synced.
-            /// </summary>
             PositionZ = 4,
 
-            /// <summary>
-            ///     The x rotation of the transform is synced.
-            /// </summary>
             RotationX = 8,
-
-            /// <summary>
-            ///     The y rotation of the transform is synced.
-            /// </summary>
             RotationY = 16,
-
-            /// <summary>
-            ///     The z rotation of the transform is synced.
-            /// </summary>
             RotationZ = 32,
 
-            /// <summary>
-            ///     The x scale of the transform is synced.
-            /// </summary>
             ScaleX = 64,
-
-            /// <summary>
-            ///     The y scale of the transform is synced.
-            /// </summary>
             ScaleY = 128,
-
-            /// <summary>
-            ///     The z scale of the transform is synced.
-            /// </summary>
-            ScaleZ = 256
+            ScaleZ = 256,
+            
+            Position = PositionX | PositionY | PositionZ,
+            Rotation = RotationX | RotationY | RotationZ,
+            Scale = ScaleX | ScaleY | ScaleZ,
         }
         #endregion
 
@@ -136,6 +105,11 @@ namespace NetBuff.Components
         protected Vector3 lastRotation;
         protected Vector3 lastScale;
         private bool _running;
+        
+        #if NETBUFF_ADVANCED_DEBUG
+        private float _lastUpdateTime = -5;
+        #endif
+        
         protected readonly List<float> components = new();
         
         // Smoothing targets
@@ -151,46 +125,30 @@ namespace NetBuff.Components
         #endregion
 
         #region Helper Properties
-        /// <summary>
-        ///     Determines the tick rate of the NetworkAnimator. When set to -1, the default tick rate of the NetworkManager will
-        ///     be used.
-        /// </summary>
         public int TickRate
         {
             get => tickRate;
             set => tickRate = value;
         }
 
-        /// <summary>
-        ///     Defines the threshold for the position to be considered changed.
-        /// </summary>
         public float PositionThreshold
         {
             get => positionThreshold;
             set => positionThreshold = value;
         }
 
-        /// <summary>
-        ///     Defines the threshold for the rotation to be considered changed.
-        /// </summary>
         public float RotationThreshold
         {
             get => rotationThreshold;
             set => rotationThreshold = value;
         }
 
-        /// <summary>
-        ///     Defines the threshold for the scale to be considered changed.
-        /// </summary>
         public float ScaleThreshold
         {
             get => scaleThreshold;
             set => scaleThreshold = value;
         }
 
-        /// <summary>
-        ///     Defines which components of the transform should be synced.
-        /// </summary>
         public SyncMode SyncModeMask => syncMode;
         #endregion
 
@@ -232,6 +190,28 @@ namespace NetBuff.Components
             if (!HasAuthority)
                 Interpolate();
         }
+
+        #if NETBUFF_ADVANCED_DEBUG
+        private void OnRenderObject()
+        {
+            if (!DebugUtilities.EnableAdvancedDebugging)
+                return;
+            
+            if (!DebugUtilities.NetworkTransformDraw)
+                return;
+            
+            if(target == null)
+                return;
+            
+            var interval = 1f / (tickRate == -1 ? NetworkManager.Instance.DefaultTickRate : tickRate);
+            var isSleep = Time.unscaledTime - _lastUpdateTime > interval * 1.25f;
+            
+            if (!DebugUtilities.NetworkTransformDrawSleep && isSleep)
+                return;
+            
+            DebugUtilities.DrawOutline(target.gameObject,isSleep ? Color.gray : Color.cyan, DebugUtilities.DefaultFillBounds);
+        }
+        #endif
         #endregion
 
         #region Internal Methods
@@ -240,7 +220,9 @@ namespace NetBuff.Components
             if (_running) return;
             if (!HasAuthority) return;
 
-            _running = true;
+            if(target == null)
+                target = transform;
+
             _running = true;
             StartCoroutine(TickCoroutine());
         }
@@ -264,7 +246,12 @@ namespace NetBuff.Components
         {
             if (!HasAuthority) return;
             if (ShouldResend(out var packet))
+            {
+                #if NETBUFF_ADVANCED_DEBUG
+                _lastUpdateTime = Time.unscaledTime;
+                #endif
                 SendPacket(packet);
+            }
         }
         
         protected virtual void Interpolate()
@@ -311,8 +298,8 @@ namespace NetBuff.Components
                 if (smoothRotation)
                 {
                     // Handle snapping per axis
-                    bool needsSnap = false;
-                    Vector3 currentEuler = target.eulerAngles;
+                    var needsSnap = false;
+                    var currentEuler = target.eulerAngles;
                     
                     if (maxRotationDelta > 0)
                     {
@@ -343,7 +330,7 @@ namespace NetBuff.Components
                     else
                     {
                         // Smooth each axis separately
-                        Vector3 smoothEuler = currentEuler;
+                        var smoothEuler = currentEuler;
                         
                         if ((syncMode & SyncMode.RotationX) != 0)
                             smoothEuler.x = Mathf.SmoothDampAngle(
@@ -372,7 +359,7 @@ namespace NetBuff.Components
                         target.eulerAngles = smoothEuler;
                         
                         // Check if close enough to snap
-                        bool closeEnough = true;
+                        var closeEnough = true;
                         if ((syncMode & SyncMode.RotationX) != 0 && 
                             Mathf.Abs(Mathf.DeltaAngle(smoothEuler.x, _targetEulerAngles.x)) > rotationThreshold)
                             closeEnough = false;
@@ -399,7 +386,7 @@ namespace NetBuff.Components
                 else
                 {
                     // Apply rotation directly
-                    Vector3 current = target.eulerAngles;
+                    var current = target.eulerAngles;
                     if ((syncMode & SyncMode.RotationX) != 0) current.x = _targetEulerAngles.x;
                     if ((syncMode & SyncMode.RotationY) != 0) current.y = _targetEulerAngles.y;
                     if ((syncMode & SyncMode.RotationZ) != 0) current.z = _targetEulerAngles.z;
@@ -473,27 +460,22 @@ namespace NetBuff.Components
             if (clientId != OwnerId)
                 return;
 
-            if (packet is TransformPacket transformPacket && transformPacket.BehaviourId == BehaviourId)
+            if (packet is NetworkTransformPacket transformPacket && transformPacket.BehaviourId == BehaviourId)
                 ServerBroadcastPacketExceptFor(transformPacket, clientId);
         }
 
-        public override void OnClientReceivePacket(IOwnedPacket packet)
+        public override void OnReceivePacket(IOwnedPacket packet)
         {
             if (HasAuthority)
                 return;
 
-            if (packet is TransformPacket transformPacket && transformPacket.BehaviourId == BehaviourId)
+            if (packet is NetworkTransformPacket transformPacket && transformPacket.BehaviourId == BehaviourId)
                 ApplyTransformPacket(transformPacket);
         }
         #endregion
 
         #region Virtual Methods
-        /// <summary>
-        ///     Determines if the transform should be resent to the server.
-        /// </summary>
-        /// <param name="packet"></param>
-        /// <returns></returns>
-        protected virtual bool ShouldResend(out TransformPacket packet)
+        protected virtual bool ShouldResend(out NetworkTransformPacket packet)
         {
             var positionChanged = Vector3.Distance(target.position, lastPosition) > positionThreshold;
             var rotationChanged = Vector3.Distance(target.eulerAngles, lastRotation) > rotationThreshold;
@@ -508,7 +490,7 @@ namespace NetBuff.Components
                 lastScale = target.localScale;
 
                 var flag = (short)0;
-                if (positionChanged)
+                if (positionChanged && (syncMode & SyncMode.Position) != 0)
                 {
                     flag |= 1;
                     if ((syncMode & SyncMode.PositionX) != 0) components.Add(lastPosition.x);
@@ -516,7 +498,7 @@ namespace NetBuff.Components
                     if ((syncMode & SyncMode.PositionZ) != 0) components.Add(lastPosition.z);
                 }
 
-                if (rotationChanged)
+                if (rotationChanged && (syncMode & SyncMode.Rotation) != 0)
                 {
                     flag |= 2;
                     if ((syncMode & SyncMode.RotationX) != 0) components.Add(lastRotation.x);
@@ -524,7 +506,7 @@ namespace NetBuff.Components
                     if ((syncMode & SyncMode.RotationZ) != 0) components.Add(lastRotation.z);
                 }
 
-                if (scaleChanged)
+                if (scaleChanged && (syncMode & SyncMode.Scale) != 0)
                 {
                     flag |= 4;
                     if ((syncMode & SyncMode.ScaleX) != 0) components.Add(lastScale.x);
@@ -532,7 +514,7 @@ namespace NetBuff.Components
                     if ((syncMode & SyncMode.ScaleZ) != 0) components.Add(lastScale.z);
                 }
 
-                packet = new TransformPacket
+                packet = new NetworkTransformPacket
                 {
                     Id = Id,
                     Components = components.ToArray(),
@@ -546,22 +528,22 @@ namespace NetBuff.Components
             return false;
         }
 
-        /// <summary>
-        ///     Applies the transform components to the transform.
-        /// </summary>
-        /// <param name="packet"></param>
-        protected virtual void ApplyTransformPacket(TransformPacket packet)
+        protected virtual void ApplyTransformPacket(NetworkTransformPacket packet)
         {
+            #if NETBUFF_ADVANCED_DEBUG
+            _lastUpdateTime = Time.unscaledTime;
+            #endif
+            
             var cmp = packet.Components;
             var flag = packet.Flag;
 
             // Instead of applying directly, set target values for interpolation
-            int index = 0;
+            var index = 0;
             
             // Position
             if ((flag & 1) != 0)
             {
-                Vector3 basePos = _hasTargetPosition ? _targetPosition : target.position;
+                var basePos = _hasTargetPosition ? _targetPosition : target.position;
                 
                 if ((syncMode & SyncMode.PositionX) != 0) basePos.x = cmp[index++];
                 if ((syncMode & SyncMode.PositionY) != 0) basePos.y = cmp[index++];
@@ -574,7 +556,7 @@ namespace NetBuff.Components
             // Rotation
             if ((flag & 2) != 0)
             {
-                Vector3 baseRot = _hasTargetRotation ? _targetEulerAngles : target.eulerAngles;
+                var baseRot = _hasTargetRotation ? _targetEulerAngles : target.eulerAngles;
                 
                 if ((syncMode & SyncMode.RotationX) != 0) baseRot.x = cmp[index++];
                 if ((syncMode & SyncMode.RotationY) != 0) baseRot.y = cmp[index++];
@@ -587,7 +569,7 @@ namespace NetBuff.Components
             // Scale
             if ((flag & 4) != 0)
             {
-                Vector3 baseScale = _hasTargetScale ? _targetScale : target.localScale;
+                var baseScale = _hasTargetScale ? _targetScale : target.localScale;
                 
                 if ((syncMode & SyncMode.ScaleX) != 0) baseScale.x = cmp[index++];
                 if ((syncMode & SyncMode.ScaleY) != 0) baseScale.y = cmp[index++];
@@ -596,6 +578,60 @@ namespace NetBuff.Components
                 _targetScale = baseScale;
                 _hasTargetScale = true;
             }
+        }
+        #endregion
+        
+        #region Custom Serialization
+        public virtual void OnSerialize(BinaryWriter writer, bool forceSendAll, bool isSnapshot)
+        {
+            if((syncMode & SyncMode.PositionX) != 0)
+                writer.Write(target.position.x);
+            if((syncMode & SyncMode.PositionY) != 0)
+                writer.Write(target.position.y);
+            if((syncMode & SyncMode.PositionZ) != 0)
+                writer.Write(target.position.z);
+            if((syncMode & SyncMode.RotationX) != 0)
+                writer.Write(target.eulerAngles.x);
+            if((syncMode & SyncMode.RotationY) != 0)
+                writer.Write(target.eulerAngles.y);
+            if((syncMode & SyncMode.RotationZ) != 0)
+                writer.Write(target.eulerAngles.z);
+            if((syncMode & SyncMode.ScaleX) != 0)
+                writer.Write(target.localScale.x);
+            if((syncMode & SyncMode.ScaleY) != 0)
+                writer.Write(target.localScale.y);
+            if((syncMode & SyncMode.ScaleZ) != 0)
+                writer.Write(target.localScale.z);
+        }
+
+        public virtual void OnDeserialize(BinaryReader reader, bool isSnapshot)
+        {
+            var pos = target.position;
+            
+            if((syncMode & SyncMode.PositionX) != 0)
+                pos.x = reader.ReadSingle();
+            if((syncMode & SyncMode.PositionY) != 0)
+                pos.y = reader.ReadSingle();
+            if((syncMode & SyncMode.PositionZ) != 0)
+                pos.z = reader.ReadSingle();
+            target.position = pos;
+            
+            var rot = target.eulerAngles;
+            if((syncMode & SyncMode.RotationX) != 0)
+                rot.x = reader.ReadSingle();
+            if((syncMode & SyncMode.RotationY) != 0)
+                rot.y = reader.ReadSingle();
+            if((syncMode & SyncMode.RotationZ) != 0)
+                rot.z = reader.ReadSingle();
+            target.eulerAngles = rot;
+            
+            var scale = target.localScale;
+            if((syncMode & SyncMode.ScaleX) != 0)
+                scale.x = reader.ReadSingle();
+            if((syncMode & SyncMode.ScaleY) != 0)
+                scale.y = reader.ReadSingle();
+            
+            target.localScale = scale;
         }
         #endregion
     }
