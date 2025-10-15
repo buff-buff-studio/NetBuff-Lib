@@ -13,7 +13,6 @@ namespace ExamplePlatformer.Props
         
         private void OnEnable()
         {
-            WithValues(isOn);
             handle.localEulerAngles = new Vector3(isOn.Value ? angle : 0, -90f, 0);
             
             //Needs to listen to a specific packet type

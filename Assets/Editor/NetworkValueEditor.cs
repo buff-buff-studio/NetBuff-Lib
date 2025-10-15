@@ -33,12 +33,7 @@ namespace NetBuff.Editor
             EditorGUI.BeginDisabledGroup(!networkValue?.CheckPermission() ?? true);
             
             EditorGUI.BeginChangeCheck();
-            EditorStyles.label.normal.textColor = Color.yellow;
-
-            HandleField(value, valueRect, property, label);
-            
-            EditorStyles.label.normal.textColor = Color.white;
-            
+            HandleField(value, valueRect, property, new GUIContent($"{label.text} (NV)", label.image, label.tooltip));
             EditorGUI.BeginDisabledGroup(Application.isPlaying);
             EditorGUI.PropertyField(typeRect, type, GUIContent.none);
             EditorGUI.EndDisabledGroup();
@@ -57,11 +52,6 @@ namespace NetBuff.Editor
             return EditorGUI.GetPropertyHeight(property.FindPropertyRelative("value"), label);
         }
         
-        /// <summary>
-        /// Gets the object the property represents.
-        /// </summary>
-        /// <param name="prop"></param>
-        /// <returns></returns>
         public static object GetTargetObjectOfProperty(SerializedProperty prop)
         {
             if (prop == null) return null;
@@ -110,6 +100,7 @@ namespace NetBuff.Editor
         {
             var enumerable = GetValue_Imp(source, name) as System.Collections.IEnumerable;
             if (enumerable == null) return null;
+            // ReSharper disable once GenericEnumeratorNotDisposed
             var enm = enumerable.GetEnumerator();
             for (var i = 0; i <= index; i++)
             {
@@ -119,12 +110,6 @@ namespace NetBuff.Editor
         }
         
         #region Internal Util Methods
-        /// <summary>
-        ///     Returns the NetworkIdentity object from the given NetworkId.
-        ///     Will return null if the NetworkId is empty.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
         protected static NetworkIdentity GetNetworkObject(NetworkId id)
         {
             #if UNITY_EDITOR

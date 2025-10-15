@@ -15,7 +15,7 @@ namespace NetBuff.Editor
     public class NetworkManagerEditor : UnityEditor.Editor
     {
         private static readonly FieldInfo _IDField = typeof(NetworkIdentity).GetField("id", BindingFlags.NonPublic | BindingFlags.Instance);
-        
+
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
@@ -41,6 +41,53 @@ namespace NetBuff.Editor
                     System.Diagnostics.Process.Start(path);
                 }
             }
+
+            var manager = target as NetworkManager;
+            if (!manager!.IsReady)
+                EditorGUILayout.HelpBox("NetworkManager is not ready", MessageType.Warning);
+            
+            #if NETBUFF_ADVANCED_DEBUG
+            EditorGUILayout.BeginVertical("box");
+            EditorGUILayout.LabelField("Debug General Settings", EditorStyles.boldLabel);
+            DebugUtilities.EnableAdvancedDebugging = EditorGUILayout.Toggle("Enable Advanced Debugging", DebugUtilities.EnableAdvancedDebugging);
+            if (DebugUtilities.EnableAdvancedDebugging)
+            {
+                DebugUtilities.DefaultFillBounds =
+                    EditorGUILayout.Toggle("Default Fill Bounds", DebugUtilities.DefaultFillBounds);
+
+                EditorGUILayout.LabelField("Network Transform Debugging", EditorStyles.boldLabel);
+                DebugUtilities.NetworkTransformDraw =
+                    EditorGUILayout.Toggle("Network Transform Draw", DebugUtilities.NetworkTransformDraw);
+                
+                if(DebugUtilities.NetworkTransformDraw)
+                    DebugUtilities.NetworkTransformDrawSleep = EditorGUILayout.Toggle("Network Transform Draw Sleep",
+                        DebugUtilities.NetworkTransformDrawSleep);
+                
+                EditorGUILayout.LabelField("Network Identity Debugging", EditorStyles.boldLabel);
+                DebugUtilities.NetworkIdentityDraw =
+                    EditorGUILayout.Toggle("Network Identity Draw", DebugUtilities.NetworkIdentityDraw);
+                
+                if (DebugUtilities.NetworkIdentityDraw)
+                {
+                    DebugUtilities.NetworkIdentityDrawNames =
+                        EditorGUILayout.Toggle("Network Identity Draw Names", DebugUtilities.NetworkIdentityDrawNames);
+                    
+                    EditorGUILayout.LabelField("Network Behaviour Debugging", EditorStyles.boldLabel);
+                    DebugUtilities.NetworkIdentityDrawBehaviourNames =
+                        EditorGUILayout.Toggle("Network Behaviour Names",
+                            DebugUtilities.NetworkIdentityDrawBehaviourNames);
+                    
+                    if(DebugUtilities.NetworkIdentityDrawBehaviourNames)
+                        DebugUtilities.NetworkIdentityDrawBehaviourNamesSleep = EditorGUILayout.Toggle(
+                            "Network Behaviour Names Sleep",
+                            DebugUtilities.NetworkIdentityDrawBehaviourNamesSleep);
+                }
+
+                EditorGUILayout.HelpBox("Advanced debugging is enabled. This may impact performance.",
+                        MessageType.Warning);
+            }
+            EditorGUILayout.EndVertical();
+            #endif
         }
     }
 #endif

@@ -12,7 +12,7 @@ namespace CTF
         public override void OnSpawned(bool isRetroactive)
         {
             base.OnSpawned(isRetroactive);
-            rigidbody.velocity = transform.forward * 20;
+            rigidbody.linearVelocity = transform.forward * 20;
         }
 
         private void Update()

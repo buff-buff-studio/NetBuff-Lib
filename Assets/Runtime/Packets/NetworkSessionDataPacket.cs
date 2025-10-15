@@ -5,20 +5,11 @@ using NetBuff.Misc;
 
 namespace NetBuff.Packets
 {
-    /// <summary>
-    ///     Packet used to synchronize the session data of a client.
-    /// </summary>
     public class NetworkSessionDataPacket : IPacket
     {
-        /// <summary>
-        ///     The id of the client.
-        /// </summary>
         public int ClientId { get; set; }
 
-        /// <summary>
-        ///     The data of the session.
-        /// </summary>
-        [InspectorMode(InspectorMode.Data)]
+        [NetworkIdInspectorMode(NetworkIdInspectorMode.Data)]
         public ArraySegment<byte> Data { get; set; }
 
         public void Serialize(BinaryWriter writer)

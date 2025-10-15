@@ -9,10 +9,6 @@ using NetBuff.Misc;
 
 namespace NetBuff.UDP
 {
-    /// <summary>
-    ///     Used to find all available servers using UDP.
-    ///     Searches through all available network interfaces and sends a broadcast message to find servers.
-    /// </summary>
     public class UDPServerDiscoverer : ServerDiscoverer<UDPServerDiscoverer.UDPServerInfo>
     {
         public UDPServerDiscoverer(int magicNumber, int port)
@@ -117,14 +113,8 @@ namespace NetBuff.UDP
             _searchId++;
         }
 
-        /// <summary>
-        ///     Holds the information about a UDP server.
-        /// </summary>
         public class UDPServerInfo : ServerInfo
         {
-            /// <summary>
-            ///     The server's IP address.
-            /// </summary>
             public IPAddress Address { get; set; }
 
             public override string ToString()

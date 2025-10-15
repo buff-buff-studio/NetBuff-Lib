@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using NetBuff.Interface;
+using NetBuff.Misc;
 using UnityEditor;
 using UnityEngine;
 
@@ -16,7 +18,7 @@ namespace NetBuff.Editor.Windows
             public bool recordClientSide = true;
             public bool recordServerSide = true;
             public int recordServerSideFilter = -1;
-            public List<string> types = new List<string>();
+            public List<string> types = new();
         }
 
         [Serializable]
@@ -25,7 +27,6 @@ namespace NetBuff.Editor.Windows
             public int client;
             
             [SerializeReference]
-            // ReSharper disable once InconsistentNaming
             public IPacket packet;
         }
 
@@ -35,108 +36,159 @@ namespace NetBuff.Editor.Windows
             Server
         }
         
+        public EditorGUISplitView verticalSplitView = new(EditorGUISplitView.Direction.Vertical);
+        
         public Filter filter = new();
-        public Vector2 scrollFilter;
         public Vector2 scrollPackets;
-        public int limit = 100;
+        public int limit = 250;
+        public bool startRecordingAutomatically = true;
         public PacketTabs tab = PacketTabs.Server;
+        public PacketInspectorPriority minPacketPriority = PacketInspectorPriority.Normal;
         
         public List<PacketData> serverReceivedPackets = new();
         public List<PacketData> clientReceivedPackets = new();
         public bool recording;
         public InspectorUtilities.FoldStateHolder foldouts = new();
+        
+        private Texture2D _icon;
     
         [MenuItem("NetBuff/Network Packet Inspector")]
-        [MenuItem("Window/Network/Packet Inspector")]
+        [MenuItem("Window/NetBuff/Network Packet Inspector")]
         public static void ShowWindow()
         {
-            GetWindow<NetworkPacketInspector>("Network Packet Inspector");
+            var inspectorType = typeof(UnityEditor.Editor).Assembly.GetType("UnityEditor.InspectorWindow");
+            var window = GetWindow<NetworkPacketInspector>(null, false, inspectorType);
+            window.Show();
         }
 
+        private void OnEnable()
+        {
+            _icon = EditorGUIUtility.Load("Assets/NetBuff/Editor/Icons/NetworkPacketInspector.png") as Texture2D;
+            EditorApplication.playModeStateChanged += _OnPlayModeStateChanged;
+            
+            var windowIcon = EditorGUIUtility.Load("Assets/NetBuff/Editor/Icons/WindowNetworkPacketInspector.png") as Texture2D;
+            titleContent = new GUIContent("Network Packet Inspector", windowIcon);
+        }
+        
         private void OnGUI()
         {
             _Update();
             
-            _DrawFilter();
+            verticalSplitView.BeginSplitView();
+            _DrawSettings();
+            verticalSplitView.Split();
             _DrawControls();
-            _DrawPackets();
+            _DrawPacketList();
+            verticalSplitView.EndSplitView();
         }
 
-        private void _DrawFilter()
+        private void _DrawSettings()
         {
-            EditorGUI.BeginDisabledGroup(recording);
-            EditorGUILayout.BeginVertical("box");
-            EditorGUILayout.LabelField("Filter", EditorStyles.boldLabel);
-            
-            limit = EditorGUILayout.IntField("Limit", limit);
-            bool DrawBadge(string typeName)
+            #region Header
+            if (_icon != null)
             {
-                var type = Type.GetType(typeName);
-                if (type == null)
-                    return true;
-                var needWidth = EditorStyles.helpBox.CalcSize(new GUIContent(type.Name)).x + 20;
-                EditorGUILayout.LabelField(type.Name, EditorStyles.helpBox, GUILayout.Width(needWidth));
-                var lastRect = GUILayoutUtility.GetLastRect();
-                var rect = new Rect(lastRect.x + needWidth - 20, lastRect.y, 20, lastRect.height);
-                
-                if (GUI.Button(rect, "X"))
-                {
-                    Undo.RecordObject(this, "Remove Type");
-                    filter.types.Remove(typeName);
-                    Repaint();
-                    return false;
-                }
-                
-                return true;
+                GUILayout.BeginHorizontal();
+                GUILayout.FlexibleSpace();
+                GUILayout.Label(_icon, GUILayout.Width(50), GUILayout.Height(50));
+                GUILayout.FlexibleSpace();
+                GUILayout.EndHorizontal();
             }
             
+            GUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Network Packet Inspector", EditorStyles.centeredGreyMiniLabel, GUILayout.Height(20));
+            GUILayout.EndHorizontal();
+            #endregion
+            
+            EditorGUI.BeginDisabledGroup(recording);
+
+            #region General Settings
+            EditorGUILayout.BeginVertical("box");
+            EditorGUILayout.LabelField("General Settings", EditorStyles.boldLabel);
+            minPacketPriority = (PacketInspectorPriority)EditorGUILayout.EnumPopup("Min Packet Priority", minPacketPriority);
+            limit = EditorGUILayout.IntField("Limit", limit);
+            startRecordingAutomatically = EditorGUILayout.Toggle("Auto Start Recording", startRecordingAutomatically);
+            EditorGUILayout.EndVertical();
+            #endregion
+            
+            #region Filter Settings
+            EditorGUILayout.BeginVertical("box");
+            EditorGUILayout.LabelField("Filter Settings", EditorStyles.boldLabel);
             filter.recordClientSide = EditorGUILayout.Toggle("Record Client Side", filter.recordClientSide);
             EditorGUILayout.BeginHorizontal();
             filter.recordServerSide = EditorGUILayout.Toggle("Record Server Side", filter.recordServerSide);
             filter.recordServerSideFilter = EditorGUILayout.IntField("Server Client Filter", filter.recordServerSideFilter);
             EditorGUILayout.EndHorizontal();
+            EditorGUILayout.EndVertical();
+            #endregion
             
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Packet Types");
-            if (GUILayout.Button("+", GUILayout.Width(20)))
-            {
-                var menu = new GenericMenu();
-                var types = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes().Where(t => t.GetInterfaces().Contains(typeof(IPacket)) && !t.IsAbstract));
-                
-                foreach (var type in types)
-                {
-                    if (filter.types.Contains(type.AssemblyQualifiedName))
-                        continue;
-                    
-                    var type1 = type;
-                    menu.AddItem(new GUIContent(type.Name), false, () =>
-                    {
-                        Undo.RecordObject(this, "Add Type");
-                        filter.types.Add(type1.AssemblyQualifiedName);
-                        Repaint();
-                    });
-                }
-                menu.ShowAsContext();
-            }
-            EditorGUILayout.EndHorizontal();
-
+            #region Packet Type Filter
+            EditorGUILayout.BeginVertical("box");
             if (filter.types.Count > 0)
             {
-                scrollFilter = EditorGUILayout.BeginScrollView(scrollFilter,true, false, GUI.skin.horizontalScrollbar, GUI.skin.verticalScrollbar, GUI.skin.scrollView, GUILayout.Height(40));
-                scrollFilter.y = 0;
-                
                 EditorGUILayout.BeginHorizontal();
-                foreach (var type in filter.types)
-                    if (!DrawBadge(type))
-                        break;
-
-                GUILayout.FlexibleSpace();
+                EditorGUILayout.LabelField("Packet Type Filter", EditorStyles.boldLabel);
+                if (GUILayout.Button("+", GUILayout.Width(20)))
+                    _OpenAddTypeContext();
                 EditorGUILayout.EndHorizontal();
-                EditorGUILayout.EndScrollView();
+                
+                EditorGUILayout.BeginVertical();
+                foreach (var type in filter.types)
+                    if (!_DrawBadge(type))
+                        break;
+                EditorGUILayout.EndVertical();
             }
-
+            else
+            {
+                EditorGUILayout.LabelField("Packet Type Filter", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("No Packet Types Selected", EditorStyles.centeredGreyMiniLabel);
+                
+                if (GUILayout.Button("Add Packet Type Filter"))
+                    _OpenAddTypeContext();
+            }
             EditorGUILayout.EndVertical();
+            #endregion
+            
             EditorGUI.EndDisabledGroup();
+        }
+
+        private bool _DrawBadge(string typeName)
+        {
+            var type = Type.GetType(typeName);
+            if (type == null)
+                return true;
+            var needWidth = EditorStyles.helpBox.CalcSize(new GUIContent(type.Name)).x + 20;
+            EditorGUILayout.LabelField(type.Name, EditorStyles.helpBox, GUILayout.Width(needWidth));
+            var lastRect = GUILayoutUtility.GetLastRect();
+            var rect = new Rect(lastRect.x + needWidth - 20, lastRect.y, 20, lastRect.height);
+
+            if (!GUI.Button(rect, "-", EditorStyles.miniButton))
+                return true;
+            
+            Undo.RecordObject(this, "Remove Type");
+            filter.types.Remove(typeName);
+            Repaint();
+            return false;
+        }
+        
+        private void _OpenAddTypeContext()
+        {
+            var menu = new GenericMenu();
+            var types = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => a.GetTypes().Where(t => t.GetInterfaces().Contains(typeof(IPacket)) && !t.IsAbstract));
+                
+            foreach (var type in types)
+            {
+                if (filter.types.Contains(type.AssemblyQualifiedName))
+                    continue;
+                    
+                var type1 = type;
+                menu.AddItem(new GUIContent(type.Name), false, () =>
+                {
+                    Undo.RecordObject(this, "Add Type");
+                    filter.types.Add(type1.AssemblyQualifiedName);
+                    Repaint();
+                });
+            }
+            menu.ShowAsContext();
         }
 
         private void _DrawControls()
@@ -170,7 +222,7 @@ namespace NetBuff.Editor.Windows
             EditorGUILayout.EndVertical();
         }
 
-        private void _DrawPackets()
+        private void _DrawPacketList()
         {
             EditorGUILayout.BeginVertical("box");
             var centerStyle = new GUIStyle(EditorStyles.boldLabel)
@@ -178,7 +230,7 @@ namespace NetBuff.Editor.Windows
                 alignment = TextAnchor.MiddleCenter,
                 fontSize = 12
             };
-            EditorGUILayout.LabelField("Current Tab", centerStyle);
+            EditorGUILayout.LabelField("Received Packets", centerStyle);
             EditorGUILayout.BeginHorizontal();
             tab = (PacketTabs)GUILayout.Toolbar((int)tab, Enum.GetNames(typeof(PacketTabs)));
             EditorGUILayout.EndHorizontal();
@@ -193,7 +245,7 @@ namespace NetBuff.Editor.Windows
 
         private void _DrawPacketList(List<PacketData> packets, bool hideOrigin)
         {
-            EditorGUILayout.LabelField("Packets", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Packet List", EditorStyles.boldLabel);
             scrollPackets = EditorGUILayout.BeginScrollView(scrollPackets);  
             EditorGUILayout.BeginVertical();
             
@@ -227,7 +279,7 @@ namespace NetBuff.Editor.Windows
                 return;
             }
             
-            var label = hideOrigin ? data.packet.GetType().Name : $"{data.packet.GetType().Name} (From: {data.client})";
+            var label = hideOrigin ? data.packet.GetType().Name : $"{data.packet.GetType().Name} (From {data.client})";
             
             InspectorUtilities.DrawObject($"{index}", label, data.packet, foldouts);
         }
@@ -318,7 +370,21 @@ namespace NetBuff.Editor.Windows
 
         private bool ApplyTypeFilterForPacket(IPacket packet)
         {
+            if (packet == null)
+                return false; 
+            
+            var attr = packet.GetType().GetCustomAttribute<PacketInspectorPriorityAttribute>();
+            var priority = attr?.Priority ?? PacketInspectorPriority.Normal;
+            if (priority < minPacketPriority)
+                return false;
+            
             return filter.types.Count == 0 || filter.types.Contains(packet.GetType().AssemblyQualifiedName);
+        }
+        
+        private void _OnPlayModeStateChanged(PlayModeStateChange change)
+        {
+            if (change == PlayModeStateChange.EnteredPlayMode && startRecordingAutomatically)
+                StartRecording();
         }
     }
     #endif
